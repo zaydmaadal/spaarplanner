@@ -1,10 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { args, fakeDb, has, type Call } from "@/data/test-helpers";
 
-const m = vi.hoisted(() => ({ db: undefined as unknown, revalidatePath: vi.fn() }));
+const m = vi.hoisted(() => ({ db: undefined as unknown, revalidatePath: vi.fn(), signedOut: false }));
 vi.mock("next/cache", () => ({ revalidatePath: m.revalidatePath }));
 vi.mock("@/data/supabase/server", () => ({
-  requireUserId: async () => "user-1",
+  requireUserId: async () => {
+    if (m.signedOut) throw new Error("NEXT_REDIRECT"); // the real one redirects to /inloggen, which throws
+    return "user-1";
+  },
   createServerSupabase: async () => m.db,
 }));
 
@@ -29,9 +32,20 @@ function setup({ balance = 5000, stored = [] as string[], write = {} as { error?
 }
 const upsert = (calls: Call[]) => calls.find((c) => has(c, "upsert"));
 
-beforeEach(() => vi.resetAllMocks());
+beforeEach(() => {
+  vi.resetAllMocks();
+  m.signedOut = false;
+});
 
 describe("addTransactionsAction", () => {
+  it("does no database call without a session and lets the redirect propagate", async () => {
+    const calls = setup();
+    m.signedOut = true;
+    await expect(addTransactionsAction([tx()])).rejects.toThrow("NEXT_REDIRECT");
+    expect(calls).toHaveLength(0);
+    expect(m.revalidatePath).not.toHaveBeenCalled();
+  });
+
   it("refuses a withdrawal of 60 euro from a pot that holds 50 euro, and writes nothing", async () => {
     const calls = setup({ balance: 5000 });
     expect(await addTransactionsAction([tx()])).toEqual({ ok: false, error: NOT_ENOUGH });

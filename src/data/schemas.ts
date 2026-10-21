@@ -22,7 +22,7 @@ export const passwordSchema = z
   .min(10, "Kies een wachtwoord van minstens 10 tekens.")
   .refine((v) => new TextEncoder().encode(v).length <= 72, "Kies een wachtwoord van hoogstens 72 tekens.");
 
-// First message per field, for ActionResult.fieldErrors. A nested field (prefs.contextNote) is keyed by its own name.
+// First message per field, for ActionResult.fieldErrors. Keys are the leaf path segment: a bad payday rule reports under type/day/weekend, not paydayRule.
 export function fieldErrorsFrom(error: z.ZodError): Record<string, string> {
   const out: Record<string, string> = {};
   for (const issue of error.issues) out[String(issue.path.at(-1))] ??= issue.message;
@@ -46,11 +46,16 @@ const positiveMoney = moneySchema.refine((cents) => cents > 0, "Vul een bedrag i
 
 const name = z.string().trim().min(1, "Vul een naam in.").max(80, "Kies een naam van hoogstens 80 tekens.");
 const uuid = z.uuid();
+// Real calendar dates only; Postgres has no year 0 and nobody books money before 1900.
+const date = z.iso.date("Kies een geldige datum.").refine((d) => d >= "1900-01-01", "Kies een geldige datum.");
+const MONTH = "Kies een maand van 1 tot en met 12.";
 
+const DAY = "Kies een dag van 1 tot en met 31.";
+const WEEKDAY = "Kies een dag van de week.";
 const paydayRuleSchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("day_of_month"), day: z.number().int().min(1).max(31), weekend: z.enum(["before", "after"]) }),
+  z.object({ type: z.literal("day_of_month"), day: z.number().int(DAY).min(1, DAY).max(31, DAY), weekend: z.enum(["before", "after"]) }),
   z.object({ type: z.literal("last_working_day") }),
-  z.object({ type: z.literal("weekday"), weekday: z.number().int().min(1).max(7) }),
+  z.object({ type: z.literal("weekday"), weekday: z.number().int(WEEKDAY).min(1, WEEKDAY).max(7, WEEKDAY) }),
   z.object({ type: z.literal("irregular") }),
 ]);
 
@@ -63,8 +68,8 @@ export const incomeSchema = z
     amount: moneySchema,
     amountLow: moneySchema.nullish(),
     variability: z.enum(["fixed", "variable"]).default("fixed"),
-    month: z.number().int().min(1).max(12).nullish(),
-    date: z.iso.date().nullish(),
+    month: z.number().int(MONTH).min(1, MONTH).max(12, MONTH).nullish(),
+    date: date.nullish(),
     paydayRule: paydayRuleSchema,
     isEstimate: z.boolean().default(false),
     active: z.boolean().default(true),
@@ -81,6 +86,7 @@ export const budgetLineSchema = z.object({
   isEstimate: z.boolean().default(false),
 });
 
+const WEIGHT = "Het gewicht is een heel getal van 1 tot en met 32.767.";
 // The emergency fund is created when onboarding finishes, so it is not a kind to pick here. On an update the kind is
 // ignored (a goal keeps its kind). The deadline is a month, as <input type="month"> gives it.
 export const goalSchema = z.object({
@@ -90,24 +96,25 @@ export const goalSchema = z.object({
   target: positiveMoney,
   targetIsEstimate: z.boolean().default(false),
   deadline: z.string().regex(/^(19|20|21)\d\d-(0[1-9]|1[0-2])$/, "Kies een maand en een jaar.").nullish(),
-  weight: z.number().int().min(1, "Het gewicht is minstens 1.").max(32767).default(1),
+  weight: z.number().int(WEIGHT).min(1, WEIGHT).max(32767, WEIGHT).default(1),
 });
 
 export const transactionSchema = z.object({
   goalId: uuid,
   amount: positiveMoney,
   direction: z.enum(["in", "out"]),
-  occurredOn: z.iso.date(),
+  occurredOn: date,
   note: z.string().trim().max(200, "Een notitie mag hoogstens 200 tekens hebben.").optional(),
   clientRef: uuid,
 });
 export type TransactionInput = z.input<typeof transactionSchema>;
 
+const SHARE = "Kies een percentage van 0 tot 100.";
 // Every field is optional and only what is given gets written. The savings amount is only ever one the user typed:
 // null means "follows my room", and a left-out field leaves the stored value alone (a proposal is computed on render).
 export const planSchema = z.object({
   monthlySavings: moneySchema.nullable().optional(),
-  emergencySharePct: z.number().int().min(0).max(100).optional(),
+  emergencySharePct: z.number().int(SHARE).min(0, SHARE).max(100, SHARE).optional(),
   incomeMode: z.enum(["careful", "normal"]).optional(),
   includeOneOffIncome: z.boolean().optional(),
 });

@@ -5,6 +5,7 @@ import { idSchema, incomeSchema, type ActionResult } from "@/data/schemas";
 import { createServerSupabase, requireUserId } from "@/data/supabase/server";
 import { dbFailure, done, fail, invalid, SOMETHING_WRONG } from "./shared";
 
+// Full replace: optional fields that are left out reset to their defaults, so forms must send the whole object.
 export async function saveIncomeAction(input: z.input<typeof incomeSchema>): Promise<ActionResult> {
   const userId = await requireUserId();
   const parsed = incomeSchema.safeParse(input);

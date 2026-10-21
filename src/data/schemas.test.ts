@@ -164,3 +164,39 @@ describe("fieldErrorsFrom", () => {
     expect(!r.success && Object.keys(fieldErrorsFrom(r.error))).toEqual(["contextNote"]);
   });
 });
+
+describe("dates in Dutch", () => {
+  const date = (schema: { safeParse: (v: unknown) => { success: boolean; error?: import("zod").ZodError } }, v: unknown) => {
+    const r = schema.safeParse(v);
+    return r.success ? null : fieldErrorsFrom(r.error!);
+  };
+  const tx = { goalId: uuid, amount: "60", direction: "in" as const, clientRef: uuid };
+  const income = {
+    name: "Bonus",
+    kind: "other" as const,
+    frequency: "once" as const,
+    amount: "100",
+    paydayRule: { type: "irregular" as const },
+  };
+
+  it.each(["2026-02-31", "morgen", "0001-01-01", "1899-12-31"])("says 'Kies een geldige datum.' for the booking date %s", (occurredOn) => {
+    expect(date(transactionSchema, { ...tx, occurredOn })).toEqual({ occurredOn: "Kies een geldige datum." });
+  });
+
+  it.each(["2026-02-31", "0000-01-01", "1899-12-31"])("says the same for the date of one-off income %s", (d) => {
+    expect(date(incomeSchema, { ...income, date: d })).toEqual({ date: "Kies een geldige datum." });
+  });
+
+  it("accepts the first day of 1900", () => {
+    expect(transactionSchema.safeParse({ ...tx, occurredOn: "1900-01-01" }).success).toBe(true);
+  });
+
+  it("has Dutch messages for a weight that is too high, a month out of range and a deadline out of range", () => {
+    const goal = { name: "Reis", target: "100" };
+    expect(date(goalSchema, { ...goal, weight: 32768 })).toEqual({ weight: expect.stringMatching(/^Het gewicht/) });
+    expect(date(goalSchema, { ...goal, weight: 1.5 })).toEqual({ weight: expect.stringMatching(/^Het gewicht/) });
+    expect(date(goalSchema, { ...goal, deadline: "2027-13" })).toEqual({ deadline: "Kies een maand en een jaar." });
+    const yearly = { ...income, frequency: "yearly" as const };
+    expect(date(incomeSchema, { ...yearly, month: 13 })).toEqual({ month: "Kies een maand van 1 tot en met 12." });
+  });
+});

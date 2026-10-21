@@ -13,12 +13,12 @@ import { archiveGoalAction, reorderGoalsAction, saveGoalAction, setMainGoalActio
 const ID = "3f2b1c9e-7d4a-4e8b-9c1d-2a6f5e0b8d71";
 const ID_2 = "0b1c2d3e-4f50-4a61-8b72-93a4b5c6d7e8";
 
-type Setup = { kind?: string; balance?: number; top?: number | null; write?: { data?: unknown; error?: { code?: string; message?: string } } };
-function setup({ kind = "savings", balance = 0, top = null, write = {} }: Setup = {}) {
+type Setup = { kind?: string; missing?: boolean; balance?: number; top?: number | null; write?: { data?: unknown; error?: { code?: string; message?: string } } };
+function setup({ kind = "savings", missing = false, balance = 0, top = null, write = {} }: Setup = {}) {
   const db = fakeDb((call: Call) => {
     if (call.table === "goal_balances") return { data: { balance_cents: balance } };
     if (call.table === "goals" && has(call, "order")) return { data: top === null ? null : { priority: top } };
-    if (call.table === "goals" && has(call, "select") && !has(call, "insert")) return { data: { kind } };
+    if (call.table === "goals" && has(call, "select") && !has(call, "insert")) return { data: missing ? null : { kind } };
     return write;
   });
   m.db = db.client;
@@ -107,12 +107,29 @@ describe("saveGoalAction", () => {
 });
 
 describe("setMainGoalAction", () => {
-  it("clears the old main goal before setting the new one (one main goal per user)", async () => {
+  it("checks that the goal is an active goal of the user, then clears the old main goal and sets the new one", async () => {
     const calls = setup();
     expect(await setMainGoalAction(ID)).toMatchObject({ ok: true });
-    expect(calls.map((c) => args(c, "update"))).toEqual([[{ is_main: false }], [{ is_main: true }]]);
-    expect(calls[1].ops).toContainEqual(["eq", ["id", ID]]);
-    expect(calls[1].ops).toContainEqual(["eq", ["user_id", "user-1"]]);
+    expect(calls[0].table).toBe("goals");
+    expect(calls[0].ops).toEqual(expect.arrayContaining([["eq", ["id", ID]], ["eq", ["user_id", "user-1"]], ["eq", ["status", "active"]]]));
+    expect(has(calls[0], "update")).toBe(false);
+    // The unique index allows one main goal, so the old one goes first.
+    expect(calls.slice(1).map((c) => args(c, "update"))).toEqual([[{ is_main: false }], [{ is_main: true }]]);
+    expect(calls[2].ops).toContainEqual(["eq", ["id", ID]]);
+    expect(calls[2].ops).toContainEqual(["eq", ["user_id", "user-1"]]);
+  });
+
+  it("changes nothing for an unknown, foreign or archived goal, so the current main goal stays", async () => {
+    const calls = setup({ missing: true });
+    expect(await setMainGoalAction(ID)).toEqual({ ok: false, error: "Dit doel bestaat niet (meer)." });
+    expect(writes(calls)).toHaveLength(0);
+    expect(m.revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it("rejects an id that is not a uuid before any read", async () => {
+    const calls = setup();
+    expect((await setMainGoalAction("x")).ok).toBe(false);
+    expect(calls).toHaveLength(0);
   });
 });
 

@@ -109,6 +109,14 @@ describe("loadUserData", () => {
     expect(txCall.ops).toContainEqual(["gte", ["occurred_on", "2026-08-20"]]);
   });
 
+  it("asks for the closed rule keys with the not-null and done-or-dismissed filters", async () => {
+    const calls = setup();
+    await loadUserData("2026-10-21");
+    const ops = calls.find((c) => c.table === "checklist_items")!.ops;
+    expect(ops).toContainEqual(["not", ["rule_key", "is", null]]);
+    expect(ops).toContainEqual(["or", ["done_at.not.is.null,dismissed_at.not.is.null"]]);
+  });
+
   it("counts a goal without a balance row as empty", async () => {
     setup({ goal_balances: { data: [] } });
     expect((await loadUserData("2026-10-21")).goals[0].balanceCents).toBe(0);

@@ -6,6 +6,7 @@ import { createServerSupabase, requireUserId } from "@/data/supabase/server";
 import { dbFailure, done, fail, invalid, SOMETHING_WRONG } from "./shared";
 
 // Returns the id so the caller can chain setMainGoalAction for the first goal of a user.
+// Full replace: optional fields that are left out reset to their defaults, so forms must send the whole object.
 export async function saveGoalAction(input: z.input<typeof goalSchema>): Promise<ActionResult<{ id: string }>> {
   const userId = await requireUserId();
   const parsed = goalSchema.safeParse(input);
@@ -56,15 +57,19 @@ export async function reorderGoalsAction(ids: string[]): Promise<ActionResult> {
   return failed?.error ? dbFailure(failed.error) : done();
 }
 
-// The unique index allows one main goal, so the old one is cleared first. shortcut: two statements, not one transaction;
-// if the second fails the user has no main goal, and the overview falls back to the emergency fund until they pick one.
+// The target must be an active goal of the user, or the old main goal would be cleared for nothing. The unique index
+// allows one main goal, so the old one is cleared first. shortcut: two writes, not one transaction; if the second fails the
+// user has no main goal, and the overview falls back to the emergency fund until they pick one.
 export async function setMainGoalAction(id: string): Promise<ActionResult> {
   const userId = await requireUserId();
   if (!idSchema.safeParse(id).success) return fail(SOMETHING_WRONG);
   const supabase = await createServerSupabase();
+  const target = await supabase.from("goals").select("id").eq("id", id).eq("user_id", userId).eq("status", "active").maybeSingle();
+  if (target.error) return dbFailure(target.error);
+  if (!target.data) return fail("Dit doel bestaat niet (meer).");
   const cleared = await supabase.from("goals").update({ is_main: false }).eq("user_id", userId).eq("is_main", true);
   if (cleared.error) return dbFailure(cleared.error);
-  const { error } = await supabase.from("goals").update({ is_main: true }).eq("id", id).eq("user_id", userId).eq("status", "active");
+  const { error } = await supabase.from("goals").update({ is_main: true }).eq("id", id).eq("user_id", userId);
   return error ? dbFailure(error) : done();
 }
 
