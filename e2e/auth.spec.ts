@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { fillAndSubmit, password, publicClient } from "./helpers";
+import { expectNoncedScripts, fillAndSubmit, password, publicClient } from "./helpers";
 
 test("register, log out, log in", async ({ page }) => {
   const username = `haider-${Math.random().toString(36).slice(2, 8)}`;
@@ -20,13 +20,9 @@ test("register, log out, log in", async ({ page }) => {
   await expect(page).toHaveURL(/\/onboarding\/1$/);
 });
 
-for (const path of ["/inloggen", "/registreren"]) {
-  test(`every script tag on ${path} has a nonce`, async ({ request }) => {
-    const html = await (await request.get(path)).text();
-    const tags = html.match(/<script\b[^>]*>/g) ?? [];
-    expect(tags.length).toBeGreaterThan(0);
-    for (const tag of tags) expect(tag).toMatch(/\snonce="[^"]+"/);
-  });
+// The logged-in pages are checked in a11y.spec.ts, which already has a signed-in context.
+for (const path of ["/inloggen", "/registreren", "/privacy"]) {
+  test(`every script tag on ${path} has a nonce`, ({ request }) => expectNoncedScripts(request, path));
 }
 
 // Served by the second web server in playwright.config.ts (SIGNUP_MODE=closed).

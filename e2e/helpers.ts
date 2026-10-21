@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type APIRequestContext, type Page } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 
 export const password = "een-lang-wachtwoord";
@@ -115,4 +115,13 @@ export async function ensureAdmin() {
     email_confirm: true,
   });
   if (error && !(await admin.auth.admin.getUserById(id)).data.user) throw error;
+}
+
+// Every <script> tag of the HTML the server sends for this path carries a nonce (the proxy's CSP only allows nonced scripts).
+// With a page's `request` the cookies of its context go along, so this also checks a logged-in request.
+export async function expectNoncedScripts(request: APIRequestContext, path: string) {
+  const html = await (await request.get(path)).text();
+  const tags = html.match(/<script\b[^>]*>/g) ?? [];
+  expect(tags.length, `scripts on ${path}`).toBeGreaterThan(0);
+  for (const tag of tags) expect(tag, `a script on ${path}`).toMatch(/\snonce="[^"]+"/);
 }

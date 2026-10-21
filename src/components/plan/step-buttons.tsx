@@ -14,8 +14,10 @@ export function StepButtons({ step }: { step: PlanStep }) {
   const [pending, startTransition] = useTransition();
   const close = (how: "done" | "dismissed") =>
     startTransition(async () => {
-      const result: ActionResult = await (step.source === "rule" ? closeRuleItemAction(step.key, how) : toggleChecklistItemAction(step.key));
-      if (result.ok) toast.success(how === "done" ? "Afgevinkt." : "Weggeklikt.");
+      // A dropped connection throws, and a throw in a transition would show the error card of the whole screen.
+      const result: ActionResult | null = await (step.source === "rule" ? closeRuleItemAction(step.key, how) : toggleChecklistItemAction(step.key)).catch(() => null);
+      if (!result) toast.error("Opslaan lukte niet. Probeer het opnieuw.");
+      else if (result.ok) toast.success(how === "done" ? "Afgevinkt." : "Weggeklikt.");
       else toast.error(result.error);
     });
   return (

@@ -16,7 +16,8 @@ export function AddStep() {
     event.preventDefault();
     if (!title.trim()) return setError("Vul een titel in.");
     startTransition(async () => {
-      const result = await addChecklistItemAction(title);
+      const result = await addChecklistItemAction(title).catch(() => null); // a dropped connection throws
+      if (!result) return setError("Opslaan lukte niet. Probeer het opnieuw.");
       if (!result.ok) return setError(result.error);
       setError(undefined);
       setTitle("");
