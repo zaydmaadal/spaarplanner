@@ -24,6 +24,7 @@ export type Dashboard = {
   progress: number;
   budget: Budget;
   savingsCents: Cents;
+  savingsIsProposal: boolean; // true when savingsCents is the 20 % suggestion (spec 5.1), not the plan amount or the room
   warnings: BudgetWarning[];
   goals: GoalView[];
   mainGoal: GoalView | null;
@@ -41,8 +42,8 @@ export function buildDashboard(data: UserData, today: ISODate): Dashboard {
   const next = nextPayday(rule, today);
   const budget = monthlyBudget(incomes, lines, plan.incomeMode);
   // Spec 5.1 standard proposal: with no budget lines and no plan amount the room is just the income, so propose 20 % instead.
-  const savingsCents =
-    plan.monthlySavingsCents === null && lines.length === 0 ? suggestedSavings(budget.incomeCents) : savingsPerMonth(plan, budget.roomCents);
+  const savingsIsProposal = plan.monthlySavingsCents === null && lines.length === 0;
+  const savingsCents = savingsIsProposal ? suggestedSavings(budget.incomeCents) : savingsPerMonth(plan, budget.roomCents);
   const goals = data.goals.filter((g) => !g.archived);
   const deposited = Object.values(depositsThisPeriod).reduce((a, b) => a + b, 0);
   const booked = (g: Goal) => depositsThisPeriod[g.id] ?? 0;
@@ -72,11 +73,11 @@ export function buildDashboard(data: UserData, today: ISODate): Dashboard {
     };
   });
   const depositPrefill = Object.fromEntries(views.map((g) => [g.id, Math.max(0, g.allocatedCents - booked(g))]));
-  const depositDueCents = Math.max(0, views.reduce((sum, g) => sum + g.allocatedCents, 0) - deposited);
+  const depositDueCents = Object.values(depositPrefill).reduce((a, b) => a + b, 0); // deposits on archived goals were taken off the savings above
 
   const fund = views.find((g) => g.kind === "emergency");
   const mainGoal = views.find((g) => g.isMain) ?? fund ?? null;
-  const waits = mainGoal && fund && mainGoal !== fund && !mainGoal.isFull && mainGoal.allocatedCents === 0 && !fund.isFull;
+  const waits = mainGoal && fund && mainGoal !== fund && !mainGoal.isFull && mainGoal.allocatedCents === 0 && !fund.isFull && fund.allocatedCents > 0;
 
   const warnings = budgetWarnings(plan, budget);
   const rules = evaluateRules({
@@ -98,6 +99,7 @@ export function buildDashboard(data: UserData, today: ISODate): Dashboard {
     progress: periodProgress(period, today),
     budget,
     savingsCents,
+    savingsIsProposal,
     warnings,
     goals: views,
     mainGoal,

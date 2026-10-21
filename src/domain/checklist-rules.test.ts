@@ -59,15 +59,18 @@ describe("checklist rules (spec 5.8)", () => {
     expect(rule(over, "over_target")).toMatchObject({ urgency: "week", certainty: { level: 4 } });
   });
 
-  test("standing order is always on offer; with a clean context it is the only item", () => {
-    const items = evaluateRules(ctx({}));
-    expect(keys(items)).toContain("standing_order");
+  test("standing order is on offer when there is a payday; with a clean context it is the only item", () => {
+    const items = evaluateRules(ctx({ nextPayday: "2026-10-29" }));
     expect(keys(items)).toEqual(["standing_order"]);
     expect(rule(items, "standing_order")).toMatchObject({
       title: "Zet een automatische overschrijving klaar op je loondag",
       urgency: "month",
       certainty: { level: 4 },
     });
+  });
+
+  test("no standing order without a payday (the title says \"op je loondag\")", () => {
+    expect(keys(evaluateRules(ctx({ nextPayday: null })))).not.toContain("standing_order");
   });
 
   test("goal_unreachable: only for niet_haalbaar, with the extra amount", () => {
@@ -106,7 +109,7 @@ describe("checklist rules (spec 5.8)", () => {
     expect(keys(evaluateRules(ctx({ incomes: [income({ kind: "student" })] })))).toContain("student_hours");
     expect(keys(evaluateRules(ctx({ incomes: [income({ kind: "side" })] })))).toContain("side_income_tax");
     expect(keys(evaluateRules(ctx({ prefs: { noInterestSavings: true } })))).toContain("no_interest");
-    expect(keys(evaluateRules(ctx({ incomes: [income({ kind: "salary" })] })))).toEqual(["standing_order"]);
+    expect(keys(evaluateRules(ctx({ incomes: [income({ kind: "salary" })] })))).toEqual([]);
   });
 
   test("income rules appear once, and not for inactive income", () => {

@@ -12,11 +12,11 @@ const bl = (id: string, kind: BudgetLine["kind"], category: string, name: string
   name,
   isEstimate,
 });
-const base = { depositsThisPeriod: {}, closedRuleKeys: [] };
+const base = (): Pick<UserData, "depositsThisPeriod" | "closedRuleKeys"> => ({ depositsThisPeriod: {}, closedRuleKeys: [] }); // fresh objects per persona
 
 // First job, € 1.000 to mama, emergency fund first, long goals, savings without interest.
 export const zayd: UserData = {
-  ...base,
+  ...base(),
   profile: profile("Zayd", { firstJob: true, noInterestSavings: true }),
   plan: plan(),
   incomes: [income({ id: "loon", amountCents: 220000, paydayRule: { type: "last_working_day" } })],
@@ -32,7 +32,7 @@ export const zayd: UserData = {
 
 // First job, no system yet: nothing but income, so the standard proposal applies.
 export const haider: UserData = {
-  ...base,
+  ...base(),
   profile: profile("Haider", { firstJob: true }),
   plan: plan(),
   incomes: [income({ id: "loon", amountCents: 215000, paydayRule: { type: "day_of_month", day: 29, weekend: "before" } })],
@@ -45,7 +45,7 @@ export const haider: UserData = {
 
 // Variable weekly pay, counted carefully; "stage vinden" is a checklist item, not a goal.
 export const student: UserData = {
-  ...base,
+  ...base(),
   profile: profile("Student"),
   plan: plan({ incomeMode: "careful" }),
   incomes: [
@@ -70,7 +70,7 @@ export const student: UserData = {
 
 // Two salaries, a loan, studies of the children and a pension pot.
 export const gezin: UserData = {
-  ...base,
+  ...base(),
   profile: profile("Gezin"),
   plan: plan({ monthlySavingsCents: 50000 }),
   incomes: [
@@ -91,7 +91,7 @@ export const gezin: UserData = {
 
 // Weekly allowance, no payday, a driving licence to save for.
 export const tiener: UserData = {
-  ...base,
+  ...base(),
   profile: profile("Tiener"),
   plan: plan(),
   incomes: [income({ id: "zakgeld", name: "Zakgeld", kind: "allowance", frequency: "weekly", amountCents: 1500, paydayRule: { type: "irregular" } })],
@@ -104,7 +104,7 @@ export const tiener: UserData = {
 
 // Salary plus a variable side income, with a tax pot that has no deadline.
 export const freelancer: UserData = {
-  ...base,
+  ...base(),
   profile: profile("Freelancer"),
   plan: plan({ incomeMode: "careful" }),
   incomes: [

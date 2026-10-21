@@ -40,7 +40,7 @@ export function evaluateRules(ctx: RuleContext): RuleItem[] {
       add(w.key, `Je wil ${formatEUR(w.wantCents)} sparen maar houdt ${formatEUR(w.roomCents)} over`, "week", 4, "Berekend uit jouw inkomen en uitgaven");
     }
   }
-  add("standing_order", "Zet een automatische overschrijving klaar op je loondag", "month", 4, "Berekend uit jouw loondag");
+  if (nextPayday) add("standing_order", "Zet een automatische overschrijving klaar op je loondag", "month", 4, "Berekend uit jouw loondag");
   for (const g of goals) {
     if (g.status === "niet_haalbaar") {
       const title =

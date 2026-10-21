@@ -7,6 +7,7 @@ import { emergency, goal, income } from "./test-helpers";
 const today = "2026-10-20";
 const sum = (r: Record<string, number>) => Object.values(r).reduce((a, b) => a + b, 0);
 const keys = (d: ReturnType<typeof buildDashboard>) => d.rules.map((r) => r.key);
+const depositTitle = (d: ReturnType<typeof buildDashboard>) => d.rules.find((r) => r.key.startsWith("deposit:"))?.title;
 
 describe("buildDashboard: personas (spec 3)", () => {
   test("Haider: standard savings proposal when there are no budget lines and no plan amount", () => {
@@ -15,6 +16,7 @@ describe("buildDashboard: personas (spec 3)", () => {
     expect(h.daysToPayday).toBe(9);
     expect(h.savingsCents).toBe(43000);
     expect(sum(h.depositPrefill)).toBe(43000);
+    expect(h.savingsIsProposal).toBe(true);
     expect(h.mainGoal?.kind).toBe("trip");
   });
 
@@ -22,6 +24,7 @@ describe("buildDashboard: personas (spec 3)", () => {
     const d = buildDashboard(zayd, today);
     expect(horizonFor(zayd.goals, d.period.month)).toBeGreaterThan(120);
     expect(d.savingsCents).toBe(100000); // follows the room: 2.200 - 1.000 - 200
+    expect(d.savingsIsProposal).toBe(false);
     expect(d.mainGoal?.name).toBe("Hijra");
     expect(d.mainGoalWaitsFor).toEqual({ goalName: "Noodfonds", fill: { year: 2026, month: 12 } });
     expect(keys(d)).toContain("no_interest");
@@ -35,6 +38,12 @@ describe("buildDashboard: personas (spec 3)", () => {
       expect(d.period.start).toBe("2026-10-01");
     }
     expect(keys(buildDashboard(student, today))).toContain("student_hours");
+    for (const p of [student, tiener]) expect(keys(buildDashboard(p, today))).not.toContain("standing_order");
+  });
+
+  test("personas do not share mutable defaults", () => {
+    expect(zayd.closedRuleKeys).not.toBe(haider.closedRuleKeys);
+    expect(zayd.depositsThisPeriod).not.toBe(haider.depositsThisPeriod);
   });
 
   test("Gezin: goals with a status, and no budget warning", () => {
@@ -42,6 +51,7 @@ describe("buildDashboard: personas (spec 3)", () => {
     expect(d.goals.length).toBeGreaterThan(0);
     expect(d.warnings).toEqual([]);
     expect(d.goals.find((g) => g.name === "Studiekosten")?.status).not.toBeNull();
+    expect(d.savingsIsProposal).toBe(false); // plan amount and budget lines
   });
 
   test("Freelancer: tax rule and a tax pot without deadline", () => {
@@ -75,6 +85,7 @@ describe("buildDashboard: assembly", () => {
   test("a plan amount wins over the proposal, even without budget lines", () => {
     const d = buildDashboard({ ...haider, plan: { ...haider.plan, monthlySavingsCents: 20000 } }, today);
     expect(d.savingsCents).toBe(20000);
+    expect(d.savingsIsProposal).toBe(false);
     expect(d.warnings).toEqual([]);
   });
 
@@ -84,11 +95,24 @@ describe("buildDashboard: assembly", () => {
     expect(d.depositPrefill.nood).toBe(33000);
     expect(sum(d.depositPrefill)).toBe(33000);
     expect(d.goals.find((g) => g.id === "nood")?.allocatedCents).toBe(43000);
-    expect(keys(d)).toContain("deposit:2026-09-29");
+    expect(depositTitle(d)).toBe("Zet \u20ac\u00a0330,00 opzij op 29 oktober");
     const all = haider.goals.map((g) => (g.id === "nood" ? { ...g, balanceCents: 43000 } : g));
     const done = buildDashboard({ ...haider, goals: all, depositsThisPeriod: { nood: 43000 } }, today);
     expect(sum(done.depositPrefill)).toBe(0);
     expect(keys(done).some((k) => k.startsWith("deposit:"))).toBe(false);
+  });
+
+  test("deposits on an archived goal count as saved, and the deposit rule agrees with the prefill", () => {
+    const goals = [...haider.goals, goal("oud", 50000, { archived: true, balance: 10000 })];
+    const d = buildDashboard({ ...haider, goals, depositsThisPeriod: { oud: 10000 } }, today);
+    expect(sum(d.depositPrefill)).toBe(33000);
+    expect(depositTitle(d)).toBe("Zet \u20ac\u00a0330,00 opzij op 29 oktober");
+  });
+
+  test("the main goal does not wait for an emergency fund that gets nothing", () => {
+    const none = buildDashboard({ ...haider, plan: { ...haider.plan, monthlySavingsCents: 0 } }, today);
+    expect(none.savingsCents).toBe(0);
+    expect(none.mainGoalWaitsFor).toBeNull();
   });
 
   test("main goal gets money when the emergency share is below 100 %", () => {
