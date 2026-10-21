@@ -129,7 +129,7 @@ Money is integer cents. Show it only through `formatEUR` (`src/domain/money.ts`)
 | `PalettePicker` | `value`, `onChange`; each card shows its own palette; choosing sets `data-palette` on `<html>` at once, the parent saves it |
 | `src/components/ui/*` | shadcn (new-york, Radix) with the tokens mapped; buttons and inputs are 44 px high, close buttons are 44 px. `Slider` hands `aria-labelledby` (or `aria-label`) and `aria-valuetext` to its thumb: label it, show its value next to it and give the value in words |
 
-`src/app/(app)` holds the screens that need a finished onboarding (`requireOnboarded()`). Onboarding and `/wachtwoord-wijzigen` stay outside it, or the proxy's must-change redirect would loop.
+`src/app/(app)` holds the screens that need a finished onboarding (`requireOnboarded()`). Onboarding and `/wachtwoord-wijzigen` stay outside it, or the proxy's must-change redirect would loop. Its `loading.tsx` (grey blocks, no shimmer) and `error.tsx` (a card with "Opnieuw proberen", which calls `retry()` and never shows the error) are the loading and error state of every screen in it (spec 8.8).
 
 ## Skills
 

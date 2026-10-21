@@ -23,5 +23,5 @@ describe("the privacy page (spec 12)", () => {
     expect(html).toMatch(/<a[^>]*href="\/meer\/account"/);
   });
 
-  test("uses no em dash", () => expect(html).not.toContain("—"));
+  test("uses no em dash", () => expect(html).not.toContain(String.fromCharCode(0x2014)));
 });

@@ -13,7 +13,7 @@ describe("the error state of the app screens (spec 8.8)", () => {
     expect(html).toMatch(/<a[^>]*href="\/overzicht"[^>]*>Naar je overzicht<\/a>/);
     expect(html).not.toContain("geheime");
     expect(html).not.toContain("digest");
-    expect(html).not.toContain("—");
+    expect(html).not.toContain(String.fromCharCode(0x2014));
   });
 });
 
