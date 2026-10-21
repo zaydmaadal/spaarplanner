@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { addDays, addMonths, daysBetween, formatMonthNl, monthsInclusive, todayInTimeZone, weekdayOf } from "./dates";
+import { addDays, addMonths, daysBetween, formatMonthNl, monthsInclusive, toYearMonth, todayInTimeZone, weekdayOf } from "./dates";
 import { currentPeriod, nextPayday, paydayInMonth, periodProgress, primaryPaydayRule } from "./payday";
 import type { Income, PaydayRule } from "./types";
 
@@ -26,6 +26,7 @@ describe("dates", () => {
   test("todayInTimeZone", () => {
     expect(todayInTimeZone("Europe/Brussels", new Date("2026-10-24T23:30:00Z"))).toBe("2026-10-25");
     expect(todayInTimeZone("Europe/Brussels", new Date("2026-03-29T00:30:00Z"))).toBe("2026-03-29");
+    expect(todayInTimeZone("Europe/Brussels", new Date("2026-03-28T23:30:00Z"))).toBe("2026-03-29"); // UTC date is still the 28th
     expect(todayInTimeZone("Not/AZone", new Date("2026-10-24T23:30:00Z"))).toBe("2026-10-25");
   });
 });
@@ -39,6 +40,23 @@ describe("paydayInMonth", () => {
     expect(paydayInMonth({ type: "day_of_month", day: 3, weekend: "before" }, { year: 2026, month: 10 })).toBe("2026-10-02");
     expect(paydayInMonth({ type: "last_working_day" }, { year: 2026, month: 10 })).toBe("2026-10-30");
     expect(paydayInMonth(d29, { year: 2026, month: 10 })).toBe("2026-10-29");
+  });
+  test("every month has exactly one payday: a weekday, inside its own month, strictly ascending", () => {
+    const rules: PaydayRule[] = [{ type: "last_working_day" }];
+    for (let day = 1; day <= 31; day++) for (const weekend of ["before", "after"] as const) rules.push({ type: "day_of_month", day, weekend });
+    for (const rule of rules) {
+      let prev = "";
+      for (let year = 2026; year <= 2030; year++) {
+        for (let month = 1; month <= 12; month++) {
+          const payday = paydayInMonth(rule, { year, month });
+          expect(payday, JSON.stringify([rule, year, month])).not.toBeNull();
+          expect(toYearMonth(payday!), JSON.stringify([rule, year, month])).toEqual({ year, month });
+          expect(weekdayOf(payday!), JSON.stringify([rule, year, month])).toBeLessThanOrEqual(5);
+          expect(payday! > prev, JSON.stringify([rule, year, month])).toBe(true);
+          prev = payday!;
+        }
+      }
+    }
   });
   test("irregular and weekday rules have no monthly payday", () => {
     expect(paydayInMonth({ type: "irregular" }, { year: 2026, month: 10 })).toBeNull();
@@ -66,11 +84,11 @@ describe("currentPeriod and periodProgress", () => {
   test("without a payday it is the calendar month", () => {
     expect(currentPeriod(null, "2026-10-20")).toEqual({ start: "2026-10-01", end: "2026-10-31", month: { year: 2026, month: 10 } });
   });
-  test("a 'before' payday that lands in the previous month still anchors the period", () => {
+  test("a 'before' payday never leaves its month, so a period month is unique", () => {
     const d1 = { type: "day_of_month", day: 1, weekend: "before" } as const;
-    expect(paydayInMonth(d1, { year: 2026, month: 3 })).toBe("2026-02-27"); // 1 mar is sunday
-    expect(currentPeriod(d1, "2026-02-28")).toEqual({ start: "2026-02-27", end: "2026-03-31", month: { year: 2026, month: 2 } });
-    expect(nextPayday(d1, "2026-02-28")).toBe("2026-04-01");
+    expect(paydayInMonth(d1, { year: 2026, month: 3 })).toBe("2026-03-02"); // 1 mar is sunday, friday is in february
+    expect(currentPeriod(d1, "2026-03-15")).toEqual({ start: "2026-03-02", end: "2026-03-31", month: { year: 2026, month: 3 } });
+    expect(nextPayday(d1, "2026-02-28")).toBe("2026-03-02");
   });
   test("progress is the share of days elapsed", () => {
     expect(periodProgress(currentPeriod(d29, "2026-10-20"), "2026-10-20")).toBeCloseTo(0.7);

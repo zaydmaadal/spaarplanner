@@ -13,15 +13,15 @@ export function paydayInMonth(rule: PaydayRule, ym: YearMonth): ISODate | null {
   const day = rule.type === "last_working_day" ? last : Math.min(rule.day, last);
   const wd = weekdayOf(iso(ym, day));
   const after = rule.type === "day_of_month" && rule.weekend === "after";
-  let shift = wd < 6 ? 0 : after ? 8 - wd : 5 - wd; // to the next monday or the previous friday
-  if (after && day + shift > last) shift = 5 - wd; // "after" never leaves the month
-  return addDays(iso(ym, day), shift);
+  // To the next monday or the previous friday; the other direction when the first would leave the month.
+  const [prefer, other] = wd < 6 ? [0, 0] : after ? [8 - wd, 5 - wd] : [5 - wd, 8 - wd];
+  const target = day + prefer;
+  return iso(ym, target >= 1 && target <= last ? target : day + other);
 }
 
-// Ascending paydays of the months around today's month. A "before" payday can fall in the previous
-// month (day 1 on a sunday), so the next month's payday may already be behind today.
+// Ascending paydays of the previous, current and next month; each month has exactly one.
 function paydaysAround(rule: PaydayRule, ym: YearMonth): ISODate[] {
-  return [-1, 0, 1, 2]
+  return [-1, 0, 1]
     .map((n) => paydayInMonth(rule, addMonths(ym, n)))
     .filter((p): p is ISODate => p !== null);
 }
