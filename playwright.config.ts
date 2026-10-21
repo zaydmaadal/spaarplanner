@@ -11,7 +11,11 @@ const server = (port: number, signupMode: string) => ({
 
 export default defineConfig({
   testDir: "e2e",
-  use: { baseURL: "http://localhost:3000" },
+  globalSetup: "./e2e/global-setup.ts",
+  forbidOnly: !!process.env.CI,
+  // CI uploads playwright-report/ and test-results/ (traces) when a run fails.
+  reporter: process.env.CI ? [["dot"], ["html", { open: "never" }]] : "list",
+  use: { baseURL: "http://localhost:3000", trace: "retain-on-failure" },
   projects: [
     { name: "iPhone 14", use: { ...devices["iPhone 14"] } },
     { name: "Pixel 7", use: { ...devices["Pixel 7"] } },

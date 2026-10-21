@@ -63,9 +63,19 @@ jobs:
             echo "VAPID_PRIVATE_KEY=${vapid#* }"
             echo "VAPID_SUBJECT=mailto:test@example.com"
             echo "CRON_SECRET=$(openssl rand -hex 32)"
-            echo "ADMIN_USER_IDS="
+            # The admin of /beheer: e2e/global-setup.ts creates this user with this id.
+            echo "ADMIN_USER_IDS=00000000-0000-4000-8000-000000000001"
+            # The e2e run creates more than 5 users in an hour.
+            echo "SIGNUP_HOURLY_CAP=1000"
           } >> "$GITHUB_ENV"
       - run: npm run build
       - run: npx playwright install --with-deps chromium webkit
       # playwright.config.ts starts two servers from this one build: SIGNUP_MODE=open on :3000, closed on :3001.
       - run: npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright
+          path: |
+            playwright-report/
+            test-results/

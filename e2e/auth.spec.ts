@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { fillAndSubmit, password } from "./helpers";
+import { fillAndSubmit, password, publicClient } from "./helpers";
 
 test("register, log out, log in", async ({ page }) => {
   const username = `haider-${Math.random().toString(36).slice(2, 8)}`;
@@ -8,7 +8,7 @@ test("register, log out, log in", async ({ page }) => {
   await fillAndSubmit(page, username, password, "Account maken");
   await expect(page).toHaveURL(/\/onboarding\/1$/);
 
-  // The (app) shell with its logout button comes later; this page already has one.
+  // The (app) shell with its logout button comes later; the change-password page already has one.
   await page.goto("/wachtwoord-wijzigen");
   await page.getByRole("button", { name: "Uitloggen" }).click();
   await expect(page).toHaveURL(/\/inloggen$/);
@@ -38,4 +38,13 @@ test.describe("signup closed", () => {
     await expect(page.getByText("Registreren is nu gesloten.")).toBeVisible();
     await expect(page.getByRole("button", { name: "Account maken" })).toHaveCount(0);
   });
+});
+
+// The register form is not the only way in: the Auth API itself must refuse sign-ups too.
+test("signing up straight through the Auth API is switched off", async () => {
+  const { error } = await publicClient().auth.signUp({
+    email: `nep-${Math.random().toString(36).slice(2, 8)}@u.zaydmaadal.site`,
+    password,
+  });
+  expect(error?.code).toBe("signup_disabled");
 });

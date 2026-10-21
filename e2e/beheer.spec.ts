@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { createUser, fillAndSubmit, password } from "./helpers";
 
-// ADMIN_USER_IDS is empty in CI, so every signed-in user is a non-admin.
+// ADMIN_USER_IDS holds only the fixed admin of the recovery test, so this random user is a non-admin.
 test("a signed-in non-admin gets the same 404 on /beheer as on any unknown path", async ({ page }) => {
   const username = `lezer-${Math.random().toString(36).slice(2, 8)}`;
   await createUser(username, password);
