@@ -24,9 +24,9 @@ describe("the account deletion page", () => {
     expect(html).not.toContain("Annuleren");
   });
 
-  test("offers the export first as a plain link (the response itself forces the download), and keeps the Meer tab active", () => {
+  test("offers the export first as a plain download link (WebKit needs the attribute), and keeps the Meer tab active", () => {
     expect(html).toMatch(/<a[^>]*href="\/api\/export"/);
-    expect(html).not.toMatch(/<a[^>]*href="\/api\/export"[^>]*download/);
+    expect(html).toMatch(/<a[^>]*href="\/api\/export"[^>]*download/); // WebKit only downloads with the attribute
     expect(html).toMatch(/href="\/meer"[^>]*aria-current="page"|aria-current="page"[^>]*href="\/meer"/);
   });
 });
