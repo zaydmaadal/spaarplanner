@@ -12,13 +12,14 @@ const eslintConfig = defineConfig([
         "error",
         {
           patterns: [
-            "@/data/*",
-            "@/app/*",
-            "@/components/*",
-            "@/lib/*",
+            "**/data",
+            "**/app",
+            "**/components",
+            "**/lib",
             "next",
             "next/*",
             "react",
+            "react-dom",
             "@supabase/*",
           ],
         },

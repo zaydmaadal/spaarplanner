@@ -20,6 +20,8 @@ Plan: `docs/superpowers/plans/2026-10-21-spaarplanner-fase-1.md`
   (`nl-BE`, 2 decimals, U+00A0 after the euro sign).
 - Copy: Dutch, informal "je", sentence case, buttons name their action.
   Never use the em dash character (U+2014) in copy, code comments or docs.
+- Next.js 16 differs from older versions: read the bundled docs in
+  `node_modules/next/dist/docs/` before writing Next.js code.
 - Smallest change that works (ponytail): no speculative config,
   options or abstractions. Deleting beats adding.
 
