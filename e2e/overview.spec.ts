@@ -95,8 +95,8 @@ test("the simulator moves the fill month, keeps trials to itself and stores only
   const { data: profile } = await admin.from("profiles").select("id").eq("username", username).single();
   expect(profile).not.toBeNull();
   const { data: plan } = await admin.from("plans").select("*").eq("user_id", profile?.id ?? "").single();
-  // The extra income was a trial; the payment mode was not touched.
-  expect(plan).toMatchObject({ monthly_savings_cents: 200000, income_mode: "normal" });
+  // The extra income was a trial; the payment mode was not touched, so it keeps the default "careful".
+  expect(plan).toMatchObject({ monthly_savings_cents: 200000, income_mode: "careful" });
 
   // What is stored is what the sliders show, so there is nothing left to store.
   await expect(apply).toBeDisabled();
