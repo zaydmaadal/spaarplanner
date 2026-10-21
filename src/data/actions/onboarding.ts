@@ -7,6 +7,10 @@ import { suggestedEmergencyTarget } from "@/domain/budget";
 import { todayInTimeZone } from "@/domain/dates";
 import { dbFailure, done, fail, invalid, SOMETHING_WRONG } from "./shared";
 
+// done() would refresh the layout, which re-renders the onboarding page; that page redirects once onboarding is finished,
+// and Next would then turn the redirect into the answer of this action. The caller navigates itself, so nothing is refreshed.
+const FINISHED: ActionResult = { ok: true, data: undefined };
+
 // Only forward: going back a step and reloading still resumes at the furthest step reached.
 export async function setOnboardingStepAction(step: number): Promise<ActionResult> {
   const userId = await requireUserId();
@@ -25,6 +29,8 @@ const completeSchema = z.object({
 
 // Spec 8.2, after step 8. Safe to run twice: a finished onboarding answers ok, an existing fund is reused and the start
 // balance has the fund's id as client_ref, so it is booked once. The profile is updated last, so a failure can be retried.
+// shortcut: the writes are not one transaction, so a failure halfway leaves a fund without its start balance until the
+// retry; move it into a database function if retries turn out to be painful.
 export async function completeOnboardingAction(input: z.input<typeof completeSchema>): Promise<ActionResult> {
   const userId = await requireUserId();
   const parsed = completeSchema.safeParse(input);
@@ -38,7 +44,7 @@ export async function completeOnboardingAction(input: z.input<typeof completeSch
     supabase.from("budget_lines").select("amount_cents").eq("user_id", userId),
   ]);
   if (!profile.data || !goals.data || !lines.data) return dbFailure(profile.error ?? goals.error ?? lines.error ?? {});
-  if (profile.data.onboarding_completed_at) return done();
+  if (profile.data.onboarding_completed_at) return FINISHED;
 
   let fund = goals.data.find((g) => g.kind === "emergency");
   if (!fund) {
@@ -62,7 +68,8 @@ export async function completeOnboardingAction(input: z.input<typeof completeSch
     } else return dbFailure(created.error ?? {});
   }
 
-  // Savings above the target are not booked: the fund is full, the rest is for the goals (spec 8.2 step 6).
+  // shortcut: savings above the target are not booked (spec 8.2 step 6 lets the user spread them over goals); add a
+  // transaction per goal when users ask for it.
   const deposit = Math.min(startBalanceCents, fund.target_cents);
   if (deposit > 0) {
     const { error } = await supabase.from("transactions").upsert(
@@ -75,5 +82,5 @@ export async function completeOnboardingAction(input: z.input<typeof completeSch
   const plan = await supabase.from("plans").update({ emergency_share_pct: emergencySharePct }).eq("user_id", userId);
   if (plan.error) return dbFailure(plan.error);
   const { error } = await supabase.from("profiles").update({ onboarding_step: 8, onboarding_completed_at: new Date().toISOString() }).eq("id", userId);
-  return error ? dbFailure(error) : done();
+  return error ? dbFailure(error) : FINISHED;
 }

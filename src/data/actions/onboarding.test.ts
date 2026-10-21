@@ -109,13 +109,15 @@ describe("completeOnboardingAction", () => {
     expect(last.table).toBe("profiles");
     expect(args(last, "update")![0]).toEqual({ onboarding_step: 8, onboarding_completed_at: expect.stringMatching(/^\d{4}-\d\d-\d\dT/) });
     expect(last.ops).toContainEqual(["eq", ["id", "user-1"]]);
-    expect(m.revalidatePath).toHaveBeenCalledWith("/", "layout");
+    // Refreshing would re-render /onboarding/8, which redirects now; the screen navigates itself.
+    expect(m.revalidatePath).not.toHaveBeenCalled();
   });
 
   it("is idempotent: a finished onboarding answers ok and writes nothing", async () => {
     const calls = setup({ completed: true });
     expect(await completeOnboardingAction(finish)).toMatchObject({ ok: true });
     expect(calls.filter((c) => ["insert", "update", "upsert"].some((op) => has(c, op)))).toHaveLength(0);
+    expect(m.revalidatePath).not.toHaveBeenCalled();
   });
 
   it("reuses an existing emergency fund instead of failing on the unique index, and books against it", async () => {

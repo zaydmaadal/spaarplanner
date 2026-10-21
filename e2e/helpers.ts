@@ -30,7 +30,8 @@ const client = (key: string) =>
   createClient(need("NEXT_PUBLIC_SUPABASE_URL"), key, { auth: { persistSession: false, autoRefreshToken: false } });
 // A visitor's view of the Auth API: the publishable key and no stored session.
 export const publicClient = () => client(need("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"));
-const adminClient = () => client(need("SUPABASE_SECRET_KEY"));
+// Service role: reads what a test must check in the database; never for the steps a user takes.
+export const adminClient = () => client(need("SUPABASE_SECRET_KEY"));
 
 const emailOf = (username: string) => `${username}@${need("NEXT_PUBLIC_AUTH_EMAIL_DOMAIN")}`;
 

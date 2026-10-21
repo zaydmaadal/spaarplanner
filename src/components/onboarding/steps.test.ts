@@ -142,7 +142,7 @@ describe("step 6", () => {
 describe("step 7", () => {
   it("offers the example goals with their estimates and the checklist card", () => {
     const page = html(h(Step7, base7));
-    for (const text of ["Reis", "€\u00a01.500,00", "Rijbewijs", "Laptop", "€\u00a01.000,00", "Auto", "€\u00a08.000,00", "Huwelijk", "€\u00a010.000,00", "Hajj", "€\u00a07.000,00", "Stage vinden", "Iets anders toevoegen"]) {
+    for (const text of ["Reis", "€\u00a01.500,00", "Rijbewijs", "Laptop", "€\u00a01.000,00", "Auto", "€\u00a08.000,00", "Huwelijk", "€\u00a010.000,00", "Hajj", "€\u00a07.000,00", "Stage vinden", "Iets anders"]) {
       expect(page).toContain(text);
     }
     expect(page).not.toContain("Noodfonds eerst helemaal vullen");

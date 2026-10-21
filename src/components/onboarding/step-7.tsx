@@ -2,7 +2,6 @@
 
 import { useId, useState } from "react";
 import { Choice, Item, MoneyField, TextField, Toggles } from "@/components/form-fields";
-import { Button } from "@/components/ui/button";
 import { addChecklistItemAction } from "@/data/actions/checklist";
 import { archiveGoalAction, saveGoalAction, setMainGoalAction } from "@/data/actions/goals";
 import { savePlanAction } from "@/data/actions/plan";
@@ -130,6 +129,7 @@ export function Step7(props: {
           if (row) pots.remove(row.key);
           else pots.add({ preset: id, kind: p.kind, name: p.name, amount: toEuroInput(p.cents), estimate: true, deadline: "", weight: 1, isMain: false });
         }}
+        more={{ label: "Iets anders", onClick: () => pots.add({ kind: "other", name: "", amount: "", estimate: false, deadline: "", weight: 1, isMain: false }) }}
       />
       <Toggles legend="Iets om te regelen" items={[{ id: "stage", label: STAGE, hint: stageAdded ? "staat op je checklist" : undefined }]} on={() => stage} onToggle={() => setStage((on) => (stageAdded ? true : !on))} />
       {pots.rows.map((row) => (
@@ -154,9 +154,6 @@ export function Step7(props: {
           />
         </Item>
       ))}
-      <Button type="button" variant="outline" onClick={() => pots.add({ kind: "other", name: "", amount: "", estimate: false, deadline: "", weight: 1, isMain: false })}>
-        Iets anders toevoegen
-      </Button>
       {anyDeadline && (
         <div className="flex flex-col gap-2">
           <Choice

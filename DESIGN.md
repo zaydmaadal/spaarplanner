@@ -121,6 +121,9 @@ Money is integer cents. Show it only through `formatEUR` (`src/domain/money.ts`)
 | `ProgressBar` | `value` 0 to 1 (clamped), `label` (accessible name), `color?` as `var(--color-...)`; show the amounts next to it |
 | `StackedBar` | `segments` of `{ label, cents, color }`; the legend with label and amount carries the meaning |
 | `BottomNav` | `active`; every screen renders it with its own tab. The middle button "Storten" goes to `/storten`. Content needs bottom padding, which `src/app/(app)/layout.tsx` provides |
+| `form-fields` | `TextField`, `MoneyField` (fixed euro prefix, `inputmode="decimal"`), `SelectField`, `TextareaField`, `CheckField`, `Choice` (one out of a few), `Toggles` (switch items on or off), `Item` (a row of a list form with its remove button). Label always visible, hint and error tied with `aria-describedby`, ids from `useId` |
+| `StepShell` | `src/components/onboarding`: one onboarding step, or the same form on its own page with `mode="edit"` (no progress, no "Overslaan", the button says "Opslaan") |
+| `InstallGuide` | how to put the app on the home screen, iOS and Android apart |
 | `PalettePicker` | `value`, `onChange`; each card shows its own palette; choosing sets `data-palette` on `<html>` at once, the parent saves it |
 | `src/components/ui/*` | shadcn (new-york, Radix) with the tokens mapped; buttons and inputs are 44 px high, close buttons are 44 px |
 

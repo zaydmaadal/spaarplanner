@@ -1,6 +1,6 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { Check, Plus } from "lucide-react";
 import { useId, type ComponentProps, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -156,8 +156,21 @@ export function Choice<T extends string>({
   );
 }
 
-// Buttons that switch an item on or off, e.g. the usual fixed costs. `on` tells which are on.
-export function Toggles({ legend, items, on, onToggle }: { legend: string; items: { id: string; label: string; hint?: string }[]; on: (id: string) => boolean; onToggle: (id: string) => void }) {
+// Buttons that switch an item on or off, e.g. the usual fixed costs. `on` tells which are on; `more` adds one last
+// button that is not a switch, for "something else".
+export function Toggles({
+  legend,
+  items,
+  on,
+  onToggle,
+  more,
+}: {
+  legend: string;
+  items: { id: string; label: string; hint?: string }[];
+  on: (id: string) => boolean;
+  onToggle: (id: string) => void;
+  more?: { label: string; onClick: () => void };
+}) {
   return (
     <fieldset className="flex flex-col gap-1.5">
       <legend className="mb-1.5 text-sm font-semibold">{legend}</legend>
@@ -169,6 +182,12 @@ export function Toggles({ legend, items, on, onToggle }: { legend: string; items
             {item.hint && <span className="font-normal text-ink-2">{item.hint}</span>}
           </button>
         ))}
+        {more && (
+          <button type="button" onClick={more.onClick} className={cn(pill, "cursor-pointer", pillState(false))}>
+            <Plus aria-hidden className="size-4" />
+            {more.label}
+          </button>
+        )}
       </div>
     </fieldset>
   );
