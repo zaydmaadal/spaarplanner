@@ -18,13 +18,15 @@ describe("the account deletion page", () => {
   });
 
   test("starts with the destructive button only: nothing is confirmed yet", () => {
-    expect(html).toMatch(/<button[^>]*type="submit"[^>]*>Account wissen<\/button>/);
+    expect(html).toMatch(/<button[^>]*type="button"[^>]*>Account wissen<\/button>/); // not a submit button: only the second step submits
+    expect(html).not.toContain('type="submit"');
     expect(html).not.toContain("Weet je het zeker?");
     expect(html).not.toContain("Annuleren");
   });
 
-  test("offers the export first as a plain download link, and keeps the Meer tab active", () => {
-    expect(html).toMatch(/<a[^>]*href="\/api\/export"[^>]*download/);
+  test("offers the export first as a plain link (the response itself forces the download), and keeps the Meer tab active", () => {
+    expect(html).toMatch(/<a[^>]*href="\/api\/export"/);
+    expect(html).not.toMatch(/<a[^>]*href="\/api\/export"[^>]*download/);
     expect(html).toMatch(/href="\/meer"[^>]*aria-current="page"|aria-current="page"[^>]*href="\/meer"/);
   });
 });

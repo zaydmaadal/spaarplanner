@@ -59,11 +59,11 @@ export default function PrivacyPage() {
         <p>Je gegevens zijn van jou. Je kan ze elk moment zelf meenemen of laten wissen. Je gegevens aanpassen kan in de app, onder Meer.</p>
         <ul className="flex flex-col">
           <li>
-            {/* A plain link, not next/link: Link would prefetch the download. */}
-            <a href="/api/export" download className={link}>
+            {/* A plain link, not next/link (Link would prefetch the download), and no download attribute: the response forces the download itself. */}
+            <a href="/api/export" className={link}>
               Gegevens downloaden
             </a>
-            <span className="block text-sm text-ink-2">Je krijgt één bestand met al je gegevens.</span>
+            <span className="block text-sm text-ink-2">Je krijgt één bestand met je gegevens, op de technische sleutels van je meldingen na.</span>
           </li>
           <li>
             <Link href="/meer/account" className={link}>

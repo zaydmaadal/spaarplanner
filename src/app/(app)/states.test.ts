@@ -26,4 +26,8 @@ describe("the loading state of the app screens (spec 8.8)", () => {
     expect(html).toContain("bg-tint");
     expect(html).not.toMatch(/animate-|shimmer|pulse/);
   });
+
+  test("gives no block two radii", () => {
+    for (const [, cls] of html.matchAll(/class="([^"]*)"/g)) expect(cls.match(/rounded-\w+/g)?.length ?? 0).toBeLessThanOrEqual(1);
+  });
 });

@@ -62,16 +62,21 @@ describe("GET /api/export", () => {
     expect(select.split(",").map((c) => c.trim())).toEqual(["id", "user_agent", "created_at", "last_success_at", "failure_count"]);
   });
 
-  it("reads all transactions, not just the first 1000 rows of the API", async () => {
+  it("reads every table page by page, as the API returns 1000 rows at most", async () => {
     const calls = setup((call) => {
-      if (call.table !== "transactions") return { data: [] };
       const [from] = args(call, "range") as [number, number];
       return { data: from === 0 ? rows(1000) : rows(3) };
     });
     const body = await (await GET()).json();
-    expect(body.transactions).toHaveLength(1003);
-    const ranges = calls.filter((c) => c.table === "transactions").map((c) => args(c, "range"));
-    expect(ranges).toEqual([[0, 999], [1000, 1999]]);
+    for (const t of TABLES) expect(body[t]).toHaveLength(1003);
+    for (const t of TABLES) expect(calls.filter((c) => c.table === t).map((c) => args(c, "range"))).toEqual([[0, 999], [1000, 1999]]);
+  });
+
+  it("orders every table by a column it has, so the pages never overlap (checklist_items has no created_at)", async () => {
+    const calls = setup();
+    await GET();
+    // plans is keyed by user_id; the other tables have an id.
+    for (const c of calls) expect(args(c, "order")).toEqual([c.table === "plans" ? "user_id" : "id"]);
   });
 
   it("sends nothing half-finished when a read fails: it throws, so Next answers 500", async () => {

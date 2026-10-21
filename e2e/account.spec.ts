@@ -25,9 +25,10 @@ test("the export is one JSON download with only the own rows and no push keys", 
   // Somebody else with a goal that must stay out, and a subscription of this user whose keys must stay out.
   const other = await seedHaider(`export-ander-${rand()}`);
   const admin = adminClient();
+  // The endpoint is unique over the whole table, and this test runs once per project.
   const writes = await Promise.all([
     admin.from("goals").update({ name: "Doel van een ander" }).eq("user_id", other).eq("kind", "trip"),
-    admin.from("push_subscriptions").insert({ user_id: id, endpoint: "https://fcm.googleapis.com/fcm/send/e2e", p256dh: "p256dh-geheim", auth: "auth-geheim", user_agent: "e2e" }),
+    admin.from("push_subscriptions").insert({ user_id: id, endpoint: `https://fcm.googleapis.com/fcm/send/${username}`, p256dh: "p256dh-geheim", auth: "auth-geheim", user_agent: "e2e" }),
   ]);
   for (const { error } of writes) expect(error).toBeNull();
   await loginAs(page, username);

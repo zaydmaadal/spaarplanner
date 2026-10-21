@@ -9,7 +9,8 @@ import { deleteAccountAction } from "@/data/actions/account";
 
 type State = { error: string; fieldErrors?: Record<string, string> } | null;
 
-// Two steps in one form: the first "Account wissen" only asks "Weet je het zeker?", the second one deletes.
+// Two steps in one form: the first "Account wissen" (a plain button, so focus stays on it) only asks "Weet je het
+// zeker?", only the second button submits. Enter in the password field before that gets to the question, not past it.
 // The password is state, not an uncontrolled field: React resets those after every form action.
 export function DeleteAccountForm() {
   const router = useRouter();
@@ -45,9 +46,15 @@ export function DeleteAccountForm() {
         </p>
       )}
       <div className="flex flex-wrap gap-3">
-        <Button type="submit" variant="destructive" disabled={pending}>
-          {confirming ? "Ja, wis mijn account" : "Account wissen"}
-        </Button>
+        {confirming ? (
+          <Button type="submit" variant="destructive" disabled={pending}>
+            Ja, wis mijn account
+          </Button>
+        ) : (
+          <Button type="button" variant="destructive" onClick={() => setConfirming(true)}>
+            Account wissen
+          </Button>
+        )}
         {confirming && (
           <Button type="button" variant="outline" disabled={pending} onClick={() => setConfirming(false)}>
             Annuleren

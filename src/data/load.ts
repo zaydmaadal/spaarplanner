@@ -64,8 +64,8 @@ export async function loadScreenData(): Promise<{ today: ISODate; data: UserData
 
 export type OpenStep = { id: string; title: string; urgency: Urgency };
 
-// The open steps the user wrote down (Overview and Plan), most urgent first. The database sorts by age and id, and the
-// sort below is stable, so the order is the same on every load.
+// The open steps the user wrote down (Overview and Plan), most urgent first. The table has no creation date, so the
+// database sorts by id, and the sort below is stable, so the order is the same on every load.
 export async function loadOpenUserSteps(): Promise<OpenStep[]> {
   await requireUserId();
   const supabase = await createServerSupabase();
@@ -76,7 +76,6 @@ export async function loadOpenUserSteps(): Promise<OpenStep[]> {
       .eq("source", "user")
       .is("done_at", null)
       .is("dismissed_at", null)
-      .order("created_at")
       .order("id"),
   );
   // The CHECK constraint on the column limits urgency to the three values of Urgency.

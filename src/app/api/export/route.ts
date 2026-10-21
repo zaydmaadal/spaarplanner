@@ -1,12 +1,16 @@
 import { createServerSupabase } from "@/data/supabase/server";
 
-// Rows the API returns per request at most (max_rows in supabase/config.toml).
-const PAGE = 1000;
+const PAGE = 1000; // max_rows in supabase/config.toml: the API never returns more rows per request
 
-async function read<T>(query: PromiseLike<{ data: T[] | null; error: unknown }>): Promise<T[]> {
-  const { data, error } = await query;
-  if (error || !data) throw error ?? new Error("Missing rows");
-  return data;
+// Every table is read page by page. Each page is ordered by a column the table has, or the pages could overlap.
+async function readAll<T>(page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: unknown }>): Promise<T[]> {
+  const rows: T[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await page(from, from + PAGE - 1);
+    if (error || !data) throw error ?? new Error("Missing rows");
+    rows.push(...data);
+    if (data.length < PAGE) return rows;
+  }
 }
 
 // Spec 7: the own rows of the 8 user tables as one JSON download. Row level security does the scoping, so nothing from the
@@ -17,28 +21,19 @@ export async function GET() {
   const { data } = await supabase.auth.getClaims();
   if (!data?.claims.sub) return Response.json({ error: "Niet ingelogd." }, { status: 401 });
 
-  // A user can have 20.000 transactions: read them page by page, in a fixed order.
-  const transactions = async () => {
-    const all = [];
-    for (let from = 0; ; from += PAGE) {
-      const rows = await read(supabase.from("transactions").select("*").order("created_at").order("id").range(from, from + PAGE - 1));
-      all.push(...rows);
-      if (rows.length < PAGE) return all;
-    }
-  };
-  const [profiles, plans, income_sources, budget_lines, goals, transactionRows, checklist_items, push_subscriptions] = await Promise.all([
-    read(supabase.from("profiles").select("*")),
-    read(supabase.from("plans").select("*")),
-    read(supabase.from("income_sources").select("*")),
-    read(supabase.from("budget_lines").select("*")),
-    read(supabase.from("goals").select("*")),
-    transactions(),
-    read(supabase.from("checklist_items").select("*")),
-    read(supabase.from("push_subscriptions").select("id, user_agent, created_at, last_success_at, failure_count")),
+  const [profiles, plans, income_sources, budget_lines, goals, transactions, checklist_items, push_subscriptions] = await Promise.all([
+    readAll((a, b) => supabase.from("profiles").select("*").order("id").range(a, b)),
+    readAll((a, b) => supabase.from("plans").select("*").order("user_id").range(a, b)),
+    readAll((a, b) => supabase.from("income_sources").select("*").order("id").range(a, b)),
+    readAll((a, b) => supabase.from("budget_lines").select("*").order("id").range(a, b)),
+    readAll((a, b) => supabase.from("goals").select("*").order("id").range(a, b)),
+    readAll((a, b) => supabase.from("transactions").select("*").order("id").range(a, b)),
+    readAll((a, b) => supabase.from("checklist_items").select("*").order("id").range(a, b)),
+    readAll((a, b) => supabase.from("push_subscriptions").select("id, user_agent, created_at, last_success_at, failure_count").order("id").range(a, b)),
   ]);
 
   return new Response(
-    JSON.stringify({ exported_at: new Date().toISOString(), profiles, plans, income_sources, budget_lines, goals, transactions: transactionRows, checklist_items, push_subscriptions }, null, 2),
+    JSON.stringify({ exported_at: new Date().toISOString(), profiles, plans, income_sources, budget_lines, goals, transactions, checklist_items, push_subscriptions }, null, 2),
     {
       headers: {
         "Content-Type": "application/json",

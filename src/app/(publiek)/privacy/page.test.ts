@@ -18,9 +18,14 @@ describe("the privacy page (spec 12)", () => {
     }
   });
 
-  test("links to the export as a plain download link and to account deletion", () => {
-    expect(html).toMatch(/<a[^>]*href="\/api\/export"[^>]*download/);
+  test("links to the export as a plain link (no download attribute: a logged-out click must not save the login page) and to account deletion", () => {
+    expect(html).toMatch(/<a[^>]*href="\/api\/export"/);
+    expect(html).not.toMatch(/<a[^>]*href="\/api\/export"[^>]*download/);
     expect(html).toMatch(/<a[^>]*href="\/meer\/account"/);
+  });
+
+  test("says the technical keys of the notifications are not in the export", () => {
+    expect(text).toContain("Je krijgt één bestand met je gegevens, op de technische sleutels van je meldingen na.");
   });
 
   test("uses no em dash", () => expect(html).not.toContain(String.fromCharCode(0x2014)));

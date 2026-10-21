@@ -150,7 +150,7 @@ describe("loadUserData", () => {
 describe("loadOpenUserSteps", () => {
   const step = (id: string, urgency: string) => ({ id, title: `Stap ${id}`, urgency });
 
-  it("asks for the open steps the user wrote, oldest first with the id as tie-break", async () => {
+  it("asks for the open steps the user wrote, in the order of their id (the table has no created_at)", async () => {
     const calls = setup({ checklist_items: { data: [] } });
     await loadOpenUserSteps();
     const call = calls.find((c) => c.table === "checklist_items")!;
@@ -158,7 +158,7 @@ describe("loadOpenUserSteps", () => {
     expect(call.ops).toContainEqual(["eq", ["source", "user"]]);
     expect(call.ops).toContainEqual(["is", ["done_at", null]]);
     expect(call.ops).toContainEqual(["is", ["dismissed_at", null]]);
-    expect(call.ops.filter(([op]) => op === "order")).toEqual([["order", ["created_at"]], ["order", ["id"]]]);
+    expect(call.ops.filter(([op]) => op === "order")).toEqual([["order", ["id"]]]);
     expect(has(call, "limit")).toBe(false);
   });
 
