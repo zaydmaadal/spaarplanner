@@ -34,7 +34,7 @@
 2. **Double tap on "Opslaan" in the deposit flow** (or a retry on a flaky connection): must not book the deposits twice. Each submit carries a client-generated `client_ref` UUID; `transactions` has `unique (user_id, client_ref)` and the action treats a conflict as success. Tests: Task 9 pgTAP unique test, Task 17 e2e double submit.
 3. **Midnight and daylight-saving nights across time zones**: "today" is the user's local date, not the UTC date, also in the DST nights of 29 March and 25 October 2026. Tests: Task 3 `todayInTimeZone` cases and the Task 20 cron case at 23:30 UTC.
 4. **A user who skips income, expenses and goals in onboarding**: onboarding still completes, the payday strip hides, the emergency fund gets the € 1.000 estimate, the overview renders without errors. Tests: Task 8 dashboard test with empty data, Task 15 e2e "skip everything".
-5. **A deadline already in the past when a goal is created**: the preview and the goal show `niet haalbaar` with the extra amount, no crash or division by zero. Tests: Task 5 example 4, Task 17 e2e create goal with past deadline.
+5. **A deadline already in the past when a goal is created**: the preview and the goal show `niet haalbaar` with "Verschuif de deadline van …" (no monthly amount can meet a past deadline; a deadline in the current month still shows the extra amount), no crash or division by zero. Tests: Task 5 example 4, the M1 past-deadline domain test, Task 17 e2e create goal with past deadline.
 
 ---
 
@@ -458,7 +458,7 @@ Note for Haider: when `plan.monthlySavingsCents` is null and there are no budget
 - [ ] **Step 3: Run** `npx supabase start && npx supabase test db`. Expected: FAIL (tables missing).
 - [ ] **Step 4: Write the migration** following spec §6 and the Global Constraints: enums as `text` + CHECK; amount, text-length and `pg_column_size(prefs) < 8192` checks; partial unique indexes `goals (user_id) where kind = 'emergency'` and `goals (user_id) where is_main`; `unique (id, user_id)` on goals and FK `transactions (goal_id, user_id) references goals (id, user_id) on delete cascade`; endpoint check regex `^https://(fcm\.googleapis\.com|[a-z0-9.-]+\.push\.apple\.com|updates\.push\.services\.mozilla\.com|[a-z0-9.-]+\.notify\.windows\.com)/`; column grants on `profiles` excluding `username`; `private.handle_new_user()` `security definer set search_path = ''`; view with `security_invoker = true`.
 - [ ] **Step 5: Run** `npx supabase db reset && npx supabase test db`. Expected: all PASS. Run `npm run db:types`.
-- [ ] **Step 6:** Extend `ci.yml` with job `db` (ubuntu, Docker available): `npx supabase start`, `npx supabase test db`, `npm run db:types` then `git diff --exit-code src/data/database.types.ts`.
+- [ ] **Step 6:** Add `permissions: contents: read` and `node-version-file: .nvmrc` to `ci.yml`, and extend it with job `db` (ubuntu, Docker available): `npx supabase start`, `npx supabase test db`, `npm run db:types` then `git diff --exit-code src/data/database.types.ts`.
 - [ ] **Step 7: Commit** `feat(db): phase 1 schema with RLS and pgTAP tests`
 
 ### Task 10: Env, Supabase clients and proxy
@@ -565,8 +565,9 @@ export function toIncome(row: Tables<'income_sources'>): Income;
 export function toBudgetLine(row: Tables<'budget_lines'>): BudgetLine;
 export function toGoal(row: Tables<'goals'>, balanceCents: Cents): Goal; // deadline 'YYYY-MM-DD' → YearMonth
 export function toPlan(row: Tables<'plans'>): PlanSettings;
+export function toProfile(row: Tables<'profiles'>): UserData['profile']; // prefs jsonb snake_case (first_job, no_interest_savings) → camelCase; timezone → timeZone
 // load.ts
-export async function loadUserData(today: ISODate): Promise<UserData>; // one parallel fetch, RLS-scoped; depositsThisPeriod per goal for currentPeriod
+export async function loadUserData(today: ISODate): Promise<UserData>; // one parallel fetch, RLS-scoped; depositsThisPeriod = depositsInPeriod(transactions, currentPeriod(primaryPaydayRule(incomes), today)) from src/domain/dashboard.ts, with occurredOn passed as 'YYYY-MM-DD'
 // schemas.ts additions (Zod, amounts as strings parsed with parseEuroInput)
 export const moneySchema; export const incomeSchema; export const budgetLineSchema; export const goalSchema;
 export const transactionSchema; // { goalId, amount, direction: 'in'|'out', occurredOn, note?, clientRef: uuid }
@@ -578,6 +579,7 @@ closeRuleItemAction(key: string, how: 'done'|'dismissed'), addChecklistItemActio
 ```
 - [ ] **Step 1: Write the failing tests:**
   - `toGoal({ deadline: '2027-01-01', … }, 5000)` → `deadline: { year: 2027, month: 1 }, balanceCents: 5000`.
+  - `toProfile({ prefs: { first_job: true, no_interest_savings: true }, timezone: 'Europe/Brussels', … })` → `prefs: { firstJob: true, noInterestSavings: true }, timeZone: 'Europe/Brussels'`.
   - `addTransactionsAction` with a mocked server client: withdrawal of € 60 on a pot with balance € 50 → `{ ok: false, error: 'Je kan niet meer opnemen dan er in de pot zit.' }`; a `23505` on `client_ref` → `{ ok: true }`.
   - `archiveGoalAction`: emergency goal → `error: 'Je noodfonds kan je niet archiveren.'`; goal with balance > 0 → `error: 'Haal eerst het geld uit deze pot of verplaats het.'`.
   - `goalSchema`: `target: '0'` rejected; `name` of 81 chars rejected; `weight: 0` rejected.
@@ -593,9 +595,9 @@ closeRuleItemAction(key: string, how: 'done'|'dismissed'), addChecklistItemActio
 
 **Interfaces:**
 - Consumes: Task 14 actions; `suggestedSavings`, `suggestedEmergencyTarget`, `monthlyBudget` (Task 6).
-- Produces: `setOnboardingStepAction(step: 1..8): Promise<ActionResult>`; `completeOnboardingAction(input: { emergencyTargetCents: Cents | null; startBalanceCents: Cents; emergencySharePct: 50 | 100 }): Promise<ActionResult>` (creates the emergency goal with `target = input ?? suggestedEmergencyTarget(expenses)` (`target_is_estimate` when not given), books a `source: 'start'` transaction capped at the target, sets `plans.emergency_share_pct`, sets `onboarding_completed_at`, persists `suggestedSavings` into `plans.monthly_savings_cents` as estimate when the user left step 5 untouched and entered no budget lines). Step components are reused by Meer (Task 18) via a `mode: 'onboarding' | 'edit'` prop.
+- Produces: `setOnboardingStepAction(step: 1..8): Promise<ActionResult>`; `completeOnboardingAction(input: { emergencyTargetCents: Cents | null; startBalanceCents: Cents; emergencySharePct: 50 | 100 }): Promise<ActionResult>` (creates the emergency goal with `target = input ?? suggestedEmergencyTarget(expenses)` (`target_is_estimate` when not given), books a `source: 'start'` transaction capped at the target, sets `plans.emergency_share_pct`, sets `onboarding_completed_at`). The 20 % savings proposal is never persisted: `plans.monthly_savings_cents` is written only when the user edits the step-5 amount; otherwise it stays null and `savingsTarget` (budget.ts) supplies the proposal. Step components are reused by Meer (Task 18) via a `mode: 'onboarding' | 'edit'` prop.
 
-Content per step: spec §8.2. Goal cards in step 7 with default estimates: Reis € 1.500, Rijbewijs € 1.500, Laptop € 1.000, Auto € 8.000, Huwelijk € 10.000, Hajj € 7.000, Iets anders (no default, amount required). "Stage vinden" creates a user checklist item. The first goal added gets `is_main`. When any goal has a deadline, ask "Noodfonds eerst helemaal vullen, of tegelijk met je doelen?" with "Eerst noodfonds" (100) / "Tegelijk" (50). Step 7 ends with a timeline preview using `project` + `formatMonthNl`. Step 8 has the `PalettePicker` (Task 13; saves `prefs.palette` via `saveProfileAction`), the `context_note` textarea (max 2.000) and `InstallGuide` (iOS: Deel-knop → "Zet op beginscherm"; Android: menu → "App installeren"; the line "Je logt één keer opnieuw in in de geïnstalleerde app.").
+Content per step: spec §8.2. Goal cards in step 7 with default estimates: Reis € 1.500, Rijbewijs € 1.500, Laptop € 1.000, Auto € 8.000, Huwelijk € 10.000, Hajj € 7.000, Iets anders (no default, amount required). "Stage vinden" creates a user checklist item. The first goal added gets `is_main`. When any goal has a deadline, ask "Noodfonds eerst helemaal vullen, of tegelijk met je doelen?" with "Eerst noodfonds" (100) / "Tegelijk" (50). Step 7 ends with a timeline preview using `project` + `formatMonthNl`; because the emergency goal does not exist yet, the preview adds a provisional emergency goal (target from step 6 or `suggestedEmergencyTarget`, balance from step 6) and uses the chosen share (100 or 50). Step 8 has the `PalettePicker` (Task 13; saves `prefs.palette` via `saveProfileAction`), the `context_note` textarea (max 2.000) and `InstallGuide` (iOS: Deel-knop → "Zet op beginscherm"; Android: menu → "App installeren"; the line "Je logt één keer opnieuw in in de geïnstalleerde app.").
 
 - [ ] **Step 1: Write the failing tests:**
   - `completeOnboardingAction` (mocked client): expenses € 1.650 and no target → emergency target 495000 with `target_is_estimate = true`; start balance € 6.000 with target € 4.950 → transaction 495000; skipped everything → target 100000.
@@ -613,11 +615,11 @@ Content per step: spec §8.2. Goal cards in step 7 with default estimates: Reis 
 
 **Interfaces:**
 - Consumes: `loadUserData`, `buildDashboard` (Tasks 14, 8), components (Task 13), `project`, `savingsPerMonth`, `monthlyBudget` (Tasks 5, 6), `savePlanAction` (Task 14).
-- Produces: `simulate(base: UserData, today: ISODate, input: { savingsCents: Cents | null; extraIncomeCents: Cents; extraExpensesCents: Cents; incomeMode: 'careful'|'normal' }): { savingsCents: Cents; fills: Record<string, YearMonth | 'full' | null> }` in `src/components/overview/simulate.ts` (pure, imports only `@/domain`), tested in `src/components/overview/simulate.test.ts`. Slider ranges: savings € 0 to max(€ 2.000, 2 × current), step € 25; extra income € 0 to € 1.000, step € 50; extra expenses € 0 to € 1.000, step € 50. "Zo instellen" calls `savePlanAction({ monthlySavingsCents, incomeMode })` only.
+- Produces: `simulate(base: UserData, today: ISODate, input: { savingsCents: Cents | null; extraIncomeCents: Cents; extraExpensesCents: Cents; incomeMode: 'careful'|'normal' }): { savingsCents: Cents; fills: Record<string, YearMonth | 'full' | null> }` in `src/components/overview/simulate.ts` (pure, imports only `@/domain`), tested in `src/components/overview/simulate.test.ts`. Savings when `input.savingsCents` is null: `max(0, savingsTarget(plan, budget, hasLines).cents + extraIncomeCents − extraExpensesCents)`; when given, that amount. Dashboard fields from the M1 fix wave: `savingsIsProposal`, `savingsCertainty`, `horizon`, `GoalView.fillCertainty`, and `GoalView.allocatedCents` is the whole share of the period (already booked + still to deposit). Slider ranges: savings € 0 to max(€ 2.000, 2 × current), step € 25; extra income € 0 to € 1.000, step € 50; extra expenses € 0 to € 1.000, step € 50. "Zo instellen" calls `savePlanAction({ monthlySavingsCents, incomeMode })` only.
 
-Sections and order: spec §8.3. Main goal card shows `mainGoalWaitsFor` as "Krijgt nu nog niets: eerst je noodfonds, vol rond maart 2027". Pots show `fill` via `formatMonthNl` ("vol rond mei 2027", "vol", "niet binnen 40 jaar" when `null`). Salary split table has a total row "Netto per maand". Next steps = first 3 of `rules` + open user items.
+Sections and order: spec §8.3. Main goal card shows `mainGoalWaitsFor` as "Krijgt nu nog niets: eerst je noodfonds, vol rond maart 2027". Pots show `fill` via `formatMonthNl` ("vol rond mei 2027", "vol", "niet binnen {Math.floor(dashboard.horizon / 12)} jaar" when `null`). Salary split table has a total row "Netto per maand". Next steps = first 3 of `rules` + open user items.
 
-- [ ] **Step 1: Write the failing tests:** `simulate(haider, '2026-10-20', { savingsCents: 50000, extraIncomeCents: 0, extraExpensesCents: 0, incomeMode: 'normal' }).savingsCents` is 50000; with `savingsCents: null` and `extraExpensesCents: 10000` savings equal the room minus 10000; e2e: on the overview, moving the savings slider to the right changes the trip's "klaar" month to an earlier or equal month and "Zo instellen" shows the toast "Je plan is aangepast." 
+- [ ] **Step 1: Write the failing tests:** `simulate(haider, '2026-10-20', { savingsCents: 50000, extraIncomeCents: 0, extraExpensesCents: 0, incomeMode: 'normal' }).savingsCents` is 50000; with `savingsCents: null` Haider's savings are 43000 (the proposal), with `extraExpensesCents: 10000` they are 33000 and with `extraIncomeCents: 5000` they are 48000; e2e: on the overview, moving the savings slider to the right changes the trip's "klaar" month to an earlier or equal month and "Zo instellen" shows the toast "Je plan is aangepast." 
 - [ ] **Step 2: Run.** Expected: FAIL.
 - [ ] **Step 3: Implement.**
 - [ ] **Step 4: Run** unit and e2e. Expected: PASS.
@@ -630,13 +632,13 @@ Sections and order: spec §8.3. Main goal card shows `mainGoalWaitsFor` as "Krij
 
 **Interfaces:**
 - Consumes: Task 14 actions, `compareProjections`, `goalStatus`, `extraNeededCents` (Task 5), `depositPrefill` (Task 8).
-- Produces: `<EffectPreview before={ProjectionInput} after={ProjectionInput} />` rendering each `Shift` as "<naam> schuift <n> maanden op, van <maand> naar <maand>" (or "komt <n> maanden vroeger"), and for a new goal "Klaar rond <maand>".
+- Produces: `<EffectPreview before={ProjectionInput} after={ProjectionInput} />` rendering each `Shift` as "<naam> schuift <n> maanden op, van <maand> naar <maand>" (or "komt <n> maanden vroeger"), and for a new goal "Klaar rond <maand>". Both projections run on the same horizon `Math.max(horizonFor(before.goals, start), horizonFor(after.goals, start))` passed as `ProjectionInput.horizon`, with `oneOffs` built by `oneOffIncomes` for that horizon.
 
 Archive shows a Sonner toast "Pot gearchiveerd" with action "Ongedaan maken" (8 s) calling `unarchiveGoalAction`. The emergency fund has no archive button. Deposit form generates one `clientRef` per submit (`crypto.randomUUID()`), disables the button while pending, and prefills from `depositPrefill`.
 
 - [ ] **Step 1: Write the failing e2e tests** (`e2e/goals.spec.ts`, logged-in Haider fixture via registration helper):
   - create "Laptop" `1200` without deadline → preview shows "Reis schuift" and a month; after saving, the goals list shows Laptop with "vol rond".
-  - create a goal with a deadline in the past (Review Focus 5) → preview and detail show "niet haalbaar" and "Spaar € … meer per maand".
+  - create a goal with a deadline in the past (Review Focus 5) → preview and detail show "niet haalbaar" and "Verschuif de deadline van …".
   - `/storten`: prefilled amounts sum to the plan amount; double-click "Opslaan" (Review Focus 2) → history shows each deposit once.
   - withdrawal larger than balance → error "Je kan niet meer opnemen dan er in de pot zit."
   - archive then "Ongedaan maken" → goal is back.
