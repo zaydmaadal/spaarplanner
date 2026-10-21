@@ -4,14 +4,20 @@ import type { Page } from "@playwright/test";
 export const password = "een-lang-wachtwoord";
 
 // The forms only work once React has hydrated (CSP blocks the pre-hydration submit), so a click before that does nothing.
+// Next keeps the previous page mounted but hidden (React Activity), so check every form and fill only the visible one.
 export const hydrated = (page: Page) =>
-  page.waitForFunction(() => Object.keys(document.forms[0] ?? {}).some((k) => k.startsWith("__reactProps")));
+  page.waitForFunction(
+    () =>
+      document.forms.length > 0 &&
+      Array.from(document.forms).every((form) => Object.keys(form).some((k) => k.startsWith("__reactProps"))),
+  );
 
 export async function fillAndSubmit(page: Page, username: string, pw: string, button: string) {
   await hydrated(page);
-  await page.getByLabel("Gebruikersnaam").fill(username);
-  await page.getByLabel("Wachtwoord").fill(pw);
-  await page.getByRole("button", { name: button }).click();
+  const form = page.locator("form").filter({ visible: true });
+  await form.getByLabel("Gebruikersnaam", { exact: true }).fill(username);
+  await form.getByLabel("Wachtwoord", { exact: true }).fill(pw);
+  await form.getByRole("button", { name: button }).click();
 }
 
 const need = (name: string) => {
