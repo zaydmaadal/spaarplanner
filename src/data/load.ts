@@ -1,7 +1,7 @@
 import { toBudgetLine, toGoal, toIncome, toPlan, toProfile } from "@/data/mappers";
 import { createServerSupabase, readProfile, requireUserId } from "@/data/supabase/server";
 import { depositsInPeriod, type UserData } from "@/domain/dashboard";
-import { addDays } from "@/domain/dates";
+import { addDays, todayInTimeZone } from "@/domain/dates";
 import { currentPeriod, primaryPaydayRule } from "@/domain/payday";
 import type { ISODate } from "@/domain/types";
 
@@ -51,4 +51,12 @@ export async function loadUserData(today: ISODate): Promise<UserData> {
     ),
     closedRuleKeys: must(closed).flatMap((r) => (r.rule_key ? [r.rule_key] : [])),
   };
+}
+
+// What every screen starts with: today in the time zone of the user, and their data as of that day.
+export async function loadScreenData(): Promise<{ today: ISODate; data: UserData }> {
+  const profile = await readProfile(await requireUserId());
+  if (!profile) throw new Error("Missing profile");
+  const today = todayInTimeZone(profile.timezone, new Date());
+  return { today, data: await loadUserData(today) };
 }

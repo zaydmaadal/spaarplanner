@@ -9,7 +9,7 @@ vi.mock("@/data/supabase/server", () => ({
   readProfile: async () => profile,
 }));
 
-import { loadUserData } from "./load";
+import { loadScreenData, loadUserData } from "./load";
 
 const profile: Tables<"profiles"> = {
   id: "user-1",
@@ -87,6 +87,22 @@ function setup(overrides: Record<string, object> = {}) {
 }
 
 beforeEach(() => vi.resetAllMocks());
+
+describe("loadScreenData", () => {
+  it("reads today in the time zone of the profile and loads the data of that day", async () => {
+    const calls = setup();
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-20T23:30:00Z")); // already the 21st in Brussels
+    try {
+      const { today, data } = await loadScreenData();
+      expect(today).toBe("2026-10-21");
+      expect(data.goals).toHaveLength(1);
+      expect(calls.find((c) => c.table === "transactions")!.ops).toContainEqual(["gte", ["occurred_on", "2026-08-20"]]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
 
 describe("loadUserData", () => {
   it("maps every table to the domain shape and books the deposits of the current period per goal", async () => {

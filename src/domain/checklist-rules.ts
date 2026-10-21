@@ -19,6 +19,12 @@ export type RuleContext = {
 export type Urgency = "week" | "month" | "later";
 export type RuleItem = { key: string; title: string; urgency: Urgency; certainty: Certainty };
 
+// What to do about a goal that is not full in time (also shown on the goal screens). The cap means no amount per month is enough.
+export const goalUnreachableTitle = (name: string, extraNeededCents: Cents) =>
+  extraNeededCents >= EXTRA_NEEDED_CAP
+    ? `Verschuif de deadline van ${name}: met sparen alleen lukt het niet meer`
+    : `Spaar ${formatEUR(extraNeededCents)} meer per maand of verschuif de deadline van ${name}`;
+
 const URGENCY_RANK: Record<Urgency, number> = { week: 0, month: 1, later: 2 };
 const dayMonth = new Intl.DateTimeFormat("nl-BE", { day: "numeric", month: "long", timeZone: "UTC" });
 
@@ -44,11 +50,7 @@ export function evaluateRules(ctx: RuleContext): RuleItem[] {
   if (nextPayday) add("standing_order", "Zet een automatische overschrijving klaar op je loondag", "month", 4, "Berekend uit jouw loondag");
   for (const g of goals) {
     if (g.status === "niet_haalbaar") {
-      const title =
-        g.extraNeededCents >= EXTRA_NEEDED_CAP
-          ? `Verschuif de deadline van ${g.name}: met sparen alleen lukt het niet meer`
-          : `Spaar ${formatEUR(g.extraNeededCents)} meer per maand of verschuif de deadline van ${g.name}`;
-      add(`goal_unreachable:${g.id}`, title, "month", 4, "Berekend uit jouw plan en deadline");
+      add(`goal_unreachable:${g.id}`, goalUnreachableTitle(g.name, g.extraNeededCents), "month", 4, "Berekend uit jouw plan en deadline");
     }
     if (g.targetIsEstimate) {
       const title = g.isEmergency ? "Kijk na of je noodfonds groot genoeg is" : `Zoek de echte prijs van ${g.name} op`;

@@ -53,12 +53,49 @@ const emailOf = (username: string) => `${username}@${need("NEXT_PUBLIC_AUTH_EMAI
 // Creates a user through the admin API instead of the register form. The sign-up trigger still
 // makes a profile; CI raises SIGNUP_HOURLY_CAP so these do not count against the form's cap.
 export async function createUser(username: string, pw: string) {
-  const { error } = await adminClient().auth.admin.createUser({
+  const { data, error } = await adminClient().auth.admin.createUser({
     email: emailOf(username),
     password: pw,
     email_confirm: true,
   });
   if (error) throw error;
+  return data.user.id;
+}
+
+// A finished onboarding for Haider (spec 3), written in the shapes of the onboarding steps and completeOnboardingAction:
+// 2.150 euro on the 29th and no costs (so the savings are the proposal of 430 euro), "Tegelijk" (50 %), the emergency fund
+// at its estimated 1.000 euro and a trip of 2.500 euro due in 12 months, which is on track. Nothing is booked yet.
+// A fixed distance to the deadline keeps the numbers the same whatever day the tests run.
+export async function seedHaider(username: string) {
+  const id = await createUser(username, password);
+  const admin = adminClient();
+  const now = new Date();
+  const deadline = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 12, 1)).toISOString().slice(0, 10);
+  const writes = await Promise.all([
+    admin.from("profiles").update({ display_name: "Haider", onboarding_step: 8, onboarding_completed_at: now.toISOString() }).eq("id", id),
+    admin.from("income_sources").insert({
+      user_id: id,
+      name: "Netto inkomen",
+      kind: "salary",
+      frequency: "monthly",
+      amount_cents: 215000,
+      payday_rule: { type: "day_of_month", day: 29, weekend: "before" },
+    }),
+    admin.from("plans").update({ emergency_share_pct: 50 }).eq("user_id", id),
+    admin.from("goals").insert([
+      { user_id: id, kind: "emergency", name: "Noodfonds", target_cents: 100000, target_is_estimate: true, priority: 1 },
+      { user_id: id, kind: "trip", name: "Reis", target_cents: 250000, deadline, priority: 2, is_main: true },
+    ]),
+  ]);
+  for (const { error } of writes) if (error) throw error;
+  return id;
+}
+
+// Signs in through the login form; a seeded user has finished the onboarding, so the overview is next.
+export async function loginAs(page: Page, username: string) {
+  await page.goto("/inloggen");
+  await fillAndSubmit(page, username, password, "Inloggen");
+  await expect(page).toHaveURL(/\/overzicht$/);
 }
 
 // A session through the API, like another device of the same user.
