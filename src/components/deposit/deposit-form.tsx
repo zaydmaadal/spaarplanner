@@ -47,7 +47,9 @@ export function DepositForm({ pots, today, initial, only }: { pots: Pot[]; today
     if (Object.keys(invalid).length > 0) return;
     if (items.length === 0) return setError("Vul bij minstens één pot een bedrag in.");
     startTransition(async () => {
-      const result = await addTransactionsAction(items);
+      // A dropped connection throws; catching it keeps this form and its refs, so a retry books once.
+      const result = await addTransactionsAction(items).catch(() => null);
+      if (!result) return setError("Opslaan lukte niet. Probeer het opnieuw.");
       if (!result.ok) return setError(result.error);
       refs.current = {};
       setAmounts(start("out")); // empty: what was put aside is not to be put aside again

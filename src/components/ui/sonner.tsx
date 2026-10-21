@@ -15,6 +15,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
       theme="system"
       position="top-center"
       className="toaster group"
+      // Sonner's own CSS makes action buttons 24 px; "Ongedaan maken" needs the 44 px target.
+      toastOptions={{ classNames: { actionButton: "h-11! px-4! text-sm!", cancelButton: "h-11! px-4! text-sm!" } }}
       icons={{
         success: <CircleCheckIcon className="size-4" />,
         info: <InfoIcon className="size-4" />,
