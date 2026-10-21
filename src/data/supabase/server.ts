@@ -3,11 +3,16 @@ import { createServerClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
+import { connection } from "next/server";
 import type { Database } from "@/data/database.types";
 import { adminUserIds, publicEnv } from "@/lib/env";
+import { parsePrefs } from "@/lib/prefs";
 
 export async function createServerSupabase(): Promise<SupabaseClient<Database>> {
   const cookieStore = await cookies();
+  // The auth client reads the clock (Date.now) right after it is created, which Next flags as unstable
+  // in the stages that run before the request-time render. Wait for that stage first.
+  await connection();
   return createServerClient<Database>(publicEnv.supabaseUrl, publicEnv.supabasePublishableKey, {
     cookies: {
       getAll: () => cookieStore.getAll(),
@@ -51,4 +56,13 @@ export async function requireOnboarded(): Promise<string> {
   // Step 0 means "not started"; the first screen is /onboarding/1.
   if (!data?.onboarding_completed_at) redirect(`/onboarding/${Math.max(1, data?.onboarding_step ?? 0)}`);
   return userId;
+}
+
+// For the root layout: palette and theme of the signed-in user. Never redirects; Task 14 replaces this with the data layer.
+export async function readPrefs() {
+  const supabase = await createServerSupabase();
+  const { data: auth } = await supabase.auth.getClaims();
+  if (!auth?.claims.sub) return parsePrefs(null);
+  const { data } = await supabase.from("profiles").select("prefs").eq("id", auth.claims.sub).single();
+  return parsePrefs(data?.prefs);
 }

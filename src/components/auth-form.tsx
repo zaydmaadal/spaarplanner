@@ -32,7 +32,7 @@ export function Field({
         {...input}
       />
       {error && (
-        <p id={`${id}-error`} role="alert" className="text-sm text-red-700 dark:text-red-400">
+        <p id={`${id}-error`} role="alert" className="text-sm text-error">
           {error}
         </p>
       )}
@@ -42,7 +42,7 @@ export function Field({
 
 export function FormError({ children }: { children?: string }) {
   return children ? (
-    <p role="alert" className="text-sm text-red-700 dark:text-red-400">
+    <p role="alert" className="text-sm text-error">
       {children}
     </p>
   ) : null;
