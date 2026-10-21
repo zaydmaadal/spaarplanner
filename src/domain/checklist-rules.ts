@@ -25,7 +25,8 @@ export const goalUnreachableTitle = (name: string, extraNeededCents: Cents) =>
     ? `Verschuif de deadline van ${name}: met sparen alleen lukt het niet meer`
     : `Spaar ${formatEUR(extraNeededCents)} meer per maand of verschuif de deadline van ${name}`;
 
-const URGENCY_RANK: Record<Urgency, number> = { week: 0, month: 1, later: 2 };
+export const URGENCY_RANK: Record<Urgency, number> = { week: 0, month: 1, later: 2 };
+export const URGENCY_LABEL: Record<Urgency, string> = { week: "Deze week", month: "Deze maand", later: "Later" };
 const dayMonth = new Intl.DateTimeFormat("nl-BE", { day: "numeric", month: "long", timeZone: "UTC" });
 
 // Spec 5.8. Computed on every render and never stored while open; the UI hides keys the user ticked or dismissed.

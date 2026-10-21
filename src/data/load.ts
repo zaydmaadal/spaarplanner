@@ -1,6 +1,7 @@
 import { toBudgetLine, toGoal, toIncome, toPlan, toProfile } from "@/data/mappers";
 import { createServerSupabase, readProfile, requireUserId } from "@/data/supabase/server";
 import { depositsInPeriod, type UserData } from "@/domain/dashboard";
+import { URGENCY_RANK, type Urgency } from "@/domain/checklist-rules";
 import { addDays, todayInTimeZone } from "@/domain/dates";
 import { currentPeriod, primaryPaydayRule } from "@/domain/payday";
 import type { ISODate } from "@/domain/types";
@@ -59,4 +60,25 @@ export async function loadScreenData(): Promise<{ today: ISODate; data: UserData
   if (!profile) throw new Error("Missing profile");
   const today = todayInTimeZone(profile.timezone, new Date());
   return { today, data: await loadUserData(today) };
+}
+
+export type OpenStep = { id: string; title: string; urgency: Urgency };
+
+// The open steps the user wrote down (Overview and Plan), most urgent first. The database sorts by age and id, and the
+// sort below is stable, so the order is the same on every load.
+export async function loadOpenUserSteps(): Promise<OpenStep[]> {
+  await requireUserId();
+  const supabase = await createServerSupabase();
+  const rows = must(
+    await supabase
+      .from("checklist_items")
+      .select("id, title, urgency")
+      .eq("source", "user")
+      .is("done_at", null)
+      .is("dismissed_at", null)
+      .order("created_at")
+      .order("id"),
+  );
+  // The CHECK constraint on the column limits urgency to the three values of Urgency.
+  return (rows as OpenStep[]).sort((a, b) => URGENCY_RANK[a.urgency] - URGENCY_RANK[b.urgency]);
 }

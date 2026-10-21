@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { useId } from "react";
+import { URGENCY_LABEL, type Urgency } from "@/domain/checklist-rules";
 
-export type Step = { key: string; title: string; urgency: string };
-
-const URGENCY: Record<string, string> = { week: "Deze week", month: "Deze maand", later: "Later" };
+export type Step = { key: string; title: string; urgency: Urgency };
 
 // The first rule items and the open steps the user wrote down; ticking them off happens in Plan.
 export function NextSteps({ steps }: { steps: Step[] }) {
@@ -19,7 +18,7 @@ export function NextSteps({ steps }: { steps: Step[] }) {
         <ul className="flex flex-col gap-3">
           {steps.map((s) => (
             <li key={s.key} className="flex flex-col gap-0.5">
-              <span className="text-sm font-semibold text-ink-2">{URGENCY[s.urgency] ?? URGENCY.later}</span>
+              <span className="text-sm font-semibold text-ink-2">{URGENCY_LABEL[s.urgency]}</span>
               <span>{s.title}</span>
             </li>
           ))}

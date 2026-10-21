@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Tables } from "@/data/database.types";
-import { fakeDb, type Call } from "@/data/test-helpers";
+import { args, fakeDb, has, type Call } from "@/data/test-helpers";
 
 const m = vi.hoisted(() => ({ db: undefined as unknown }));
 vi.mock("@/data/supabase/server", () => ({
@@ -9,7 +9,7 @@ vi.mock("@/data/supabase/server", () => ({
   readProfile: async () => profile,
 }));
 
-import { loadScreenData, loadUserData } from "./load";
+import { loadOpenUserSteps, loadScreenData, loadUserData } from "./load";
 
 const profile: Tables<"profiles"> = {
   id: "user-1",
@@ -146,3 +146,34 @@ describe("loadUserData", () => {
   });
 });
 
+
+describe("loadOpenUserSteps", () => {
+  const step = (id: string, urgency: string) => ({ id, title: `Stap ${id}`, urgency });
+
+  it("asks for the open steps the user wrote, oldest first with the id as tie-break", async () => {
+    const calls = setup({ checklist_items: { data: [] } });
+    await loadOpenUserSteps();
+    const call = calls.find((c) => c.table === "checklist_items")!;
+    expect(args(call, "select")).toEqual(["id, title, urgency"]);
+    expect(call.ops).toContainEqual(["eq", ["source", "user"]]);
+    expect(call.ops).toContainEqual(["is", ["done_at", null]]);
+    expect(call.ops).toContainEqual(["is", ["dismissed_at", null]]);
+    expect(call.ops.filter(([op]) => op === "order")).toEqual([["order", ["created_at"]], ["order", ["id"]]]);
+    expect(has(call, "limit")).toBe(false);
+  });
+
+  it("puts the most urgent first and keeps the order of the database within one urgency", async () => {
+    setup({ checklist_items: { data: [step("a", "later"), step("b", "week"), step("c", "month"), step("d", "week"), step("e", "later")] } });
+    expect((await loadOpenUserSteps()).map((s) => s.id)).toEqual(["b", "d", "c", "a", "e"]);
+  });
+
+  it("is empty without open steps", async () => {
+    setup({ checklist_items: { data: [] } });
+    expect(await loadOpenUserSteps()).toEqual([]);
+  });
+
+  it("throws when the query fails, so the error boundary shows the retry card", async () => {
+    setup({ checklist_items: { error: { code: "XX000", message: "down" } } });
+    await expect(loadOpenUserSteps()).rejects.toBeTruthy();
+  });
+});

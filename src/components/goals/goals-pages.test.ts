@@ -147,6 +147,16 @@ describe("the deposit screen", () => {
     expect(out).not.toMatch(/value="[1-9]/);
   });
 
+  test("without goals: one sentence and one action to the new-goal form, no deposit form", async () => {
+    m.data = data({ goals: [] });
+    const out = await depositPage();
+    expect(headings(out, 1)).toEqual(["Storten"]);
+    expect(out).toContain("Je hebt nog geen doelen om op te storten.");
+    expect(out).toMatch(/<a[^>]*href="\/doelen\/nieuw"[^>]*>Maak je eerste doel<\/a>/);
+    expect(out).not.toContain("<form");
+    expect(out).toMatch(/aria-current="page"[^>]*href="\/storten"|href="\/storten"[^>]*aria-current="page"/); // the nav stays
+  });
+
   test("what is already booked this period is not prefilled again", async () => {
     m.data = data({ depositsThisPeriod: { [FUND]: 43000 } });
     const out = await depositPage();

@@ -7,14 +7,13 @@ import { PaydayStrip } from "@/components/overview/payday-strip";
 import { PotsList } from "@/components/overview/pots-list";
 import { SalarySplit } from "@/components/overview/salary-split";
 import { Simulator } from "@/components/overview/simulator";
-import { loadUserData } from "@/data/load";
-import { createServerSupabase, readProfile, requireUserId } from "@/data/supabase/server";
+import { loadOpenUserSteps, loadUserData } from "@/data/load";
+import { readProfile, requireUserId } from "@/data/supabase/server";
 import { buildDashboard } from "@/domain/dashboard";
 import { todayInTimeZone } from "@/domain/dates";
 
 export const metadata: Metadata = { title: "Overzicht" };
 
-const URGENCY_ORDER = ["week", "month", "later"];
 const MAX_OWN_STEPS = 3; // the rest is in Plan
 
 // Spec 8.3, top to bottom. The data is read here; only the simulator needs the browser.
@@ -23,19 +22,11 @@ export default async function OverviewPage() {
   if (!profile) throw new Error("Missing profile");
   const today = todayInTimeZone(profile.timezone, new Date());
 
-  const supabase = await createServerSupabase();
-  const [data, own] = await Promise.all([
-    loadUserData(today),
-    supabase.from("checklist_items").select("id, title, urgency").eq("source", "user").is("done_at", null).is("dismissed_at", null),
-  ]);
-  if (own.error) throw own.error;
+  const [data, own] = await Promise.all([loadUserData(today), loadOpenUserSteps()]);
 
   const d = buildDashboard(data, today);
   const horizonYears = Math.floor(d.horizon / 12);
-  const ownSteps = own.data
-    .map(({ id, title, urgency }) => ({ key: id, title, urgency }))
-    .sort((a, b) => URGENCY_ORDER.indexOf(a.urgency) - URGENCY_ORDER.indexOf(b.urgency))
-    .slice(0, MAX_OWN_STEPS);
+  const ownSteps = own.slice(0, MAX_OWN_STEPS).map(({ id, title, urgency }) => ({ key: id, title, urgency }));
   const name = data.profile.displayName.trim();
 
   return (

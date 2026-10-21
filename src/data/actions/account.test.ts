@@ -62,7 +62,7 @@ describe("deleteAccountAction", () => {
     expect(m.signOut).not.toHaveBeenCalled();
   });
 
-  it.each([undefined, "", 123 as unknown as string])("refuses a missing password (%s) without asking Supabase", async (password) => {
+  it.each([undefined as unknown as string, "", 123 as unknown as string])("refuses a missing password (%s) without asking Supabase", async (password) => {
     expect(await deleteAccountAction({ password })).toMatchObject({ ok: false, error: wrong });
     expect(m.signIn).not.toHaveBeenCalled();
     expect(m.deleteUser).not.toHaveBeenCalled();
