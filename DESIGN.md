@@ -120,8 +120,10 @@ Money is integer cents. Show it only through `formatEUR` (`src/domain/money.ts`)
 | `CertaintyMeter` | `level` 1 to 5, `reason`; five segments, the `CERTAINTY_LABEL` text and the reason; `role="img"` with `aria-label="Zekerheid N van 5: label"` |
 | `ProgressBar` | `value` 0 to 1 (clamped), `label` (accessible name), `color?` as `var(--color-...)`; show the amounts next to it |
 | `StackedBar` | `segments` of `{ label, cents, color }`; the legend with label and amount carries the meaning |
-| `BottomNav` | `active`; every screen renders it with its own tab. The middle button "Storten" goes to `/storten`. Content needs bottom padding, which `src/app/(app)/layout.tsx` provides |
+| `BottomNav` | `active` (a tab, or `storten` on the deposit screen); every screen renders it with its own tab. The middle button "Storten" goes to `/storten`. Content needs bottom padding, which `src/app/(app)/layout.tsx` provides |
 | `form-fields` | `TextField`, `MoneyField` (fixed euro prefix, `inputmode="decimal"`), `SelectField`, `TextareaField`, `CheckField`, `Choice` (one out of a few), `Toggles` (switch items on or off), `Item` (a row of a list form with its remove button). Label always visible, hint and error tied with `aria-describedby`, ids from `useId` |
+| `EffectPreview` | `before`, `after` as `previewInputs` makes them (same horizon, one-off income for it); the goal's own "Klaar rond ..." with status and advice, then a sentence per other goal that moves. Shown in the goal form before saving |
+| `GoalCard`, `History`, `DepositForm` | `src/components/goals` and `deposit`: a pot in the list (with arrows for its priority), the bookings of one pot, and the deposit or withdrawal form (one `clientRef` per row, kept until the save succeeds) |
 | `StepShell` | `src/components/onboarding`: one onboarding step, or the same form on its own page with `mode="edit"` (no progress, no "Overslaan", the button says "Opslaan") |
 | `InstallGuide` | how to put the app on the home screen, iOS and Android apart |
 | `PalettePicker` | `value`, `onChange`; each card shows its own palette; choosing sets `data-palette` on `<html>` at once, the parent saves it |

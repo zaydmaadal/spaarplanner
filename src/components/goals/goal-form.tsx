@@ -22,7 +22,6 @@ export function GoalForm({ data, today, goal }: { data: UserData; today: ISODate
   const [target, setTarget] = useState(goal ? toEuroInput(goal.targetCents) : "");
   const [estimate, setEstimate] = useState(goal?.targetIsEstimate ?? false);
   const [deadline, setDeadline] = useState(goal?.deadline ? `${goal.deadline.year}-${String(goal.deadline.month).padStart(2, "0")}` : "");
-  const [savedId, setSavedId] = useState(goal?.id); // a second try after a failed navigation updates, it does not add another goal
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -39,12 +38,18 @@ export function GoalForm({ data, today, goal }: { data: UserData; today: ISODate
     event.preventDefault();
     startTransition(async () => {
       setError(null);
-      const saved = await saveGoalAction({ id: savedId, kind: "other", name, target, targetIsEstimate: estimate, deadline: isFund ? null : deadline || null, weight: goal?.weight ?? 1 });
+      const saved = await saveGoalAction({ id: goal?.id, kind: "other", name, target, targetIsEstimate: estimate, deadline: isFund ? null : deadline || null, weight: goal?.weight ?? 1 });
       setErrors(saved.ok ? {} : (saved.fieldErrors ?? {}));
       if (!saved.ok) return setError(goalError(saved.error));
-      setSavedId(saved.data.id);
       toast.success("Doel opgeslagen.");
-      router.push(goal ? `/doelen/${saved.data.id}` : "/doelen");
+      // Next keeps this page mounted, hidden, after leaving it: a new goal starts from an empty form next time.
+      if (!goal) {
+        setName("");
+        setTarget("");
+        setEstimate(false);
+        setDeadline("");
+      }
+      router.push(goal ? `/doelen/${goal.id}` : "/doelen");
     });
   }
 

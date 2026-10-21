@@ -16,7 +16,7 @@ export default async function EditGoalPage({ params }: PageProps<"/doelen/[id]/a
     <>
       <div className="flex flex-col gap-4">
         <h1 className="font-display text-2xl font-semibold">Doel aanpassen</h1>
-        <GoalForm data={data} today={today} goal={goal} />
+        <GoalForm key={goal.id} data={data} today={today} goal={goal} />
       </div>
       <BottomNav active="doelen" />
     </>
