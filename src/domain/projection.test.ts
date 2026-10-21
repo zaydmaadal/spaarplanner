@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { compareProjections, extraNeededCents, fillMonth, goalStatus, horizonFor, project } from "./projection";
+import { compareProjections, extraNeededCents, fillMonth, goalStatus, horizonFor, periodZeroAvailable, project } from "./projection";
 import { emergency, goal } from "./test-helpers";
 
 const nov = { year: 2026, month: 11 };
@@ -26,6 +26,15 @@ describe("project (spec 5.4)", () => {
 
   test("archived goals are left out", () => {
     expect(project({ ...base, goals: [emergency(150000), goal("oud", 1, { archived: true })] }).fill).toEqual({ nood: 2 });
+  });
+
+  test("deposits above the savings: the one-off in period 0 is added to the target before they come off", () => {
+    expect(periodZeroAvailable(50000, 30000, 70000)).toBe(10000);
+    expect(periodZeroAvailable(50000, 0, 70000)).toBe(0);
+    expect(periodZeroAvailable(50000, 30000, 0)).toBe(80000);
+    const oneOffs = [{ month: nov, cents: 30000 }];
+    // 700 booked of a 500 target and a 300 one-off: period 0 gets 100 (balance 800), period 1 gets 500 (full)
+    expect(project({ ...base, depositedThisPeriodCents: 70000, oneOffs, goals: [goal("reis", 100000, { balance: 70000 })] }).fill).toEqual({ reis: 1 });
   });
 });
 
@@ -82,5 +91,16 @@ describe("compareProjections", () => {
       { goalId: "reis", from: { year: 2027, month: 3 }, to: { year: 2027, month: 5 }, deltaMonths: 2 },
       { goalId: "laptop", from: null, to: { year: 2027, month: 6 }, deltaMonths: null },
     ]);
+  });
+
+  test("on equal horizons a far-deadline goal does not shift an unrelated goal", () => {
+    const input = { ...base, savingsCents: 10000 };
+    const beforeGoals = [emergency(150000, 150000), goal("reis", 1_395_000)];
+    const afterGoals = [...beforeGoals, goal("villa", 361, { priority: 2, deadline: { year: 2056, month: 11 } })];
+    const horizon = Math.max(horizonFor(beforeGoals, nov), horizonFor(afterGoals, nov));
+    const before = project({ ...input, goals: beforeGoals, horizon });
+    const after = project({ ...input, goals: afterGoals, horizon });
+    expect(before.fill.reis).toBe(139);
+    expect(compareProjections(before, after, nov).map((s) => s.goalId)).toEqual(["villa"]);
   });
 });

@@ -23,6 +23,13 @@ export function savingsPerMonth(plan: PlanSettings, roomCents: Cents): Cents {
   return plan.monthlySavingsCents ?? Math.max(0, roomCents);
 }
 
+// Spec 5.1 standard proposal: with no plan amount and no budget lines the room is just the income, so propose 20 % instead.
+// A proposal is shown, never stored as the plan amount.
+export function savingsTarget(plan: PlanSettings, budget: Budget, hasBudgetLines: boolean): { cents: Cents; isProposal: boolean } {
+  const isProposal = plan.monthlySavingsCents === null && !hasBudgetLines;
+  return { cents: isProposal ? suggestedSavings(budget.incomeCents) : savingsPerMonth(plan, budget.roomCents), isProposal };
+}
+
 // 20 % of income rounded to € 10, in one division so exact halves stay exact.
 export function suggestedSavings(incomeCents: Cents): Cents {
   return Math.round(incomeCents / 5000) * 1000;

@@ -8,6 +8,7 @@ const ctx = (overrides: Partial<RuleContext> = {}): RuleContext => ({
   periodStart: "2026-09-29",
   nextPayday: null,
   depositDueCents: 0,
+  savingsLevel: 4,
   budget: { incomeCents: 200000, expensesCents: 150000, roomCents: 50000 },
   warnings: [],
   goals: [],
@@ -24,6 +25,7 @@ const goalRule = (overrides: Partial<RuleContext["goals"][number]> = {}) => ({
   status: null,
   extraNeededCents: 0,
   targetIsEstimate: false,
+  isEmergency: false,
   ...overrides,
 });
 
@@ -41,6 +43,10 @@ describe("checklist rules (spec 5.8)", () => {
     expect(title(items, "deposit:2026-09-29")).toBe("Zet € 500,00 opzij op 29 oktober");
     expect(rule(items, "deposit:2026-09-29")).toMatchObject({ urgency: "week", certainty: { level: 4 } });
     expect(keys(evaluateRules(ctx({ depositDueCents: 0 })))).not.toContain("deposit:2026-09-29");
+  });
+
+  test("deposit takes the certainty of the savings amount", () => {
+    expect(rule(evaluateRules(ctx({ depositDueCents: 50000, savingsLevel: 2 })), "deposit:2026-09-29")?.certainty.level).toBe(2);
   });
 
   test("deposit without a payday (irregular income) drops the date; the day has no leading zero", () => {
@@ -97,6 +103,15 @@ describe("checklist rules (spec 5.8)", () => {
       certainty: { level: 2 },
     });
     expect(keys(evaluateRules(ctx({ goals: [goalRule({ targetIsEstimate: false })] })))).not.toContain("estimate:g1");
+  });
+
+  test("estimate on the emergency fund asks to check its size, not to look up a price", () => {
+    const items = evaluateRules(ctx({ goals: [goalRule({ id: "nood", name: "Noodfonds", targetIsEstimate: true, isEmergency: true })] }));
+    expect(rule(items, "estimate:nood")).toMatchObject({
+      title: "Kijk na of je noodfonds groot genoeg is",
+      urgency: "later",
+      certainty: { level: 2 },
+    });
   });
 
   test("prefs and income kinds", () => {

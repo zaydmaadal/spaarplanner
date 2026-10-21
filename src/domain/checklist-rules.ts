@@ -4,11 +4,12 @@ import { formatEUR } from "./money";
 import { EXTRA_NEEDED_CAP, type GoalStatus } from "./projection";
 import type { Cents, Income, ISODate } from "./types";
 
-export type RuleGoal = { id: string; name: string; status: GoalStatus | null; extraNeededCents: Cents; targetIsEstimate: boolean };
+export type RuleGoal = { id: string; name: string; status: GoalStatus | null; extraNeededCents: Cents; targetIsEstimate: boolean; isEmergency: boolean };
 export type RuleContext = {
   periodStart: ISODate;
   nextPayday: ISODate | null;
   depositDueCents: Cents;
+  savingsLevel: Level; // certainty of the savings amount the deposit comes from
   budget: Budget;
   warnings: BudgetWarning[];
   goals: RuleGoal[];
@@ -23,7 +24,7 @@ const dayMonth = new Intl.DateTimeFormat("nl-BE", { day: "numeric", month: "long
 
 // Spec 5.8. Computed on every render and never stored while open; the UI hides keys the user ticked or dismissed.
 export function evaluateRules(ctx: RuleContext): RuleItem[] {
-  const { periodStart, nextPayday, depositDueCents, warnings, goals, incomes, prefs } = ctx;
+  const { periodStart, nextPayday, depositDueCents, savingsLevel, warnings, goals, incomes, prefs } = ctx;
   const items: RuleItem[] = [];
   const add = (key: string, title: string, urgency: Urgency, level: Level, reason: string) =>
     items.push({ key, title, urgency, certainty: { level, reason } });
@@ -31,7 +32,7 @@ export function evaluateRules(ctx: RuleContext): RuleItem[] {
 
   if (depositDueCents > 0) {
     const on = nextPayday ? ` op ${dayMonth.format(new Date(`${nextPayday}T00:00:00Z`))}` : "";
-    add(`deposit:${periodStart}`, `Zet ${formatEUR(depositDueCents)} opzij${on}`, "week", 4, "Berekend uit jouw inkomen en uitgaven");
+    add(`deposit:${periodStart}`, `Zet ${formatEUR(depositDueCents)} opzij${on}`, "week", savingsLevel, "Berekend uit jouw inkomen en uitgaven");
   }
   for (const w of warnings) {
     if (w.key === "negative_budget") {
@@ -49,7 +50,10 @@ export function evaluateRules(ctx: RuleContext): RuleItem[] {
           : `Spaar ${formatEUR(g.extraNeededCents)} meer per maand of verschuif de deadline van ${g.name}`;
       add(`goal_unreachable:${g.id}`, title, "month", 4, "Berekend uit jouw plan en deadline");
     }
-    if (g.targetIsEstimate) add(`estimate:${g.id}`, `Zoek de echte prijs van ${g.name} op`, "later", 2, "Het doelbedrag is een schatting");
+    if (g.targetIsEstimate) {
+      const title = g.isEmergency ? "Kijk na of je noodfonds groot genoeg is" : `Zoek de echte prijs van ${g.name} op`;
+      add(`estimate:${g.id}`, title, "later", 2, "Het doelbedrag is een schatting");
+    }
   }
   if (prefs.firstJob) add("ziekenfonds", "Sluit aan bij een ziekenfonds als titularis", "month", 3, "Een regel die kan veranderen");
   if (hasIncome("student")) add("student_hours", "Hou je studentenuren bij: studentenarbeid heeft een jaarlimiet", "month", 3, "Een regel die kan veranderen");

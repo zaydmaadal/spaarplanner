@@ -10,6 +10,7 @@ export type ProjectionInput = {
   startMonth: YearMonth;
   depositedThisPeriodCents: Cents;
   oneOffs: OneOff[];
+  horizon?: number; // periods to project; defaults to horizonFor, set it to compare projections over the same length
 };
 export type Fill = number | "full" | null; // period index k, already full, or not within horizon
 export type Projection = { fill: Record<string, Fill>; horizon: number };
@@ -24,17 +25,26 @@ export function horizonFor(goals: Goal[], startMonth: YearMonth): number {
   return Math.min(480, Math.max(120, ...months));
 }
 
+// Spec 5.4: the one-off joins the savings target of period 0, then the booked deposits come off.
+export function periodZeroAvailable(savingsCents: Cents, oneOffZeroCents: Cents, depositedCents: Cents): Cents {
+  return Math.max(0, savingsCents + oneOffZeroCents - depositedCents);
+}
+
+export function oneOffIn(oneOffs: OneOff[], month: YearMonth): Cents {
+  return oneOffs.filter((o) => monthIndex(o.month) === monthIndex(month)).reduce((sum, o) => sum + o.cents, 0);
+}
+
 // Spec 5.4: period by period, allocate (5.3), add the amounts to the balances, note the first period a goal is full.
 export function project(input: ProjectionInput): Projection {
   const { savingsCents, emergencySharePct, startMonth, depositedThisPeriodCents, oneOffs } = input;
   let goals = input.goals.filter((g) => !g.archived);
-  const horizon = horizonFor(goals, startMonth);
+  const horizon = input.horizon ?? horizonFor(goals, startMonth);
   const fill: Record<string, Fill> = Object.fromEntries(goals.map((g) => [g.id, g.balanceCents >= g.targetCents ? "full" : null]));
 
   for (let k = 0; k < horizon; k++) {
     const month = addMonths(startMonth, k);
-    const oneOff = oneOffs.filter((o) => monthIndex(o.month) === monthIndex(month)).reduce((sum, o) => sum + o.cents, 0);
-    const available = (k === 0 ? Math.max(0, savingsCents - depositedThisPeriodCents) : savingsCents) + oneOff;
+    const oneOff = oneOffIn(oneOffs, month);
+    const available = k === 0 ? periodZeroAvailable(savingsCents, oneOff, depositedThisPeriodCents) : savingsCents + oneOff;
     const got = allocate(available, goals, emergencySharePct, month);
     goals = goals.map((g) => ({ ...g, balanceCents: g.balanceCents + (got[g.id] ?? 0) }));
     for (const g of goals) if (fill[g.id] === null && g.balanceCents >= g.targetCents) fill[g.id] = k;

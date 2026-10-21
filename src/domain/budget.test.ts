@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { budgetWarnings, monthlyBudget, oneOffIncomes, savingsPerMonth, suggestedEmergencyTarget, suggestedSavings } from "./budget";
+import { budgetWarnings, monthlyBudget, oneOffIncomes, savingsPerMonth, savingsTarget, suggestedEmergencyTarget, suggestedSavings } from "./budget";
 import { income, line, plan } from "./test-helpers";
 
 const nov = { year: 2026, month: 11 };
@@ -23,6 +23,14 @@ describe("budget (spec 5.1)", () => {
   test("savings per month follows the room when no target is set", () => {
     expect(savingsPerMonth(plan({ monthlySavingsCents: null }), -5000)).toBe(0);
     expect(savingsPerMonth(plan({ monthlySavingsCents: 60000 }), 50000)).toBe(60000);
+  });
+
+  test("savings target: plan amount, else the 20 % proposal without budget lines, else the room", () => {
+    const budget = { incomeCents: 215000, expensesCents: 100000, roomCents: 115000 };
+    expect(savingsTarget(plan({ monthlySavingsCents: 20000 }), budget, false)).toEqual({ cents: 20000, isProposal: false });
+    expect(savingsTarget(plan(), budget, false)).toEqual({ cents: 43000, isProposal: true });
+    expect(savingsTarget(plan(), budget, true)).toEqual({ cents: 115000, isProposal: false });
+    expect(savingsTarget(plan(), { ...budget, roomCents: -5000 }, true)).toEqual({ cents: 0, isProposal: false });
   });
 
   test("suggestions", () => {

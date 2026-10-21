@@ -7,7 +7,7 @@ Plan: `docs/superpowers/plans/2026-10-21-spaarplanner-fase-1.md`
 ## Commands
 
 - `npm run dev` / `build` / `start`
-- `npm run lint`, `npm run typecheck` (`tsc --noEmit`)
+- `npm run lint`, `npm run typecheck` (`next typegen && tsc --noEmit`)
 - `npm test` (vitest run), `npm run e2e` (playwright test)
 - Node 24 (`.nvmrc`). CI runs lint, typecheck, test, build.
 
