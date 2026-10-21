@@ -99,7 +99,8 @@ spaarplanner/
 │  ├─ app/
 │  │  ├─ (publiek)/inloggen, registreren, privacy
 │  │  ├─ onboarding/[stap]
-│  │  ├─ (app)/overzicht, doelen, doelen/[id], plan, storten, meer, wachtwoord-wijzigen
+│  │  ├─ (app)/overzicht, doelen, doelen/[id], plan, storten, meer
+│  │  ├─ (account)/wachtwoord-wijzigen   (buiten (app): geen onboarding-check, anders een redirectlus met de proxy)
 │  │  ├─ beheer/                (alleen ADMIN_USER_IDS)
 │  │  ├─ api/cron/loondag/route.ts
 │  │  ├─ manifest.ts

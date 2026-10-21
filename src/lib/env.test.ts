@@ -9,13 +9,13 @@ afterEach(() => vi.unstubAllEnvs());
 describe("signupConfig", () => {
   it("is closed when SIGNUP_MODE is unset", async () => {
     vi.stubEnv("SIGNUP_MODE", "");
-    expect((await load()).signupConfig()).toEqual({ mode: "closed", inviteCode: null });
+    expect((await load()).signupConfig()).toEqual({ mode: "closed", inviteCode: null, hourlyCap: 5 });
   });
 
   it("returns the invite code in invite mode", async () => {
     vi.stubEnv("SIGNUP_MODE", "invite");
     vi.stubEnv("INVITE_CODE", "abc");
-    expect((await load()).signupConfig()).toEqual({ mode: "invite", inviteCode: "abc" });
+    expect((await load()).signupConfig()).toEqual({ mode: "invite", inviteCode: "abc", hourlyCap: 5 });
   });
 
   it("throws for invite without INVITE_CODE", async () => {
@@ -27,6 +27,27 @@ describe("signupConfig", () => {
   it("throws for an unknown mode", async () => {
     vi.stubEnv("SIGNUP_MODE", "maybe");
     expect((await load()).signupConfig).toThrow();
+  });
+
+  describe("hourlyCap", () => {
+    it("is 5 when SIGNUP_HOURLY_CAP is unset or empty", async () => {
+      vi.stubEnv("SIGNUP_HOURLY_CAP", undefined);
+      const { signupConfig } = await load();
+      expect(signupConfig().hourlyCap).toBe(5);
+      vi.stubEnv("SIGNUP_HOURLY_CAP", "");
+      expect(signupConfig().hourlyCap).toBe(5);
+    });
+
+    it("can be raised, for the e2e run", async () => {
+      vi.stubEnv("SIGNUP_HOURLY_CAP", "1000");
+      expect((await load()).signupConfig().hourlyCap).toBe(1000);
+    });
+
+    // Throwing, like an unknown SIGNUP_MODE: a typo must not silently disable or change the cap.
+    it.each(["abc", "0", "-1", "1.5", "Infinity"])("throws for %s", async (value) => {
+      vi.stubEnv("SIGNUP_HOURLY_CAP", value);
+      expect((await load()).signupConfig).toThrow();
+    });
   });
 });
 

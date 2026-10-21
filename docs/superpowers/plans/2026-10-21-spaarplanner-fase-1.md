@@ -493,7 +493,7 @@ export function createAdminSupabase(): SupabaseClient<Database>; // secret key, 
 ### Task 11: Register, log in, change password, log out
 
 **Files:**
-- Create: `src/data/schemas.ts` (start: `ActionResult`, `usernameSchema`, `passwordSchema`), `src/data/schemas.test.ts`, `src/data/actions/auth.ts`, `src/data/actions/auth.test.ts`, `src/app/(publiek)/layout.tsx`, `src/app/(publiek)/inloggen/page.tsx`, `src/app/(publiek)/registreren/page.tsx`, `src/app/(app)/wachtwoord-wijzigen/page.tsx`, `src/app/page.tsx`, `src/lib/auth-email.ts`, `e2e/auth.spec.ts`
+- Create: `src/data/schemas.ts` (start: `ActionResult`, `usernameSchema`, `passwordSchema`), `src/data/schemas.test.ts`, `src/data/actions/auth.ts`, `src/data/actions/auth.test.ts`, `src/app/(publiek)/layout.tsx`, `src/app/(publiek)/inloggen/page.tsx`, `src/app/(publiek)/registreren/page.tsx`, `src/app/(account)/wachtwoord-wijzigen/page.tsx`, `src/app/page.tsx`, `src/lib/auth-email.ts`, `e2e/auth.spec.ts`
 
 **Interfaces:**
 - Consumes: Task 10 clients and `signupConfig`.

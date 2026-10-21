@@ -7,10 +7,14 @@ import { changePasswordAction } from "@/data/actions/auth";
 
 type State = { error: string; fieldErrors?: Record<string, string> } | null;
 
-export function ChangePasswordForm() {
+// forced: right after an admin reset the temporary password is not asked again.
+export function ChangePasswordForm({ forced }: { forced: boolean }) {
   const router = useRouter();
   const [state, action, pending] = useActionState(async (_prev: State, formData: FormData): Promise<State> => {
-    const result = await changePasswordAction({ password: String(formData.get("password")) });
+    const result = await changePasswordAction({
+      password: String(formData.get("password")),
+      currentPassword: forced ? undefined : String(formData.get("currentPassword")),
+    });
     if (!result.ok) return result;
     router.replace("/");
     return null;
@@ -18,6 +22,15 @@ export function ChangePasswordForm() {
 
   return (
     <form action={action} className="flex flex-col gap-4">
+      {!forced && (
+        <Field
+          label="Huidig wachtwoord"
+          name="currentPassword"
+          type="password"
+          autoComplete="current-password"
+          error={state?.fieldErrors?.currentPassword}
+        />
+      )}
       <Field
         label="Nieuw wachtwoord"
         name="password"

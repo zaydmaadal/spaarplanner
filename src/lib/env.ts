@@ -65,11 +65,13 @@ export function validatePublicEnv(): void {
   loadPublic();
 }
 
-export function signupConfig(): { mode: "open" | "invite" | "closed"; inviteCode: string | null } {
+export function signupConfig(): { mode: "open" | "invite" | "closed"; inviteCode: string | null; hourlyCap: number } {
   const mode = z.enum(["open", "invite", "closed"]).parse(process.env.SIGNUP_MODE || "closed");
   const inviteCode = process.env.INVITE_CODE || null;
   if (mode === "invite" && !inviteCode) throw new Error("INVITE_CODE is required when SIGNUP_MODE=invite");
-  return { mode, inviteCode };
+  // Invalid throws (like SIGNUP_MODE) so a typo can never switch the cap off; CI e2e raises it.
+  const hourlyCap = z.coerce.number().int().positive().default(5).parse(process.env.SIGNUP_HOURLY_CAP || undefined);
+  return { mode, inviteCode, hourlyCap };
 }
 
 // Read on its own (not through serverEnv) so proxy.ts needs no other secret to hide /beheer from non-admins.

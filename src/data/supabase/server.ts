@@ -22,12 +22,14 @@ export async function createServerSupabase(): Promise<SupabaseClient<Database>> 
   });
 }
 
-export async function requireUserId(): Promise<string> {
+export async function requireClaims() {
   const supabase = await createServerSupabase();
   const { data } = await supabase.auth.getClaims();
   if (!data?.claims.sub) redirect("/inloggen");
-  return data.claims.sub;
+  return data.claims;
 }
+
+export const requireUserId = async (): Promise<string> => (await requireClaims()).sub;
 
 // Non-admins get a 404, so the page does not reveal that it exists. Lives here, not in a "use server"
 // file, so it is never a callable action endpoint.

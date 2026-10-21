@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 import { logoutAction } from "@/data/actions/auth";
-import { requireUserId } from "@/data/supabase/server";
+import { requireClaims } from "@/data/supabase/server";
 import { ChangePasswordForm } from "./change-password-form";
 
 export const metadata: Metadata = { title: "Wachtwoord wijzigen" };
 
 export default async function WachtwoordWijzigenPage() {
-  await requireUserId();
+  const claims = await requireClaims();
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center gap-6 px-4 py-8">
       <h1 className="text-2xl font-semibold">Wachtwoord wijzigen</h1>
-      <ChangePasswordForm />
+      <ChangePasswordForm forced={!!claims.app_metadata?.must_change_password} />
       <form action={logoutAction}>
         <button
           type="submit"
