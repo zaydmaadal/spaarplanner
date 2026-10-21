@@ -1,14 +1,14 @@
 "use server";
 
 import { createHash, timingSafeEqual } from "node:crypto";
-import { createClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createAdminSupabase } from "@/data/supabase/admin";
 import { createServerSupabase, requireClaims } from "@/data/supabase/server";
+import { verifyPassword } from "@/data/supabase/verify-password";
 import { fieldErrorsFrom, passwordSchema, usernameSchema, type ActionResult } from "@/data/schemas";
 import { usernameToEmail } from "@/lib/auth-email";
-import { publicEnv, signupConfig } from "@/lib/env";
+import { signupConfig } from "@/lib/env";
 
 const SOMETHING_WRONG = "Er ging iets mis. Probeer het opnieuw.";
 
@@ -85,14 +85,9 @@ export async function changePasswordAction(input: { password: string; currentPas
     if (typeof input.currentPassword !== "string" || !input.currentPassword) {
       return { ok: false, error: wrong, fieldErrors: { currentPassword: wrong } };
     }
-    // A fresh client that stores nothing, so the cookie session of this user is left alone.
-    const { error: verifyError } = await createClient(publicEnv.supabaseUrl, publicEnv.supabasePublishableKey, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    }).auth.signInWithPassword({ email: claims.email!, password: input.currentPassword });
-    if (verifyError?.code === "invalid_credentials") {
-      return { ok: false, error: wrong, fieldErrors: { currentPassword: wrong } };
-    }
-    if (verifyError) return { ok: false, error: SOMETHING_WRONG };
+    const check = await verifyPassword(claims.email!, input.currentPassword);
+    if (check === "wrong") return { ok: false, error: wrong, fieldErrors: { currentPassword: wrong } };
+    if (check === "error") return { ok: false, error: SOMETHING_WRONG };
   }
 
   // Before the password changes: a missing secret on a preview must not leave a half-done change.
