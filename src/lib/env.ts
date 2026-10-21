@@ -44,10 +44,27 @@ function loadPublic(): PublicEnv {
   return publicCache;
 }
 
-// Validated on first property access, so `next build` in CI works without a Supabase project.
-export const publicEnv = new Proxy({} as PublicEnv, {
-  get: (_, key) => loadPublic()[key as keyof PublicEnv],
-});
+// Getters validate on first access, so `next build` in CI works without a Supabase project.
+// Plain enumerable getters (not a Proxy) so Object.keys and spread work.
+export const publicEnv: PublicEnv = {
+  get supabaseUrl() {
+    return loadPublic().supabaseUrl;
+  },
+  get supabasePublishableKey() {
+    return loadPublic().supabasePublishableKey;
+  },
+  get authEmailDomain() {
+    return loadPublic().authEmailDomain;
+  },
+  get vapidPublicKey() {
+    return loadPublic().vapidPublicKey;
+  },
+};
+
+// Called from next.config.ts on Vercel so a missing public variable fails the build.
+export function validatePublicEnv(): void {
+  loadPublic();
+}
 
 export function signupConfig(): { mode: "open" | "invite" | "closed"; inviteCode: string | null } {
   const mode = z.enum(["open", "invite", "closed"]).parse(process.env.SIGNUP_MODE || "closed");

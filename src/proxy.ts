@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/data/database.types";
 import { publicEnv } from "@/lib/env";
-import { isPublicPath } from "@/lib/paths";
+import { redirectTarget } from "@/lib/paths";
 
 export async function proxy(request: NextRequest) {
   const nonce = btoa(crypto.randomUUID());
@@ -10,11 +10,14 @@ export async function proxy(request: NextRequest) {
     "default-src 'self'",
     // React needs eval in development only (Next CSP guide).
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,
-    `connect-src 'self' ${publicEnv.supabaseUrl}`,
+    `connect-src 'self' ${new URL(publicEnv.supabaseUrl).origin}`,
     "frame-ancestors 'none'",
     "img-src 'self' data:",
     "style-src 'self' 'unsafe-inline'",
     "worker-src 'self'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
   ].join("; ");
 
   // Next reads the nonce from the request's CSP header while rendering.
@@ -42,18 +45,14 @@ export async function proxy(request: NextRequest) {
 
   // Do not run code between createServerClient and getClaims: it refreshes the session.
   const { data } = await supabase.auth.getClaims();
-  const { pathname } = request.nextUrl;
-  const target =
-    !data && !isPublicPath(pathname)
-      ? "/inloggen"
-      : data?.claims.app_metadata?.must_change_password && pathname !== "/wachtwoord-wijzigen"
-        ? "/wachtwoord-wijzigen"
-        : null;
+  const target = redirectTarget(request.nextUrl.pathname, data?.claims ?? null);
 
   let result = response;
   if (target) {
+    // 303 so a redirected POST (server action) is retried as GET; 307 keeps GET/HEAD as they are.
+    const status = request.method === "GET" || request.method === "HEAD" ? 307 : 303;
+    result = NextResponse.redirect(new URL(target, request.url), status);
     // A redirect must carry the refreshed auth cookies, or the session is lost.
-    result = NextResponse.redirect(new URL(target, request.url));
     response.headers.getSetCookie().forEach((c) => result.headers.append("set-cookie", c));
     Object.entries(authHeaders).forEach(([k, v]) => result.headers.set(k, v));
   }

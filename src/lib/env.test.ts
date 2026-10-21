@@ -70,9 +70,17 @@ describe("serverEnv", () => {
 });
 
 describe("publicEnv", () => {
+  const stubAll = () => {
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "http://127.0.0.1:54321");
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "sb_publishable_x");
+    vi.stubEnv("NEXT_PUBLIC_AUTH_EMAIL_DOMAIN", "u.zaydmaadal.site");
+    vi.stubEnv("NEXT_PUBLIC_VAPID_PUBLIC_KEY", "pub");
+  };
+
   it("does not throw on import or when untouched without env (CI build)", async () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "");
-    await expect(load()).resolves.toBeDefined();
+    const { publicEnv } = await load();
+    expect(Object.keys(publicEnv)).toHaveLength(4);
   });
 
   it("throws on access when a public variable is missing", async () => {
@@ -81,13 +89,29 @@ describe("publicEnv", () => {
     expect(() => publicEnv.supabaseUrl).toThrow(/NEXT_PUBLIC_SUPABASE_URL/);
   });
 
-  it("returns the values when all are set", async () => {
-    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "http://127.0.0.1:54321");
-    vi.stubEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "sb_publishable_x");
-    vi.stubEnv("NEXT_PUBLIC_AUTH_EMAIL_DOMAIN", "u.zaydmaadal.site");
-    vi.stubEnv("NEXT_PUBLIC_VAPID_PUBLIC_KEY", "pub");
+  it("returns the values when all are set, and lists its four keys", async () => {
+    stubAll();
     const { publicEnv } = await load();
     expect(publicEnv.supabaseUrl).toBe("http://127.0.0.1:54321");
-    expect(publicEnv.authEmailDomain).toBe("u.zaydmaadal.site");
+    expect(Object.keys(publicEnv)).toEqual([
+      "supabaseUrl",
+      "supabasePublishableKey",
+      "authEmailDomain",
+      "vapidPublicKey",
+    ]);
+    expect({ ...publicEnv }).toEqual({
+      supabaseUrl: "http://127.0.0.1:54321",
+      supabasePublishableKey: "sb_publishable_x",
+      authEmailDomain: "u.zaydmaadal.site",
+      vapidPublicKey: "pub",
+    });
+  });
+
+  it("validatePublicEnv throws when a variable is missing and passes when all are set", async () => {
+    vi.stubEnv("NEXT_PUBLIC_VAPID_PUBLIC_KEY", "");
+    expect((await load()).validatePublicEnv).toThrow(/NEXT_PUBLIC_VAPID_PUBLIC_KEY/);
+    vi.resetModules();
+    stubAll();
+    expect((await load()).validatePublicEnv).not.toThrow();
   });
 });
