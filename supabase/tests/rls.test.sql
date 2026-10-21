@@ -1,5 +1,5 @@
 begin;
-select plan(56);
+select plan(58);
 
 -- Users a and b; the trigger gives each a profile and a plan. Every other user table gets one row per user.
 insert into auth.users (id, email) values
@@ -88,6 +88,13 @@ select throws_ok($$select * from admin_audit$$, '42501', null, 'a cannot read ad
 select throws_ok($$select * from notification_log$$, '42501', null, 'a cannot read notification_log');
 select is((select balance_cents from goal_balances where goal_id = '11111111-1111-1111-1111-111111111111'), 1500::bigint, 'a sees their own balance');
 select is((select count(*) from goal_balances where user_id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'), 0::bigint, 'a does not see the balance of b');
+
+-- The row cap also holds for the API role (the trigger function is security definer, so it counts under RLS too).
+select lives_ok($$insert into push_subscriptions (user_id, endpoint, p256dh, auth)
+  select 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'https://fcm.googleapis.com/fcm/send/a' || n, 'p', 'a' from generate_series(2, 10) n$$,
+  'a can store 10 push subscriptions');
+select throws_ok($$insert into push_subscriptions (user_id, endpoint, p256dh, auth) values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'https://fcm.googleapis.com/fcm/send/a11', 'p', 'a')$$,
+  '23514', 'row limit reached for push_subscriptions', 'a cannot store an 11th push subscription');
 
 -- b is untouched.
 reset role;

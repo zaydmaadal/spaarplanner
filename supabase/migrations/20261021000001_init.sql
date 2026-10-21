@@ -64,9 +64,20 @@ create table public.income_sources (
     and payday_rule ? 'type'
     and payday_rule ->> 'type' in ('day_of_month', 'last_working_day', 'weekday', 'irregular')
     and pg_column_size(payday_rule) < 512
+    -- coalesce: a missing field makes the CASE null, and a null CHECK passes.
+    and coalesce(case payday_rule ->> 'type'
+      when 'day_of_month' then jsonb_typeof(payday_rule -> 'day') = 'number'
+        and payday_rule ->> 'day' ~ '^([1-9]|[12][0-9]|3[01])$'
+        and payday_rule ->> 'weekend' in ('before', 'after')
+      when 'weekday' then jsonb_typeof(payday_rule -> 'weekday') = 'number'
+        and payday_rule ->> 'weekday' ~ '^[1-7]$'
+      else true
+    end, false)
   ),
   is_estimate boolean not null default false,
-  active boolean not null default true
+  active boolean not null default true,
+  check (frequency <> 'yearly' or month is not null),
+  check (frequency <> 'once' or date is not null)
 );
 create index on public.income_sources (user_id);
 
@@ -226,6 +237,32 @@ create policy "own rows" on public.push_subscriptions for all to authenticated
 -- No grants for authenticated, so these policies never match; they only state the intent.
 create policy "service role only" on public.notification_log for all to authenticated using (false);
 create policy "service role only" on public.admin_audit for all to authenticated using (false);
+
+-- per-user row caps (spec 6) --------------------------------------------------
+-- Nobody fills the free 500 MB database or stalls the cron. The trigger argument is the cap.
+-- shortcut: the count is not serialised, so parallel requests can overshoot a cap by the size of the burst; add an advisory lock if that is abused.
+create function private.enforce_row_cap() returns trigger language plpgsql security definer set search_path = '' as $$
+declare n bigint;
+begin
+  execute format('select count(*) from %I.%I where user_id = $1', tg_table_schema, tg_table_name) into n using new.user_id;
+  if n >= tg_argv[0]::int then
+    raise exception 'row limit reached for %', tg_table_name using errcode = 'check_violation';
+  end if;
+  return new;
+end $$;
+
+create trigger push_subscriptions_row_cap before insert on public.push_subscriptions
+  for each row execute function private.enforce_row_cap(10);
+create trigger income_sources_row_cap before insert on public.income_sources
+  for each row execute function private.enforce_row_cap(20);
+create trigger goals_row_cap before insert on public.goals
+  for each row execute function private.enforce_row_cap(50);
+create trigger budget_lines_row_cap before insert on public.budget_lines
+  for each row execute function private.enforce_row_cap(100);
+create trigger checklist_items_row_cap before insert on public.checklist_items
+  for each row execute function private.enforce_row_cap(500);
+create trigger transactions_row_cap before insert on public.transactions
+  for each row execute function private.enforce_row_cap(20000);
 
 -- sign-up trigger -----------------------------------------------------------
 create function private.handle_new_user() returns trigger language plpgsql security definer set search_path = '' as $$
