@@ -1,3 +1,4 @@
+import type { TokenColor } from "@/components/progress-bar";
 import { formatMonthNl } from "@/domain/dates";
 import type { GoalStatus } from "@/domain/projection";
 import type { ISODate, YearMonth } from "@/domain/types";
@@ -7,6 +8,9 @@ const longDate = new Intl.DateTimeFormat("nl-BE", { weekday: "long", day: "numer
 
 // "donderdag 29 oktober". The date is a calendar day, so format it as UTC.
 export const longDateNl = (d: ISODate) => longDate.format(new Date(`${d}T00:00:00Z`));
+
+// The four pot colours repeat after four pots; the name and the amounts carry the meaning.
+export const potColor = (i: number): TokenColor => `var(--color-pot-${(i % 4) + 1})`;
 
 // When a pot is full: "vol rond mei 2027", "vol", or "niet binnen 10 jaar" when the projection never gets there.
 export function fillText(fill: YearMonth | "full" | null, horizonYears: number): string {

@@ -14,7 +14,7 @@ const TABS = {
 const item = "flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 rounded-strip text-xs font-semibold";
 
 // Every screen renders its own tab as active. The fixed bar needs bottom padding on the page content, see (app)/layout.tsx.
-export function BottomNav({ active }: { active: Tab }) {
+export function BottomNav({ active }: { active: Tab | "storten" }) {
   const tab = (key: Tab) => {
     const { href, label, Icon } = TABS[key];
     return (
@@ -34,7 +34,7 @@ export function BottomNav({ active }: { active: Tab }) {
       <div className="mx-auto flex max-w-lg items-center gap-1 px-2 py-2">
         {tab("overzicht")}
         {tab("doelen")}
-        <Link href="/storten" className={cn(item, "bg-action text-on-action")}>
+        <Link href="/storten" aria-current={active === "storten" ? "page" : undefined} className={cn(item, "bg-action text-on-action")}>
           <Plus aria-hidden className="size-6" />
           Storten
         </Link>

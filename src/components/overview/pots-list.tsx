@@ -1,13 +1,10 @@
 import Link from "next/link";
 import { useId } from "react";
 import { Money } from "@/components/money";
-import { ProgressBar, type TokenColor } from "@/components/progress-bar";
+import { ProgressBar } from "@/components/progress-bar";
 import { CERTAINTY_LABEL } from "@/domain/certainty";
 import type { GoalView } from "@/domain/dashboard";
-import { fillText, StatusBadge } from "./labels";
-
-// The four pot colours repeat after four pots; the name and the amounts carry the meaning.
-const potColor = (i: number): TokenColor => `var(--color-pot-${(i % 4) + 1})`;
+import { fillText, potColor, StatusBadge } from "./labels";
 
 export function PotsList({ goals, horizonYears }: { goals: GoalView[]; horizonYears: number }) {
   const titleId = useId();

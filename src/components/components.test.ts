@@ -75,4 +75,10 @@ describe("BottomNav", () => {
     expect(out).toMatch(/<a[^>]*href="\/doelen"[^>]*aria-current="page"|<a[^>]*aria-current="page"[^>]*href="\/doelen"/);
     expect(out).toMatch(/<a[^>]*href="\/storten"[^>]*>.*?Storten/);
   });
+
+  it("marks the middle button on the deposit screen, and no tab", () => {
+    const out = html(h(BottomNav, { active: "storten" }));
+    expect(count(out, 'aria-current="page"')).toBe(1);
+    expect(out).toMatch(/<a[^>]*href="\/storten"[^>]*aria-current="page"|<a[^>]*aria-current="page"[^>]*href="\/storten"/);
+  });
 });
