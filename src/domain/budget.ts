@@ -35,7 +35,8 @@ export function suggestedEmergencyTarget(expensesCents: Cents): Cents {
 export function budgetWarnings(plan: PlanSettings, budget: Budget): BudgetWarning[] {
   const warnings: BudgetWarning[] = [];
   if (budget.roomCents < 0) warnings.push({ key: "negative_budget" });
-  if (plan.monthlySavingsCents !== null && plan.monthlySavingsCents > budget.roomCents) {
+  // On a negative room "je wil sparen maar houdt over" would read oddly, so only negative_budget shows.
+  else if (plan.monthlySavingsCents !== null && plan.monthlySavingsCents > budget.roomCents) {
     warnings.push({ key: "over_target", wantCents: plan.monthlySavingsCents, roomCents: budget.roomCents });
   }
   return warnings;
@@ -53,6 +54,7 @@ export function oneOffIncomes(incomes: Income[], fromPeriodStart: ISODate, start
         if (month.month === i.month) out.push({ month, cents: i.amountCents });
       }
     } else if (i.frequency === "once" && i.date !== null && i.date >= fromPeriodStart) {
+      // shortcut: a one-off counts in the period whose month equals its calendar month; use the containing period once payday rules are passed in
       out.push({ month: toYearMonth(i.date), cents: i.amountCents });
     }
   }

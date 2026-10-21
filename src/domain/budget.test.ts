@@ -39,6 +39,12 @@ describe("budget (spec 5.1)", () => {
     ]);
   });
 
+  test("no over-target warning when the budget is negative", () => {
+    expect(budgetWarnings(plan({ monthlySavingsCents: 0 }), { incomeCents: 0, expensesCents: 10000, roomCents: -10000 })).toEqual([{ key: "negative_budget" }]);
+    expect(budgetWarnings(plan({ monthlySavingsCents: 60000 }), { incomeCents: 0, expensesCents: 5000, roomCents: -5000 })).toEqual([{ key: "negative_budget" }]);
+    expect(budgetWarnings(plan({ monthlySavingsCents: 0 }), { incomeCents: 0, expensesCents: 0, roomCents: 0 })).toEqual([]);
+  });
+
   test("one-off incomes: yearly every year in the horizon, once on its date, never before the current period", () => {
     expect(
       oneOffIncomes(
