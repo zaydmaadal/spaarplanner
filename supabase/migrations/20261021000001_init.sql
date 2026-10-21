@@ -2,11 +2,15 @@
 -- own rows only for authenticated, everything for service_role (server only).
 
 create schema if not exists private;
+-- Nothing in private is callable through the API: the schema has no usage grant and the explicit revoke
+-- after handle_new_user covers every function. The next line only records intent: schema defaults are
+-- added to the global ones, so it cannot remove the implicit PUBLIC execute on its own.
+alter default privileges in schema private revoke execute on functions from public;
 
 -- profiles ------------------------------------------------------------------
 create table public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
-  username text not null unique check (char_length(username) between 1 and 80),
+  username text not null unique check (username ~ '^[a-z0-9]([a-z0-9._-]{0,18}[a-z0-9])?$' and username !~ '\.\.'), -- spec 7
   display_name text check (char_length(display_name) <= 80),
   locale text not null default 'nl-BE' check (char_length(locale) <= 80),
   currency text not null default 'EUR' check (char_length(currency) <= 80),
@@ -57,6 +61,7 @@ create table public.income_sources (
   date date,
   payday_rule jsonb not null default '{"type": "irregular"}' check (
     jsonb_typeof(payday_rule) = 'object'
+    and payday_rule ? 'type'
     and payday_rule ->> 'type' in ('day_of_month', 'last_working_day', 'weekday', 'irregular')
     and pg_column_size(payday_rule) < 512
   ),
@@ -143,7 +148,7 @@ create table public.push_subscriptions (
   ),
   p256dh text not null check (char_length(p256dh) <= 200),
   auth text not null check (char_length(auth) <= 200),
-  user_agent text check (char_length(user_agent) <= 200),
+  user_agent text check (char_length(user_agent) <= 500),
   created_at timestamptz not null default now(),
   last_success_at timestamptz,
   failure_count integer not null default 0 check (failure_count >= 0)
@@ -230,7 +235,7 @@ begin
   return new;
 end $$;
 
-revoke all on all functions in schema private from public;
+revoke all on all functions in schema private from public, anon, authenticated;
 
 create trigger on_auth_user_created after insert on auth.users
   for each row execute function private.handle_new_user();

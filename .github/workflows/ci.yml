@@ -28,7 +28,7 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - run: npx supabase start
+      - run: npx supabase start -x studio,imgproxy,storage-api,realtime,edge-runtime,logflare,vector,supavisor,mailpit
       - run: npx supabase test db
       - run: npm run db:types
       - run: git diff --exit-code src/data/database.types.ts
