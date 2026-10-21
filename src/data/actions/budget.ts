@@ -5,7 +5,8 @@ import { budgetLineSchema, idSchema, type ActionResult } from "@/data/schemas";
 import { createServerSupabase, requireUserId } from "@/data/supabase/server";
 import { dbFailure, done, fail, invalid, SOMETHING_WRONG } from "./shared";
 
-export async function saveBudgetLineAction(input: z.input<typeof budgetLineSchema>): Promise<ActionResult> {
+// Returns the id, like saveIncomeAction.
+export async function saveBudgetLineAction(input: z.input<typeof budgetLineSchema>): Promise<ActionResult<{ id: string }>> {
   const userId = await requireUserId();
   const parsed = budgetLineSchema.safeParse(input);
   if (!parsed.success) return invalid(parsed.error);
@@ -13,10 +14,12 @@ export async function saveBudgetLineAction(input: z.input<typeof budgetLineSchem
 
   const row = { kind: v.kind, category: v.category, name: v.name, amount_cents: amount, is_estimate: isEstimate };
   const supabase = await createServerSupabase();
-  const { error } = id
-    ? await supabase.from("budget_lines").update(row).eq("id", id).eq("user_id", userId)
-    : await supabase.from("budget_lines").insert({ ...row, user_id: userId });
-  return error ? dbFailure(error) : done();
+  if (id) {
+    const { error } = await supabase.from("budget_lines").update(row).eq("id", id).eq("user_id", userId);
+    return error ? dbFailure(error) : done({ id });
+  }
+  const { data, error } = await supabase.from("budget_lines").insert({ ...row, user_id: userId }).select("id").single();
+  return error ? dbFailure(error) : done({ id: data.id });
 }
 
 export async function deleteBudgetLineAction(id: string): Promise<ActionResult> {

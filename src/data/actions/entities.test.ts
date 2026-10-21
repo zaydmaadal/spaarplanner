@@ -33,9 +33,9 @@ const income = {
 };
 
 describe("incomes", () => {
-  it("inserts with the session user and drops month, date and the low amount that do not apply", async () => {
-    const calls = setup();
-    expect(await saveIncomeAction({ ...income, amountLow: "1.800", month: 5, date: "2027-01-01", user_id: "x" } as typeof income)).toMatchObject({ ok: true });
+  it("inserts with the session user and drops month, date and the low amount that do not apply, and returns the new id", async () => {
+    const calls = setup(() => ({ data: { id: ID } }));
+    expect(await saveIncomeAction({ ...income, amountLow: "1.800", month: 5, date: "2027-01-01", user_id: "x" } as typeof income)).toEqual({ ok: true, data: { id: ID } });
     expect(args(calls[0], "insert")).toEqual([
       {
         user_id: "user-1",
@@ -56,14 +56,14 @@ describe("incomes", () => {
   });
 
   it("keeps the low amount of variable income and the month of yearly income", async () => {
-    const calls = setup();
+    const calls = setup(() => ({ data: { id: ID } }));
     await saveIncomeAction({ ...income, variability: "variable", amountLow: "1.800", frequency: "yearly", month: 12 });
     expect(args(calls[0], "insert")![0]).toMatchObject({ amount_low_cents: 180000, month: 12, date: null });
   });
 
-  it("updates by id and owner, without writing user_id", async () => {
+  it("updates by id and owner, without writing user_id, and returns that id", async () => {
     const calls = setup();
-    await saveIncomeAction({ ...income, id: ID });
+    expect(await saveIncomeAction({ ...income, id: ID })).toEqual({ ok: true, data: { id: ID } });
     expect(args(calls[0], "update")![0]).not.toHaveProperty("user_id");
     expect(calls[0].ops.filter(([op]) => op === "eq")).toEqual([["eq", ["id", ID]], ...owner]);
   });
@@ -85,13 +85,13 @@ describe("incomes", () => {
 describe("budget lines", () => {
   const line = { kind: "fixed" as const, category: "Wonen", name: "Huur", amount: "500" };
 
-  it("inserts and updates like incomes", async () => {
-    const calls = setup();
-    await saveBudgetLineAction(line);
+  it("inserts and updates like incomes, and returns the id", async () => {
+    const calls = setup((call) => (has(call, "insert") ? { data: { id: ID } } : {}));
+    expect(await saveBudgetLineAction(line)).toEqual({ ok: true, data: { id: ID } });
     expect(args(calls[0], "insert")).toEqual([
       { user_id: "user-1", kind: "fixed", category: "Wonen", name: "Huur", amount_cents: 50000, is_estimate: false },
     ]);
-    await saveBudgetLineAction({ ...line, id: ID, isEstimate: true });
+    expect(await saveBudgetLineAction({ ...line, id: ID, isEstimate: true })).toEqual({ ok: true, data: { id: ID } });
     expect(args(calls[1], "update")).toEqual([{ kind: "fixed", category: "Wonen", name: "Huur", amount_cents: 50000, is_estimate: true }]);
     expect(calls[1].ops).toContainEqual(["eq", ["user_id", "user-1"]]);
   });

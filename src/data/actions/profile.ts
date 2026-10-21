@@ -13,6 +13,8 @@ const PREF_KEYS = {
   noInterestSavings: "no_interest_savings",
   showBasmala: "show_basmala",
   contextNote: "context_note",
+  startBalance: "start_balance_cents",
+  emergencyTarget: "emergency_target_cents",
 } as const;
 
 export async function saveProfileAction(input: z.input<typeof profileSchema>): Promise<ActionResult> {

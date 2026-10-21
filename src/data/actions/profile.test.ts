@@ -40,6 +40,13 @@ describe("saveProfileAction", () => {
     });
   });
 
+  it("keeps what step 6 of the onboarding asked as cents (null clears it), until the emergency fund exists", async () => {
+    const calls = setup();
+    await saveProfileAction({ prefs: { startBalance: "6.000", emergencyTarget: null } });
+    expect(args(update(calls), "update")![0]).toEqual({ prefs: { ...stored, start_balance_cents: 600000, emergency_target_cents: null } });
+    expect((await saveProfileAction({ prefs: { startBalance: "veel" } })).ok).toBe(false);
+  });
+
   it("takes only whitelisted keys and values, so no extra key can reach the jsonb", async () => {
     const calls = setup();
     const bad = await saveProfileAction({ prefs: { palette: "neon" } } as never);

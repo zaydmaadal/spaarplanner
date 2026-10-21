@@ -30,7 +30,7 @@ export function fieldErrorsFrom(error: z.ZodError): Record<string, string> {
 }
 
 // Entities (spec 6). The limits are the CHECKs of the migration, so the database never has to say no.
-const MAX_CENTS = 100_000_000_000;
+export const MAX_CENTS = 100_000_000_000;
 
 // Amounts come in as text from the form (Dutch notation) and leave as whole cents. Negative amounts do not exist:
 // a withdrawal is a direction, not a sign.
@@ -129,6 +129,9 @@ export const profileSchema = z.object({
       noInterestSavings: z.boolean().optional(),
       showBasmala: z.boolean().optional(),
       contextNote: z.string().max(2000, "Je notitie mag hoogstens 2.000 tekens hebben.").optional(),
+      // Step 6 of the onboarding, kept here because the emergency fund only exists after step 8 (null: not given).
+      startBalance: moneySchema.nullable().optional(),
+      emergencyTarget: moneySchema.nullable().optional(),
     })
     .optional(),
 });

@@ -6,7 +6,8 @@ import { createServerSupabase, requireUserId } from "@/data/supabase/server";
 import { dbFailure, done, fail, invalid, SOMETHING_WRONG } from "./shared";
 
 // Full replace: optional fields that are left out reset to their defaults, so forms must send the whole object.
-export async function saveIncomeAction(input: z.input<typeof incomeSchema>): Promise<ActionResult> {
+// Returns the id so a form that saves several rows can update, not insert again, when it has to try again.
+export async function saveIncomeAction(input: z.input<typeof incomeSchema>): Promise<ActionResult<{ id: string }>> {
   const userId = await requireUserId();
   const parsed = incomeSchema.safeParse(input);
   if (!parsed.success) return invalid(parsed.error);
@@ -27,10 +28,12 @@ export async function saveIncomeAction(input: z.input<typeof incomeSchema>): Pro
     active: v.active,
   };
   const supabase = await createServerSupabase();
-  const { error } = id
-    ? await supabase.from("income_sources").update(row).eq("id", id).eq("user_id", userId)
-    : await supabase.from("income_sources").insert({ ...row, user_id: userId });
-  return error ? dbFailure(error) : done();
+  if (id) {
+    const { error } = await supabase.from("income_sources").update(row).eq("id", id).eq("user_id", userId);
+    return error ? dbFailure(error) : done({ id });
+  }
+  const { data, error } = await supabase.from("income_sources").insert({ ...row, user_id: userId }).select("id").single();
+  return error ? dbFailure(error) : done({ id: data.id });
 }
 
 export async function deleteIncomeAction(id: string): Promise<ActionResult> {
