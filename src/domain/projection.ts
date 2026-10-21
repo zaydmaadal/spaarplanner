@@ -16,7 +16,8 @@ export type Projection = { fill: Record<string, Fill>; horizon: number };
 export type GoalStatus = "op_schema" | "krap" | "niet_haalbaar";
 export type Shift = { goalId: string; from: YearMonth | "full" | null; to: YearMonth | "full" | null; deltaMonths: number | null };
 
-const EXTRA_CAP_EUROS = 100_000;
+export const EXTRA_NEEDED_CAP: Cents = 10_000_000; // returned by extraNeededCents when no amount within it is enough
+const EXTRA_CAP_EUROS = EXTRA_NEEDED_CAP / 100;
 
 export function horizonFor(goals: Goal[], startMonth: YearMonth): number {
   const months = goals.flatMap((g) => (g.archived || !g.deadline ? [] : [monthsInclusive(startMonth, g.deadline)]));
@@ -68,7 +69,7 @@ export function extraNeededCents(input: ProjectionInput, goalId: string): Cents 
   const g = withDeadline(input, goalId);
   if (!g || goalStatus(input, goalId) !== "niet_haalbaar") return 0;
   const works = (euros: number) => fullByDeadline({ ...input, savingsCents: input.savingsCents + euros * 100 }, g);
-  if (!works(EXTRA_CAP_EUROS)) return EXTRA_CAP_EUROS * 100;
+  if (!works(EXTRA_CAP_EUROS)) return EXTRA_NEEDED_CAP;
   let lo = 1;
   let hi = EXTRA_CAP_EUROS;
   while (lo < hi) {
