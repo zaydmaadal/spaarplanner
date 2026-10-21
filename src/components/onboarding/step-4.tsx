@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { deleteBudgetLineAction, saveBudgetLineAction } from "@/data/actions/budget";
 import { toEuroInput } from "@/domain/money";
 import type { BudgetLine } from "@/domain/types";
-import { deleteRows, saveRows, useRows, type Errors, type Row } from "./rows";
+import { deleteRows, refuseBlank, saveRows, useRows, type Errors, type Row } from "./rows";
 import { StepShell, type Mode } from "./step-shell";
 
 type Cost = Row & { name: string; category: string; amount: string; isEstimate: boolean; custom: boolean };
@@ -22,13 +22,14 @@ export function Step4({ mode, lines }: { mode: Mode; lines: BudgetLine[] }) {
   const [errors, setErrors] = useState<Record<string, Errors>>({});
 
   async function save() {
+    const refused = refuseBlank(mode, rows.rows);
     const saved = await saveRows(
-      rows.rows,
+      refused.send,
       (row) => saveBudgetLineAction({ id: row.id, kind: "fixed", category: row.category, name: row.name, amount: row.amount, isEstimate: row.isEstimate }),
       (key, id) => rows.patch(key, { id }),
     );
-    setErrors(saved.errors);
-    return saved.message ?? (await deleteRows(rows.removed, deleteBudgetLineAction, rows.forget));
+    setErrors({ ...refused.errors, ...saved.errors });
+    return saved.message ?? refused.message ?? (await deleteRows(rows.removed, deleteBudgetLineAction, rows.forget));
   }
 
   const chosen = (name: string) => rows.rows.some((r) => !r.custom && r.name === name);

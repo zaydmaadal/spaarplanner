@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { useId } from "react";
 import { Money } from "@/components/money";
 import { fillText, StatusBadge } from "@/components/overview/labels";
 import { CERTAINTY_LABEL } from "@/domain/certainty";
@@ -10,10 +9,9 @@ import { byFill } from "./helpers";
 // Spec 8.6: the pots in the order they fill, each with its month. The month is the milestone; "vol" and "niet binnen
 // 10 jaar" take its place for a pot that is full or does not fill within the horizon.
 export function Timeline({ goals, horizonYears }: { goals: GoalView[]; horizonYears: number }) {
-  const titleId = useId();
   return (
-    <section aria-labelledby={titleId} className="flex flex-col gap-4 rounded-card bg-surface p-5">
-      <h2 id={titleId} className="font-display text-xl font-semibold">
+    <section aria-label="Tijdlijn" className="flex flex-col gap-4 rounded-card bg-surface p-5">
+      <h2 className="font-display text-xl font-semibold">
         Tijdlijn
       </h2>
       {goals.length === 0 ? (

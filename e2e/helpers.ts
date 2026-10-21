@@ -20,9 +20,12 @@ export async function fillAndSubmit(page: Page, username: string, pw: string, bu
   await form.getByRole("button", { name: button }).click();
 }
 
+// Returns once the sign-up is through and the session is set, on the first onboarding step: a goto to a private page before
+// that would race the sign-in and land on the login page.
 export async function register(page: Page, username: string) {
   await page.goto("/registreren");
   await fillAndSubmit(page, username, password, "Account maken");
+  await expect(page).toHaveURL(/\/onboarding\/1$/);
 }
 
 // Next keeps the previous step mounted but hidden (React Activity): wait until the step's form is hydrated and only

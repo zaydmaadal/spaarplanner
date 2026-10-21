@@ -1,4 +1,3 @@
-import { useId } from "react";
 import { Money } from "@/components/money";
 import type { Cents, ISODate } from "@/domain/types";
 
@@ -9,10 +8,9 @@ const day = new Intl.DateTimeFormat("nl-BE", { day: "numeric", month: "long", ye
 // Spec 8.4: the deposits and withdrawals of one pot, newest first. The words say which is which, not only the sign.
 // shortcut: the page passes the last 100 bookings; the balance below is of all of them. Add paging when someone gets there.
 export function History({ bookings, balanceCents }: { bookings: Booking[]; balanceCents: Cents }) {
-  const titleId = useId();
   return (
-    <section aria-labelledby={titleId} className="flex flex-col gap-4 rounded-card bg-surface p-5">
-      <h2 id={titleId} className="font-display text-xl font-semibold">
+    <section aria-label="Geschiedenis" className="flex flex-col gap-4 rounded-card bg-surface p-5">
+      <h2 className="font-display text-xl font-semibold">
         Geschiedenis
       </h2>
       {bookings.length === 0 ? (

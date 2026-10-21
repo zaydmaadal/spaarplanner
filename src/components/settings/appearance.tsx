@@ -14,24 +14,30 @@ const THEMES: { value: Theme; label: string }[] = [
 ];
 
 // Spec 8.7: palette and theme. The choice shows on <html> at once (the picker sets data-palette itself) and is saved with
-// both values, so two quick changes cannot undo each other.
+// both values, so two quick changes cannot undo each other. When the save fails, the page goes back to what it was.
 export function Appearance({ palette: storedPalette, theme: storedTheme }: { palette: Palette; theme: Theme }) {
   const [palette, setPalette] = useState(storedPalette);
   const [theme, setTheme] = useState(storedTheme);
+  const html = () => document.documentElement.dataset;
 
-  const save = (prefs: { palette: Palette; theme: Theme }) =>
-    saveProfileAction({ prefs }).then(
-      (result) => result.ok || toast.error(result.error),
-      () => toast.error("Opslaan lukte niet. Probeer het opnieuw."),
-    );
+  async function save(prefs: { palette: Palette; theme: Theme }, undo: () => void) {
+    const result = await saveProfileAction({ prefs }).catch(() => null); // a dropped connection throws
+    if (result?.ok) return;
+    undo();
+    toast.error(result ? result.error : "Opslaan lukte niet. Probeer het opnieuw.");
+  }
 
   return (
     <div className="flex flex-col gap-5">
       <PalettePicker
         value={palette}
         onChange={(next) => {
+          const before = palette;
           setPalette(next);
-          void save({ palette: next, theme });
+          void save({ palette: next, theme }, () => {
+            html().palette = before;
+            setPalette(before);
+          });
         }}
       />
       <Choice
@@ -39,9 +45,13 @@ export function Appearance({ palette: storedPalette, theme: storedTheme }: { pal
         value={theme}
         options={THEMES}
         onChange={(next) => {
-          document.documentElement.dataset.theme = next;
+          const before = theme;
+          html().theme = next;
           setTheme(next);
-          void save({ palette, theme: next });
+          void save({ palette, theme: next }, () => {
+            html().theme = before;
+            setTheme(before);
+          });
         }}
       />
     </div>

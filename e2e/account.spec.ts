@@ -12,6 +12,9 @@ test("/privacy opens without a session, and the export does not", async ({ page,
   await expect(page).toHaveURL(/\/privacy$/);
   await expect(page.getByRole("heading", { level: 1, name: "Privacy", exact: true })).toBeVisible();
   await expect(page.getByText("Zayd Maadal")).toBeVisible();
+  // It tells you where to download (Meer), and does not link to the export itself.
+  await expect(page.getByRole("link", { name: "Gegevens downloaden via Meer", exact: true })).toHaveAttribute("href", "/meer");
+  await expect(page.locator('a[href="/api/export"]')).toHaveCount(0);
 
   // The proxy sends a visitor without a session to the login page, the same as for every other private path.
   const res = await request.get("/api/export", { maxRedirects: 0 });
@@ -33,8 +36,9 @@ test("the export is one JSON download with only the own rows and no push keys", 
   for (const { error } of writes) expect(error).toBeNull();
   await loginAs(page, username);
 
-  await test.step("the link on the privacy page downloads spaarplanner-export.json", async () => {
-    await page.goto("/privacy");
+  await test.step("the link on Meer downloads spaarplanner-export.json", async () => {
+    await page.goto("/meer");
+    await expect(page.getByRole("heading", { level: 1, name: "Meer", exact: true })).toBeVisible();
     const [download] = await Promise.all([
       page.waitForEvent("download"),
       page.getByRole("link", { name: "Gegevens downloaden", exact: true }).click(),
@@ -74,14 +78,19 @@ test("deleting the account asks for the password and a second tap, wipes the row
   const form = page.locator("form").filter({ visible: true });
   await form.getByLabel("Wachtwoord", { exact: true }).fill(password);
 
+  const confirm = form.getByRole("button", { name: "Ja, wis mijn account", exact: true });
   await test.step("the first tap only asks if you are sure, nothing is deleted", async () => {
     await form.getByRole("button", { name: "Account wissen", exact: true }).click();
     await expect(form.getByText("Weet je het zeker? Dit kan niet ongedaan worden gemaakt.", { exact: true })).toBeVisible();
-    expect((await admin.auth.admin.getUserById(id)).data.user).not.toBeNull();
+    // The confirm button must be idle (a first tap that submitted the form would leave it disabled, then leave the page) ...
+    await expect(confirm).toBeEnabled();
+    await expect(page).toHaveURL(/\/meer\/account$/);
+    // ... and the account must still be there a second later: a delete that was started by the first tap lands within that.
+    await expect(async () => expect((await admin.auth.admin.getUserById(id)).data.user).toBeNull()).not.toPass({ timeout: 1000, intervals: [250] });
   });
 
   await test.step("the second tap deletes the account and sends you to the login page", async () => {
-    await form.getByRole("button", { name: "Ja, wis mijn account", exact: true }).click();
+    await confirm.click();
     await expect(page).toHaveURL(/\/inloggen$/);
     expect((await admin.auth.admin.getUserById(id)).data.user).toBeNull();
     for (const table of ["plans", "income_sources", "goals"] as const) {

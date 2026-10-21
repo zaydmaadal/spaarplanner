@@ -17,7 +17,7 @@ export default async function SavingsPlanPage() {
         <PlanSettingsForm
           plan={data.plan}
           variableIncome={data.incomes.some((i) => i.active && i.variability === "variable")}
-          hasDeadline={data.goals.some((g) => !g.archived && g.deadline !== null)}
+          hasPots={data.goals.some((g) => !g.archived && g.kind !== "emergency")}
         />
       </div>
       <BottomNav active="meer" />

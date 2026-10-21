@@ -34,6 +34,12 @@ describe("the overview page (spec 8.3)", () => {
     expect(out).toContain('aria-current="page"'); // the nav, with Overzicht active
   });
 
+  test("names the regions of the server components with aria-label (an id from useId there can clash with a hidden page)", async () => {
+    const out = await render(haider);
+    for (const name of ["Reis", "Verdeling van je loon", "Je potten", "Volgende stappen"]) expect(out).toContain(`<section aria-label="${name}"`);
+    expect(out.match(/<section[^>]*aria-labelledby/g)).toHaveLength(1); // the simulator is a client component: its ids are unique in its own tree
+  });
+
   test("without a fixed payday there is no strip", async () => {
     expect(await render(tiener)).not.toContain("Volgende loondag");
   });

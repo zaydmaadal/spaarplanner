@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { ActionResult } from "@/data/schemas";
+import type { Mode } from "./step-shell";
 
 export type Errors = Record<string, string>;
 export type Row = { key: string; id?: string }; // id: the row is stored; key: what React and the errors go by
@@ -51,4 +52,26 @@ export async function deleteRows(ids: string[], remove: (id: string) => Promise<
     else message ??= result.error;
   }
   return message;
+}
+
+export const BLANK_AMOUNT = "Vul een bedrag in of verwijder deze regel."; // under the field
+const CHECK_DATA = "Controleer je gegevens."; // under the form, like the action says for a field it refuses
+
+// What a blank amount means for a row. While onboarding it means "nothing to say here", so a stored row is removed. On a
+// Meer page (mode edit) a stored row without an amount is a mistake to correct, never a delete: deleting is the
+// "Verwijderen" button, which sets `removing`.
+export function blankAmount(mode: Mode, row: { id?: string; removing?: boolean }): "skip" | "delete" | "error" {
+  if (!row.id) return "skip";
+  return mode === "onboarding" || row.removing ? "delete" : "error";
+}
+
+// For the list forms, whose rows go to the action as they are: on a Meer page the stored rows without an amount are held
+// back with an error on their field. A new blank row still goes to the action, which says what is wrong with it.
+export function refuseBlank<R extends Row & { amount: string }>(mode: Mode, rows: R[]): { send: R[]; errors: Record<string, Errors>; message: string | null } {
+  const refused = rows.filter((r) => !r.amount.trim() && blankAmount(mode, r) === "error");
+  return {
+    send: rows.filter((r) => !refused.includes(r)),
+    errors: Object.fromEntries(refused.map((r) => [r.key, { amount: BLANK_AMOUNT }])),
+    message: refused.length > 0 ? CHECK_DATA : null,
+  };
 }

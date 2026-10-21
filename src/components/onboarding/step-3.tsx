@@ -7,7 +7,7 @@ import { deleteIncomeAction, saveIncomeAction } from "@/data/actions/incomes";
 import { toEuroInput } from "@/domain/money";
 import type { Income, IncomeKind } from "@/domain/types";
 import { keptIncomeFields } from "./income-input";
-import { deleteRows, saveRows, useRows, type Errors, type Row } from "./rows";
+import { deleteRows, refuseBlank, saveRows, useRows, type Errors, type Row } from "./rows";
 import { StepShell, type Mode } from "./step-shell";
 
 type OneOff = Row & { stored?: Income; name: string; kind: IncomeKind; amount: string; month: string; custom: boolean };
@@ -29,15 +29,16 @@ export function Step3({ mode, incomes, level }: { mode: Mode; incomes: Income[];
   const [errors, setErrors] = useState<Record<string, Errors>>({});
 
   async function save() {
+    const refused = refuseBlank(mode, rows.rows);
     const saved = await saveRows(
-      rows.rows,
+      refused.send,
       // New ones are estimates; a stored one keeps its flag, and everything else the form has no input for.
       (row) =>
         saveIncomeAction({ ...keptIncomeFields(row.stored, "yearly"), isEstimate: row.stored?.isEstimate ?? true, id: row.id, name: row.name, kind: row.kind, frequency: "yearly", month: Number(row.month), amount: row.amount }),
       (key, id) => rows.patch(key, { id }),
     );
-    setErrors(saved.errors);
-    return saved.message ?? (await deleteRows(rows.removed, deleteIncomeAction, rows.forget));
+    setErrors({ ...refused.errors, ...saved.errors });
+    return saved.message ?? refused.message ?? (await deleteRows(rows.removed, deleteIncomeAction, rows.forget));
   }
 
   const chosen = (id: string) => rows.rows.some((r) => !r.custom && r.name === id);

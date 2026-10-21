@@ -28,6 +28,12 @@ describe("the Meer page (spec 8.7)", () => {
     expect(anchor(out, "/meer")).toContain('aria-current="page"');
   });
 
+  test("names its regions with aria-label, not with generated ids (see the plan page test)", async () => {
+    const out = await render();
+    for (const name of ["Je gegevens", "Uiterlijk", "Privacy en account"]) expect(out).toContain(`<section aria-label="${name}"`);
+    expect(out).not.toContain("aria-labelledby");
+  });
+
   test("links to the settings pages, privacy, the password and account deletion", async () => {
     const out = await render();
     for (const [href, label] of [
@@ -44,11 +50,11 @@ describe("the Meer page (spec 8.7)", () => {
     }
   });
 
-  test("offers the export as a plain link: not next/link (it would prefetch the download) and no download attribute", async () => {
+  test("offers the export as a plain download link: not next/link (it would prefetch the download)", async () => {
     const a = anchor(await render(), "/api/export");
     expect(a).not.toBe("");
     expect(a).not.toContain("data-next-link");
-    expect(a).not.toContain("download");
+    expect(a).toContain("download");
   });
 
   test("has a logout button in a form", async () => {

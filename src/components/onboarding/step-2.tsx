@@ -8,12 +8,12 @@ import { saveProfileAction } from "@/data/actions/profile";
 import { toEuroInput } from "@/domain/money";
 import type { Income, IncomeKind } from "@/domain/types";
 import { keptIncomeFields } from "./income-input";
-import { deleteRows, saveRows, useRows, type Errors, type Row } from "./rows";
+import { BLANK_AMOUNT, blankAmount, deleteRows, refuseBlank, saveRows, useRows, type Errors, type Row } from "./rows";
 import { StepShell, type Mode } from "./step-shell";
 
 type Frequency = "monthly" | "weekly" | "biweekly";
 type Payday = "day" | "last" | "irregular";
-type Main = { id?: string; stored?: Income; name: string; amount: string; frequency: Frequency; variable: boolean; low: string; payday: Payday; day: string; weekend: "before" | "after"; weekday: string };
+type Main = { id?: string; stored?: Income; removing?: boolean; name: string; amount: string; frequency: Frequency; variable: boolean; low: string; payday: Payday; day: string; weekend: "before" | "after"; weekday: string };
 type Extra = Row & { stored?: Income; name: string; kind: IncomeKind; amount: string; frequency: Frequency };
 
 const FREQUENCIES = [
@@ -76,8 +76,10 @@ export function Step2({ mode, incomes, firstJob }: { mode: Mode; incomes: Income
       const r = await saveProfileAction({ prefs: { firstJob: job } });
       if (!r.ok) message = r.error;
     }
-    // A blank amount means "nothing to say here": a stored main income is then removed.
+    // A blank amount: while onboarding it means "nothing to say here" and a stored main income is removed; on a Meer page it
+    // is an error, and the income is only removed after "Verwijderen".
     // saveIncomeAction replaces the whole income, so what this form has no input for goes back as stored.
+    const ifBlank = blankAmount(mode, main);
     if (main.amount.trim()) {
       const r = await saveIncomeAction({
         id: main.id,
@@ -94,18 +96,23 @@ export function Step2({ mode, incomes, firstJob }: { mode: Mode; incomes: Income
       setMainErrors(r.ok ? {} : (r.fieldErrors ?? {}));
       if (r.ok) change({ id: r.data.id });
       else message ??= r.error;
-    } else if (main.id) {
-      const r = await deleteIncomeAction(main.id);
-      if (r.ok) change({ id: undefined, stored: undefined });
+    } else if (ifBlank === "delete") {
+      const r = await deleteIncomeAction(main.id!);
+      setMainErrors({});
+      if (r.ok) change({ id: undefined, stored: undefined, removing: false });
       else message ??= r.error;
+    } else {
+      setMainErrors(ifBlank === "error" ? { amount: BLANK_AMOUNT } : {});
+      if (ifBlank === "error") message ??= "Controleer je gegevens.";
     }
+    const refused = refuseBlank(mode, extras.rows);
     const saved = await saveRows(
-      extras.rows,
+      refused.send,
       (row) => saveIncomeAction({ ...keptIncomeFields(row.stored, row.frequency), id: row.id, name: row.name, kind: row.kind, frequency: row.frequency, amount: row.amount }),
       (key, id) => extras.patch(key, { id }),
     );
-    setErrors(saved.errors);
-    message ??= saved.message ?? (await deleteRows(extras.removed, deleteIncomeAction, extras.forget));
+    setErrors({ ...refused.errors, ...saved.errors });
+    message ??= saved.message ?? refused.message ?? (await deleteRows(extras.removed, deleteIncomeAction, extras.forget));
     return message;
   }
 
@@ -117,7 +124,14 @@ export function Step2({ mode, incomes, firstJob }: { mode: Mode; incomes: Income
       intro={mode === "edit" ? undefined : "Vul in wat je netto krijgt, dus na belastingen. Een schatting is goed genoeg."}
       save={save}
     >
-      <MoneyField label="Netto bedrag" hint="Wat je echt krijgt op je rekening." value={main.amount} onChange={(amount) => change({ amount })} error={mainErrors.amount} />
+      <MoneyField
+        label="Netto bedrag"
+        hint={main.removing ? "Wordt verwijderd als je opslaat." : "Wat je echt krijgt op je rekening."}
+        value={main.amount}
+        onChange={(amount) => change({ amount, removing: false })}
+        onRemove={mode === "edit" && main.id ? () => change({ amount: "", removing: true }) : undefined}
+        error={mainErrors.amount}
+      />
       <Choice legend="Hoe vaak krijg je dit?" options={[...FREQUENCIES]} value={main.frequency} onChange={(frequency) => change({ frequency })} error={mainErrors.frequency} />
       <Choice legend="Is het bedrag elke keer hetzelfde?" options={[{ value: "fixed", label: "Vast bedrag" }, { value: "variable", label: "Wisselend" }]} value={main.variable ? "variable" : "fixed"} onChange={(v) => change({ variable: v === "variable" })} />
       {main.variable && <MoneyField label="Laagste bedrag dat je verwacht" hint="We rekenen voorzichtig met dit bedrag." value={main.low} onChange={(low) => change({ low })} error={mainErrors.amountLow} />}

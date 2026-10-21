@@ -35,6 +35,13 @@ describe("the plan page (spec 8.6)", () => {
     expect(out).not.toContain(String.fromCharCode(0x2014));
   });
 
+  test("names its regions with aria-label: an id from useId in a server component is numbered per request and can clash with a hidden page", async () => {
+    const out = await render(haider);
+    expect(out).toContain('<section aria-label="Tijdlijn"');
+    expect(out).toContain('<section aria-label="Checklist"');
+    expect(out).not.toContain("aria-labelledby");
+  });
+
   test("lists the pots in the order they fill, not the order of the list, with the month of each", async () => {
     const d = buildDashboard(haider, TODAY);
     const [fund, trip] = d.goals;

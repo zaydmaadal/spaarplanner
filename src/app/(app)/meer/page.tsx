@@ -1,7 +1,7 @@
 import { ChevronRight, Download } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { useId, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { BottomNav } from "@/components/bottom-nav";
 import { InstallGuide } from "@/components/install-guide";
 import { Appearance } from "@/components/settings/appearance";
@@ -15,10 +15,9 @@ const row = "flex min-h-14 items-center justify-between gap-3 py-2 font-semibold
 const chevron = <ChevronRight aria-hidden className="size-5 shrink-0 text-ink-2" />;
 
 function Card({ title, children }: { title: string; children: ReactNode }) {
-  const titleId = useId();
   return (
-    <section aria-labelledby={titleId} className="flex flex-col gap-2 rounded-card bg-surface p-5">
-      <h2 id={titleId} className="font-display text-xl font-semibold">
+    <section aria-label={title} className="flex flex-col gap-2 rounded-card bg-surface p-5">
+      <h2 className="font-display text-xl font-semibold">
         {title}
       </h2>
       {children}
@@ -62,8 +61,8 @@ export default async function MorePage() {
           <List>
             <Item href="/privacy">Privacy</Item>
             <li>
-              {/* A plain link, not next/link (Link would prefetch the download), and no download attribute: the response forces the download itself. */}
-              <a href="/api/export" className={row}>
+              {/* A plain link, not next/link (Link would prefetch the download). The download attribute is for WebKit; this page always has a session. */}
+              <a href="/api/export" download className={row}>
                 Gegevens downloaden
                 <Download aria-hidden className="size-5 shrink-0 text-ink-2" />
               </a>

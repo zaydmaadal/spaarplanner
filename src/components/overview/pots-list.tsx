@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { useId } from "react";
 import { Money } from "@/components/money";
 import { ProgressBar } from "@/components/progress-bar";
 import { CERTAINTY_LABEL } from "@/domain/certainty";
@@ -7,10 +6,9 @@ import type { GoalView } from "@/domain/dashboard";
 import { fillText, potColor, StatusBadge } from "./labels";
 
 export function PotsList({ goals, horizonYears }: { goals: GoalView[]; horizonYears: number }) {
-  const titleId = useId();
   return (
-    <section aria-labelledby={titleId} className="flex flex-col gap-4 rounded-card bg-surface p-5">
-      <h2 id={titleId} className="font-display text-xl font-semibold">
+    <section aria-label="Je potten" className="flex flex-col gap-4 rounded-card bg-surface p-5">
+      <h2 className="font-display text-xl font-semibold">
         Je potten
       </h2>
       {goals.length === 0 ? (

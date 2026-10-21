@@ -96,6 +96,7 @@ Do:
 - Dutch, informal "je", sentence case, buttons say what they do ("Pot opslaan").
 - Real buttons and links, a visible focus ring, touch targets of at least 44 px, never block zooming (no `maximum-scale`), follow the device font size.
 - Element ids from `useId()`, never hard-coded: Next keeps the previous route mounted but hidden.
+- In a server component an id from `useId()` is numbered per request, so it can equal an id on a hidden page: name a region with `aria-label`, never with `aria-labelledby` and a generated id. Client components keep `useId()` (unique within their own tree).
 
 Don't:
 - Gradients, glass effects, glow, emoji, or a coloured border on the left of a card.
@@ -121,10 +122,10 @@ Money is integer cents. Show it only through `formatEUR` (`src/domain/money.ts`)
 | `ProgressBar` | `value` 0 to 1 (clamped), `label` (accessible name), `color?` as `var(--color-...)`; show the amounts next to it |
 | `StackedBar` | `segments` of `{ label, cents, color }`; the legend with label and amount carries the meaning |
 | `BottomNav` | `active` (a tab, or `storten` on the deposit screen); every screen renders it with its own tab. The middle button "Storten" goes to `/storten`. Content needs bottom padding, which `src/app/(app)/layout.tsx` provides |
-| `form-fields` | `TextField`, `MoneyField` (fixed euro prefix, `inputmode="decimal"`), `SelectField`, `TextareaField`, `CheckField`, `Choice` (one out of a few), `Toggles` (switch items on or off), `Item` (a row of a list form with its remove button). Label always visible, hint and error tied with `aria-describedby`, ids from `useId` |
+| `form-fields` | `TextField`, `MoneyField` (fixed euro prefix, `inputmode="decimal"`, optional `onRemove` for a stored amount that is not a list row), `SelectField`, `TextareaField`, `CheckField`, `Choice` (one out of a few), `Toggles` (switch items on or off), `Item` (a row of a list form with its remove button). Label always visible, hint and error tied with `aria-describedby`, ids from `useId` |
 | `EffectPreview` | `before`, `after` as `previewInputs` makes them (same horizon, one-off income for it); the goal's own "Klaar rond ..." with status and advice, then a sentence per other goal that moves. Shown in the goal form before saving |
 | `GoalCard`, `History`, `DepositForm` | `src/components/goals` and `deposit`: a pot in the list (with arrows for its priority), the bookings of one pot, and the deposit or withdrawal form (one `clientRef` per row, kept until the save succeeds) |
-| `StepShell` | `src/components/onboarding`: one onboarding step, or the same form on its own page with `mode="edit"` (no progress, no "Overslaan", the button says "Opslaan"); `level={2}` makes the title an h2 for a second form on a page (Meer: inkomen, spaarplan), so a page keeps one h1 |
+| `StepShell` | `src/components/onboarding`: one onboarding step, or the same form on its own page with `mode="edit"` (no progress, no "Overslaan", the button says "Opslaan"); `level={2}` makes the title an h2 for a second form on a page (Meer: inkomen, spaarplan), so a page keeps one h1. On a Meer page a stored row without an amount is an error under its field, never a delete: removing is the row's own "Verwijderen" button (`blankAmount`, `refuseBlank`) |
 | `InstallGuide` | how to put the app on the home screen, iOS and Android apart |
 | `PalettePicker` | `value`, `onChange`; each card shows its own palette; choosing sets `data-palette` on `<html>` at once, the parent saves it |
 | `Timeline`, `Checklist` | `src/components/plan`: the Plan screen. `Timeline` lists the pots by fill month (`byFill`: full first, never last, ties keep their priority), `Checklist` the open steps per urgency (`checklistGroups`: rule steps before own steps) with a tick and a dismiss button per step and a form for a step of your own |

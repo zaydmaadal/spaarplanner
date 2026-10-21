@@ -1,4 +1,3 @@
-import { useId } from "react";
 import { CertaintyMeter } from "@/components/certainty-meter";
 import { Money } from "@/components/money";
 import { ProgressBar } from "@/components/progress-bar";
@@ -8,12 +7,11 @@ import { fillText, StatusBadge } from "./labels";
 
 // The one big figure of the screen is what is saved for the main goal (DESIGN.md: one main figure, 32 px).
 export function MainGoalCard({ goal, waitsFor, horizonYears }: { goal: GoalView; waitsFor: Dashboard["mainGoalWaitsFor"]; horizonYears: number }) {
-  const titleId = useId();
   return (
-    <section aria-labelledby={titleId} className="flex flex-col gap-4 rounded-hero bg-surface p-5">
+    <section aria-label={goal.name} className="flex flex-col gap-4 rounded-hero bg-surface p-5">
       <div className="flex flex-col gap-1">
         <p className="text-sm font-semibold text-ink-2">Hoofddoel</p>
-        <h2 id={titleId} className="font-display text-2xl font-semibold">
+        <h2 className="font-display text-2xl font-semibold">
           {goal.name}
         </h2>
       </div>

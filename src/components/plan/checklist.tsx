@@ -1,4 +1,3 @@
-import { useId } from "react";
 import { URGENCY_LABEL } from "@/domain/checklist-rules";
 import { AddStep } from "./add-step";
 import type { checklistGroups } from "./helpers";
@@ -6,10 +5,9 @@ import { StepButtons } from "./step-buttons";
 
 // Spec 8.6: the steps per urgency, to tick off or dismiss, and a step of your own.
 export function Checklist({ groups }: { groups: ReturnType<typeof checklistGroups> }) {
-  const titleId = useId();
   return (
-    <section aria-labelledby={titleId} className="flex flex-col gap-5 rounded-card bg-surface p-5">
-      <h2 id={titleId} className="font-display text-xl font-semibold">
+    <section aria-label="Checklist" className="flex flex-col gap-5 rounded-card bg-surface p-5">
+      <h2 className="font-display text-xl font-semibold">
         Checklist
       </h2>
       {groups.length === 0 && <p className="text-ink-2">Je hebt geen open stappen.</p>}

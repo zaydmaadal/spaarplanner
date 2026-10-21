@@ -8,11 +8,11 @@ import { savePlanAction } from "@/data/actions/plan";
 import { budgetWarnings, monthlyBudget, savingsTarget } from "@/domain/budget";
 import { formatEUR, parseEuroInput, toEuroInput } from "@/domain/money";
 import type { BudgetLine, Income, PlanSettings } from "@/domain/types";
-import { deleteRows, saveRows, useRows, type Errors, type Row } from "./rows";
+import { deleteRows, refuseBlank, saveRows, useRows, type Errors, type Row } from "./rows";
 import { savingsChange } from "./savings";
 import { outcome, StepShell, type Mode } from "./step-shell";
 
-type Spend = Row & { name: string; kind: "living" | "free"; category: string; amount: string; isEstimate: boolean };
+type Spend = Row & { removing?: boolean; name: string; kind: "living" | "free"; category: string; amount: string; isEstimate: boolean };
 
 // A fixed set, so the form stays short. Other living or free lines (made elsewhere) are left alone.
 const GROUPS: { legend: string; items: { name: string; kind: Spend["kind"] }[] }[] = [
@@ -45,15 +45,21 @@ export function Step5({ mode, incomes, lines, plan }: { mode: Mode; incomes: Inc
   const want = typed === null ? null : typed.trim() ? parseEuroInput(typed) : null;
   const warnings = budgetWarnings({ ...plan, monthlySavingsCents: want }, budget);
 
+  // A blank field: while onboarding it removes a stored line; on a Meer page it is an error, and a stored line is only
+  // removed after "Verwijderen" (refuseBlank holds the others back).
   async function save() {
+    const refused = refuseBlank(mode, spends.rows);
     const saved = await saveRows(
-      spends.rows.filter((r) => r.amount.trim()),
+      refused.send.filter((r) => r.amount.trim()),
       (r) => saveBudgetLineAction({ id: r.id, kind: r.kind, category: r.category, name: r.name, amount: r.amount, isEstimate: r.isEstimate }),
       (key, id) => spends.patch(key, { id }),
     );
-    setErrors(saved.errors);
-    const blank = spends.rows.flatMap((r) => (!r.amount.trim() && r.id ? [r.id] : []));
-    let message = saved.message ?? (await deleteRows(blank, deleteBudgetLineAction, (id) => spends.patch(spends.rows.find((r) => r.id === id)!.key, { id: undefined })));
+    setErrors({ ...refused.errors, ...saved.errors });
+    const gone = refused.send.flatMap((r) => (!r.amount.trim() && r.id ? [r.id] : []));
+    let message =
+      saved.message ??
+      (await deleteRows(gone, deleteBudgetLineAction, (id) => spends.patch(spends.rows.find((r) => r.id === id)!.key, { id: undefined, removing: false }))) ??
+      refused.message;
     const change = savingsChange(typed, storedSavings);
     if (change) message ??= outcome(await savePlanAction(change), setPlanErrors);
     return message;
@@ -64,9 +70,20 @@ export function Step5({ mode, incomes, lines, plan }: { mode: Mode; incomes: Inc
       {GROUPS.map((group) => (
         <fieldset key={group.legend} className="flex flex-col gap-4">
           <legend className="mb-3 font-display text-lg font-semibold">{group.legend}</legend>
-          {group.items.map((item) => (
-            <MoneyField key={item.name} label={item.name} value={spends.rows.find((r) => r.key === item.name)!.amount} onChange={(amount) => spends.patch(item.name, { amount })} error={errors[item.name]?.amount} />
-          ))}
+          {group.items.map((item) => {
+            const row = spends.rows.find((r) => r.key === item.name)!;
+            return (
+              <MoneyField
+                key={item.name}
+                label={item.name}
+                hint={row.removing ? "Wordt verwijderd als je opslaat." : undefined}
+                value={row.amount}
+                onChange={(amount) => spends.patch(item.name, { amount, removing: false })}
+                onRemove={mode === "edit" && row.id ? () => spends.patch(item.name, { amount: "", removing: true }) : undefined}
+                error={errors[item.name]?.amount}
+              />
+            );
+          })}
         </fieldset>
       ))}
       <div className="flex flex-col gap-1 border-t border-hairline pt-4">

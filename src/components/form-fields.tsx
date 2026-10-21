@@ -47,16 +47,24 @@ export function TextField({ label, hint, error, value, onChange, ...input }: Bas
   );
 }
 
-// A fixed euro sign in front; comma and dot are both fine (parseEuroInput).
-export function MoneyField({ label, hint, error, value, onChange, ...input }: Base & Controlled & Extra<"input">) {
+// A fixed euro sign in front; comma and dot are both fine (parseEuroInput). `onRemove` adds a "Verwijderen" button, for a
+// stored amount that is not a row of a list (those have their own, see Item).
+export function MoneyField({ label, hint, error, value, onChange, onRemove, ...input }: Base & Controlled & Extra<"input"> & { onRemove?: () => void }) {
   return (
     <Frame label={label} hint={hint} error={error}>
       {(aria) => (
-        <div className="relative">
-          <span aria-hidden className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-ink-2">
-            €
-          </span>
-          <Input {...input} {...aria} inputMode="decimal" autoComplete="off" className="pl-8 tabular-nums" value={value} onChange={(e) => onChange(e.target.value)} />
+        <div className="flex items-start gap-2">
+          <div className="relative flex-1">
+            <span aria-hidden className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-ink-2">
+              €
+            </span>
+            <Input {...input} {...aria} inputMode="decimal" autoComplete="off" className="pl-8 tabular-nums" value={value} onChange={(e) => onChange(e.target.value)} />
+          </div>
+          {onRemove && (
+            <Button type="button" variant="ghost" onClick={onRemove} aria-label={`${label} verwijderen`}>
+              Verwijderen
+            </Button>
+          )}
         </div>
       )}
     </Frame>

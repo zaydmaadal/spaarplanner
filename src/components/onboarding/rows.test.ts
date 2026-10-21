@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { ActionResult } from "@/data/schemas";
-import { deleteRows, saveRows } from "./rows";
+import { BLANK_AMOUNT, blankAmount, deleteRows, refuseBlank, saveRows } from "./rows";
 
 const ok = (id: string): ActionResult<{ id: string }> => ({ ok: true, data: { id } });
 const rows = [{ key: "a" }, { key: "b" }, { key: "c" }];
@@ -34,5 +34,48 @@ describe("deleteRows", () => {
     expect(await deleteRows(["w", "x", "y"], del, (id) => gone.push(id))).toBe("Er ging iets mis.");
     expect(gone).toEqual(["w", "y"]);
     expect(await deleteRows([], del, () => {})).toBeNull();
+  });
+});
+
+describe("blankAmount (what a blank amount means for a row)", () => {
+  it("skips a row that is not stored: there is nothing to say", () => {
+    expect(blankAmount("onboarding", {})).toBe("skip");
+    expect(blankAmount("edit", {})).toBe("skip");
+  });
+
+  it("deletes a stored row while onboarding: a blank amount means 'nothing to say here'", () => {
+    expect(blankAmount("onboarding", { id: "x" })).toBe("delete");
+  });
+
+  it("is an error for a stored row on a Meer page: a mistake to correct, never a delete", () => {
+    expect(blankAmount("edit", { id: "x" })).toBe("error");
+    expect(blankAmount("edit", { id: "x", removing: false })).toBe("error");
+  });
+
+  it("deletes a stored row on a Meer page only after the user pressed Verwijderen", () => {
+    expect(blankAmount("edit", { id: "x", removing: true })).toBe("delete");
+  });
+});
+
+describe("refuseBlank", () => {
+  const row = (key: string, amount: string, id?: string) => ({ key, id, amount });
+
+  it("on a Meer page keeps the stored rows without an amount from being sent, with an error on their field", () => {
+    const rows = [row("a", "10", "id-a"), row("b", "", "id-b"), row("c", "  ", "id-c"), row("d", "")];
+    const out = refuseBlank("edit", rows);
+    expect(out.send.map((r) => r.key)).toEqual(["a", "d"]); // a new blank row goes on: the action says what is wrong with it
+    expect(out.errors).toEqual({ b: { amount: BLANK_AMOUNT }, c: { amount: BLANK_AMOUNT } });
+    expect(out.message).toBe("Controleer je gegevens."); // under the form; the field says what to do
+    expect(BLANK_AMOUNT).toBe("Vul een bedrag in of verwijder deze regel.");
+  });
+
+  it("changes nothing while onboarding", () => {
+    const rows = [row("a", "10", "id-a"), row("b", "", "id-b")];
+    expect(refuseBlank("onboarding", rows)).toEqual({ send: rows, errors: {}, message: null });
+  });
+
+  it("answers without errors when every amount is filled", () => {
+    const rows = [row("a", "10", "id-a")];
+    expect(refuseBlank("edit", rows)).toEqual({ send: rows, errors: {}, message: null });
   });
 });

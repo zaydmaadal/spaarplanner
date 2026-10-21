@@ -90,12 +90,12 @@ describe("/meer/plan (spec 8.7)", () => {
     expect(saveButtons(out)).toHaveLength(2);
   });
 
-  test("asks about the emergency fund only when a pot has a deadline", async () => {
-    expect(await render(PlanPage)).toContain("Noodfonds eerst helemaal vullen, of tegelijk met je doelen?"); // the trip has one
-    const none = await render(PlanPage, { ...haider, goals: haider.goals.map((g) => ({ ...g, deadline: null })) });
-    expect(none).not.toContain("Noodfonds eerst helemaal vullen");
-    const archived = await render(PlanPage, { ...haider, goals: haider.goals.map((g) => ({ ...g, archived: true })) });
-    expect(archived).not.toContain("Noodfonds eerst helemaal vullen");
+  test("asks about the emergency fund as soon as there is a pot besides the fund, with or without a deadline", async () => {
+    const ask = "Noodfonds eerst helemaal vullen, of tegelijk met je doelen?";
+    expect(await render(PlanPage)).toContain(ask); // the trip has a deadline
+    expect(await render(PlanPage, { ...haider, goals: haider.goals.map((g) => ({ ...g, deadline: null })) })).toContain(ask);
+    expect(await render(PlanPage, { ...haider, goals: haider.goals.filter((g) => g.kind === "emergency") })).not.toContain(ask);
+    expect(await render(PlanPage, { ...haider, goals: haider.goals.map((g) => ({ ...g, archived: g.kind !== "emergency" })) })).not.toContain(ask);
   });
 
   test("asks about variable income only when there is some", async () => {

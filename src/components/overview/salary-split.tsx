@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { useId } from "react";
 import { CertaintyMeter } from "@/components/certainty-meter";
 import { Money } from "@/components/money";
 import { StackedBar, type Segment } from "@/components/stacked-bar";
@@ -11,7 +10,6 @@ const sumOf = (lines: BudgetLine[], kind: BudgetLine["kind"]) => lines.filter((l
 
 // Where the net income of a month goes (spec 8.3). The legend of the bar is the table; the total row closes it.
 export function SalarySplit({ lines, budget, savingsCents, savingsCertainty }: { lines: BudgetLine[]; budget: Budget; savingsCents: Cents; savingsCertainty: Dashboard["savingsCertainty"] }) {
-  const titleId = useId();
   const left = budget.roomCents - savingsCents;
   const parts: Segment[] = [
     { label: "Vaste kosten", cents: sumOf(lines, "fixed"), color: "var(--color-seg-fixed)" },
@@ -23,8 +21,8 @@ export function SalarySplit({ lines, budget, savingsCents, savingsCertainty }: {
   const segments = parts.filter((s) => s.cents > 0);
 
   return (
-    <section aria-labelledby={titleId} className="flex flex-col gap-4 rounded-card bg-surface p-5">
-      <h2 id={titleId} className="font-display text-xl font-semibold">
+    <section aria-label="Verdeling van je loon" className="flex flex-col gap-4 rounded-card bg-surface p-5">
+      <h2 className="font-display text-xl font-semibold">
         Verdeling van je loon
       </h2>
       {segments.length === 0 ? (

@@ -1,15 +1,13 @@
 import Link from "next/link";
-import { useId } from "react";
 import { URGENCY_LABEL, type Urgency } from "@/domain/checklist-rules";
 
 export type Step = { key: string; title: string; urgency: Urgency };
 
 // The first rule items and the open steps the user wrote down; ticking them off happens in Plan.
 export function NextSteps({ steps }: { steps: Step[] }) {
-  const titleId = useId();
   return (
-    <section aria-labelledby={titleId} className="flex flex-col gap-4 rounded-card bg-surface p-5">
-      <h2 id={titleId} className="font-display text-xl font-semibold">
+    <section aria-label="Volgende stappen" className="flex flex-col gap-4 rounded-card bg-surface p-5">
+      <h2 className="font-display text-xl font-semibold">
         Volgende stappen
       </h2>
       {steps.length === 0 ? (
