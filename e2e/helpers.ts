@@ -82,9 +82,10 @@ export async function seedHaider(username: string) {
       payday_rule: { type: "day_of_month", day: 29, weekend: "before" },
     }),
     admin.from("plans").update({ emergency_share_pct: 50 }).eq("user_id", id),
+    // A multi-row insert sends missing keys as NULL, not as the column default, so both rows name every column.
     admin.from("goals").insert([
-      { user_id: id, kind: "emergency", name: "Noodfonds", target_cents: 100000, target_is_estimate: true, priority: 1 },
-      { user_id: id, kind: "trip", name: "Reis", target_cents: 250000, deadline, priority: 2, is_main: true },
+      { user_id: id, kind: "emergency", name: "Noodfonds", target_cents: 100000, target_is_estimate: true, deadline: null, priority: 1, is_main: false },
+      { user_id: id, kind: "trip", name: "Reis", target_cents: 250000, target_is_estimate: false, deadline, priority: 2, is_main: true },
     ]),
   ]);
   for (const { error } of writes) if (error) throw error;
