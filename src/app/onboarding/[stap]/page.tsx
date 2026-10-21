@@ -12,7 +12,7 @@ import { Step8 } from "@/components/onboarding/step-8";
 import { loadUserData } from "@/data/load";
 import { createServerSupabase, readProfile, requireUserId } from "@/data/supabase/server";
 import { todayInTimeZone } from "@/domain/dates";
-import { parsePrefs } from "@/lib/prefs";
+import { parsePrefs, parseStep8Prefs } from "@/lib/prefs";
 
 // The route announcer reads the title, so each step names itself.
 export async function generateMetadata({ params }: PageProps<"/onboarding/[stap]">): Promise<Metadata> {
@@ -66,9 +66,7 @@ export default async function OnboardingPage({ params }: PageProps<"/onboarding/
       <Step8
         mode={mode}
         palette={parsePrefs(profile.prefs).palette}
-        noInterestSavings={raw.no_interest_savings === true}
-        showBasmala={raw.show_basmala === true}
-        contextNote={typeof raw.context_note === "string" ? raw.context_note : ""}
+        {...parseStep8Prefs(profile.prefs)}
         {...answers}
         emergencySharePct={data.plan.emergencySharePct}
       />

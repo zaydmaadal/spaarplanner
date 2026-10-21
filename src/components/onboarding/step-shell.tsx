@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { setOnboardingStepAction } from "@/data/actions/onboarding";
 import type { ActionResult } from "@/data/schemas";
+import { cn } from "@/lib/utils";
 import { OnboardingProgress, STEPS } from "./progress";
 import type { Errors } from "./rows";
 
@@ -62,6 +63,7 @@ export function StepShell({
   save,
   nextLabel = "Volgende",
   finish,
+  level = 1,
   children,
 }: {
   mode: Mode;
@@ -71,11 +73,13 @@ export function StepShell({
   save: Save;
   nextLabel?: string;
   finish?: () => Promise<ActionResult>; // step 8 only: the fund, the start balance and the end of the onboarding
+  level?: 1 | 2; // 2 for a second form on a page of Meer: the page has one h1
   children: ReactNode;
 }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
+  const Heading = level === 2 ? "h2" : "h1";
 
   // A new step is a new page for a screen reader: start at its title. Next keeps visited steps mounted but hidden, and
   // React runs the effects again when one is shown again.
@@ -100,9 +104,9 @@ export function StepShell({
       {mode === "onboarding" && <OnboardingProgress step={step} />}
       <div className="flex flex-col gap-5 rounded-card bg-surface p-5">
         <div className="flex flex-col gap-2">
-          <h1 ref={heading} tabIndex={-1} className="font-display text-2xl font-semibold outline-none">
+          <Heading ref={heading} tabIndex={-1} className={cn("font-display font-semibold outline-none", level === 2 ? "text-xl" : "text-2xl")}>
             {title}
-          </h1>
+          </Heading>
           {intro && <p className="text-ink-2">{intro}</p>}
         </div>
         {children}

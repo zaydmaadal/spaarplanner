@@ -9,9 +9,10 @@ import { budgetWarnings, monthlyBudget, savingsTarget } from "@/domain/budget";
 import { formatEUR, parseEuroInput, toEuroInput } from "@/domain/money";
 import type { BudgetLine, Income, PlanSettings } from "@/domain/types";
 import { deleteRows, saveRows, useRows, type Errors, type Row } from "./rows";
+import { savingsChange } from "./savings";
 import { outcome, StepShell, type Mode } from "./step-shell";
 
-type Spend = Row & { name: string; kind: "living" | "free"; amount: string; isEstimate: boolean };
+type Spend = Row & { name: string; kind: "living" | "free"; category: string; amount: string; isEstimate: boolean };
 
 // A fixed set, so the form stays short. Other living or free lines (made elsewhere) are left alone.
 const GROUPS: { legend: string; items: { name: string; kind: Spend["kind"] }[] }[] = [
@@ -24,7 +25,7 @@ export function Step5({ mode, incomes, lines, plan }: { mode: Mode; incomes: Inc
   const spends = useRows<Spend>(
     ITEMS.map((item) => {
       const stored = lines.find((l) => l.name === item.name && l.kind === item.kind);
-      return { key: item.name, id: stored?.id, name: item.name, kind: item.kind, amount: stored ? toEuroInput(stored.amountCents) : "", isEstimate: stored?.isEstimate ?? true };
+      return { key: item.name, id: stored?.id, name: item.name, kind: item.kind, category: stored?.category ?? "", amount: stored ? toEuroInput(stored.amountCents) : "", isEstimate: stored?.isEstimate ?? true };
     }),
   );
   const storedSavings = plan.monthlySavingsCents === null ? null : toEuroInput(plan.monthlySavingsCents);
@@ -36,7 +37,7 @@ export function Step5({ mode, incomes, lines, plan }: { mode: Mode; incomes: Inc
   const own = new Set<string>(ITEMS.map((i) => `${i.kind}:${i.name}`));
   const filled = spends.rows.flatMap((r) => {
     const cents = r.amount.trim() ? parseEuroInput(r.amount) : null;
-    return cents === null ? [] : [{ id: r.key, kind: r.kind, category: "", name: r.name, amountCents: cents, isEstimate: r.isEstimate }];
+    return cents === null ? [] : [{ id: r.key, kind: r.kind, category: r.category, name: r.name, amountCents: cents, isEstimate: r.isEstimate }];
   });
   const all = [...lines.filter((l) => !own.has(`${l.kind}:${l.name}`)), ...filled];
   const budget = monthlyBudget(incomes, all, plan.incomeMode);
@@ -47,16 +48,14 @@ export function Step5({ mode, incomes, lines, plan }: { mode: Mode; incomes: Inc
   async function save() {
     const saved = await saveRows(
       spends.rows.filter((r) => r.amount.trim()),
-      (r) => saveBudgetLineAction({ id: r.id, kind: r.kind, category: "", name: r.name, amount: r.amount, isEstimate: r.isEstimate }),
+      (r) => saveBudgetLineAction({ id: r.id, kind: r.kind, category: r.category, name: r.name, amount: r.amount, isEstimate: r.isEstimate }),
       (key, id) => spends.patch(key, { id }),
     );
     setErrors(saved.errors);
     const blank = spends.rows.flatMap((r) => (!r.amount.trim() && r.id ? [r.id] : []));
     let message = saved.message ?? (await deleteRows(blank, deleteBudgetLineAction, (id) => spends.patch(spends.rows.find((r) => r.id === id)!.key, { id: undefined })));
-    // Only an amount the user typed is stored, never the proposal; a blank field means "follow my room".
-    if (typed !== null && typed !== storedSavings) {
-      message ??= outcome(await savePlanAction({ monthlySavings: typed.trim() ? typed : null }), setPlanErrors);
-    }
+    const change = savingsChange(typed, storedSavings);
+    if (change) message ??= outcome(await savePlanAction(change), setPlanErrors);
     return message;
   }
 
@@ -81,7 +80,13 @@ export function Step5({ mode, incomes, lines, plan }: { mode: Mode; incomes: Inc
       ))}
       <MoneyField
         label="Dit wil ik sparen"
-        hint={proposal.isProposal ? "Ons voorstel: 20 % van wat je binnenkrijgt. Pas het aan als je meer of minder wil sparen." : "Dit is wat er overblijft. Pas het aan als je minder wil sparen."}
+        hint={
+          typed !== null
+            ? "Laat dit leeg om te sparen wat je overhoudt."
+            : proposal.isProposal
+              ? "Ons voorstel: 20 % van wat je binnenkrijgt. Pas het aan als je meer of minder wil sparen."
+              : "Dit is wat er overblijft. Pas het aan als je minder wil sparen."
+        }
         value={typed ?? toEuroInput(proposal.cents)}
         onChange={setTyped}
         error={planErrors.monthlySavings}

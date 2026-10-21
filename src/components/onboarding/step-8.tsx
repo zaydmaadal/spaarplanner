@@ -37,7 +37,7 @@ export function Step8(props: {
     <StepShell
       mode={mode}
       step={8}
-      title={mode === "edit" ? "Voorkeuren" : "Bijna klaar"}
+      title={mode === "edit" ? "Wat de app over je weet" : "Bijna klaar"}
       intro={mode === "edit" ? undefined : "Kies je kleuren en zet de app op je beginscherm."}
       nextLabel="Naar mijn overzicht"
       save={async () =>
@@ -57,7 +57,7 @@ export function Step8(props: {
         })
       }
     >
-      <PalettePicker value={palette} onChange={pick} />
+      {mode === "onboarding" && <PalettePicker value={palette} onChange={pick} />}
       <CheckField label="Ik wil sparen zonder rente" hint="Dan herinneren we je eraan een spaarpot zonder rente te kiezen bij je bank." checked={noInterest} onChange={setNoInterest} />
       <CheckField label="Toon de basmala in de app" hint="Optioneel. We bewaren dit alleen als je het aanzet." checked={basmala} onChange={setBasmala} />
       <TextareaField

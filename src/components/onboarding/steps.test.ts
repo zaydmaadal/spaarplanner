@@ -193,3 +193,32 @@ describe("step 7", () => {
     expect(value(page, "Klaar tegen (optioneel)")).toBe("2027-07");
   });
 });
+
+describe("the forms on the pages of Meer (mode edit)", () => {
+  it("can be the second form of a page: an h2, so the page keeps one h1", () => {
+    const first = html(h(Step2, { mode: "edit", incomes: [haider], firstJob: false }));
+    const second = html(h(Step3, { mode: "edit", incomes: [], level: 2 }));
+    expect(first.match(/<h1/g)).toHaveLength(1);
+    expect(second).not.toContain("<h1");
+    expect(second).toMatch(/<h2[^>]*>Krijg je ook eenmalig geld\?<\/h2>/);
+    expect(html(h(Step3, { mode: "edit", incomes: [] }))).toMatch(/<h1[^>]*>Krijg je ook eenmalig geld\?<\/h1>/);
+  });
+
+  it("step 8 leaves the palette to Uiterlijk and keeps the other answers and the note", () => {
+    const props = { palette: "oceaan" as const, noInterestSavings: true, showBasmala: false, contextNote: "Ik heb 20 vakantiedagen.", startBalanceCents: null, emergencyTargetCents: null, emergencySharePct: 100 };
+    const edit = html(h(Step8, { mode: "edit", ...props }));
+    expect(edit).toMatch(/<h1[^>]*>Wat de app over je weet<\/h1>/);
+    expect(edit).not.toContain("Kleurenpalet");
+    expect(edit).toContain("Ik wil sparen zonder rente");
+    expect(edit).toContain("Ik heb 20 vakantiedagen.</textarea>");
+    expect(html(h(Step8, { mode: "onboarding", ...props }))).toContain("Kleurenpalet");
+  });
+
+  it("step 5 does not call a typed savings amount 'what is left'", () => {
+    const typed = html(h(Step5, { mode: "edit", incomes: [haider], lines: [line("fixed", 100000)], plan: plan({ monthlySavingsCents: 25000 }) }));
+    expect(typed).toContain("Laat dit leeg om te sparen wat je overhoudt.");
+    expect(typed).not.toContain("Dit is wat er overblijft. Pas het aan");
+    const follows = html(h(Step5, { mode: "edit", incomes: [haider], lines: [line("fixed", 100000)], plan: plan() }));
+    expect(follows).toContain("Dit is wat er overblijft. Pas het aan");
+  });
+});

@@ -7,13 +7,14 @@ import { deleteIncomeAction, saveIncomeAction } from "@/data/actions/incomes";
 import { saveProfileAction } from "@/data/actions/profile";
 import { toEuroInput } from "@/domain/money";
 import type { Income, IncomeKind } from "@/domain/types";
+import { keptIncomeFields } from "./income-input";
 import { deleteRows, saveRows, useRows, type Errors, type Row } from "./rows";
 import { StepShell, type Mode } from "./step-shell";
 
 type Frequency = "monthly" | "weekly" | "biweekly";
 type Payday = "day" | "last" | "irregular";
-type Main = { id?: string; name: string; amount: string; frequency: Frequency; variable: boolean; low: string; payday: Payday; day: string; weekend: "before" | "after"; weekday: string };
-type Extra = Row & { name: string; kind: IncomeKind; amount: string; frequency: Frequency };
+type Main = { id?: string; stored?: Income; name: string; amount: string; frequency: Frequency; variable: boolean; low: string; payday: Payday; day: string; weekend: "before" | "after"; weekday: string };
+type Extra = Row & { stored?: Income; name: string; kind: IncomeKind; amount: string; frequency: Frequency };
 
 const FREQUENCIES = [
   { value: "monthly", label: "Per maand" },
@@ -37,6 +38,7 @@ function toMain(i?: Income & { frequency: Frequency }): Main {
   const rule = i?.paydayRule;
   return {
     id: i?.id,
+    stored: i,
     name: i?.name ?? "Netto inkomen",
     amount: i ? toEuroInput(i.amountCents) : "",
     frequency: i?.frequency ?? "monthly",
@@ -62,7 +64,7 @@ export function Step2({ mode, incomes, firstJob }: { mode: Mode; incomes: Income
   const [main, setMain] = useState(toMain(first));
   const [job, setJob] = useState(firstJob);
   const extras = useRows<Extra>(
-    regular.filter((i) => i !== first).map((i) => ({ key: i.id, id: i.id, name: i.name, kind: i.kind, amount: toEuroInput(i.amountCents), frequency: i.frequency })),
+    regular.filter((i) => i !== first).map((i) => ({ key: i.id, id: i.id, stored: i, name: i.name, kind: i.kind, amount: toEuroInput(i.amountCents), frequency: i.frequency })),
   );
   const [mainErrors, setMainErrors] = useState<Errors>({});
   const [errors, setErrors] = useState<Record<string, Errors>>({});
@@ -75,9 +77,12 @@ export function Step2({ mode, incomes, firstJob }: { mode: Mode; incomes: Income
       if (!r.ok) message = r.error;
     }
     // A blank amount means "nothing to say here": a stored main income is then removed.
+    // saveIncomeAction replaces the whole income, so what this form has no input for goes back as stored.
     if (main.amount.trim()) {
       const r = await saveIncomeAction({
         id: main.id,
+        isEstimate: main.stored?.isEstimate,
+        active: main.stored?.active,
         name: main.name,
         kind: "salary",
         frequency: main.frequency,
@@ -91,12 +96,12 @@ export function Step2({ mode, incomes, firstJob }: { mode: Mode; incomes: Income
       else message ??= r.error;
     } else if (main.id) {
       const r = await deleteIncomeAction(main.id);
-      if (r.ok) change({ id: undefined });
+      if (r.ok) change({ id: undefined, stored: undefined });
       else message ??= r.error;
     }
     const saved = await saveRows(
       extras.rows,
-      (row) => saveIncomeAction({ id: row.id, name: row.name, kind: row.kind, frequency: row.frequency, amount: row.amount, paydayRule: { type: "irregular" } }),
+      (row) => saveIncomeAction({ ...keptIncomeFields(row.stored, row.frequency), id: row.id, name: row.name, kind: row.kind, frequency: row.frequency, amount: row.amount }),
       (key, id) => extras.patch(key, { id }),
     );
     setErrors(saved.errors);
