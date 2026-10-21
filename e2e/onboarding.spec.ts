@@ -43,12 +43,12 @@ test("Haider: income, a trip with a deadline and the emergency fund next to it",
   await register(page, username);
 
   let form = await at(page, 1);
-  await form.getByLabel("Je naam").fill("Haider");
+  await form.getByLabel("Je naam", { exact: true }).fill("Haider");
   await next(page, 1);
 
   form = await at(page, 2);
   await form.getByLabel("Netto bedrag", { exact: true }).fill("2150");
-  await form.getByLabel("Dag van de maand").fill("29");
+  await form.getByLabel("Dag van de maand", { exact: true }).fill("29");
   await next(page, 2);
 
   await skip(page, 3);
@@ -56,7 +56,7 @@ test("Haider: income, a trip with a deadline and the emergency fund next to it",
 
   // No expenses: the proposal is 20 % of the income. Keeping it must not store it.
   form = await at(page, 5);
-  await expect(form.getByLabel("Dit wil ik sparen")).toHaveValue("430");
+  await expect(form.getByLabel("Dit wil ik sparen", { exact: true })).toHaveValue("430");
   await next(page, 5);
 
   await skip(page, 6);
@@ -66,8 +66,8 @@ test("Haider: income, a trip with a deadline and the emergency fund next to it",
   const year = now.getUTCMonth() >= 6 ? now.getUTCFullYear() + 1 : now.getUTCFullYear();
   form = await at(page, 7);
   await form.getByRole("button", { name: "Reis", pressed: false }).click();
-  await form.getByLabel("Doelbedrag").fill("2500");
-  await form.getByLabel("Klaar tegen").fill(`${year}-07`);
+  await form.getByLabel("Doelbedrag", { exact: true }).fill("2500");
+  await form.getByLabel("Klaar tegen", { exact: true }).fill(`${year}-07`);
   await form.getByText("Tegelijk", { exact: true }).click();
   await next(page, 7);
 
@@ -108,12 +108,12 @@ test("a reload resumes at the saved step, and the start balance is booked once, 
 
   let form = await at(page, 4);
   await form.getByRole("button", { name: "Huur", pressed: false }).click();
-  await form.getByLabel("Bedrag per maand").fill("550");
+  await form.getByLabel("Bedrag per maand", { exact: true }).fill("550");
   await next(page, 4);
   await skip(page, 5);
 
   form = await at(page, 6);
-  await form.getByLabel("Hoeveel spaargeld heb je nu?").fill("6000");
+  await form.getByLabel("Hoeveel spaargeld heb je nu?", { exact: true }).fill("6000");
   await next(page, 6);
   await at(page, 7);
 
@@ -126,8 +126,8 @@ test("a reload resumes at the saved step, and the start balance is booked once, 
   // The answers of step 6 are stored although the emergency fund does not exist yet.
   await page.goto("/onboarding/6");
   form = await at(page, 6);
-  await expect(form.getByLabel("Hoeveel spaargeld heb je nu?")).toHaveValue("6000");
-  await expect(form.getByLabel("Doelbedrag voor je noodfonds")).toHaveValue("1650");
+  await expect(form.getByLabel("Hoeveel spaargeld heb je nu?", { exact: true })).toHaveValue("6000");
+  await expect(form.getByLabel("Doelbedrag voor je noodfonds", { exact: true })).toHaveValue("1650");
   await next(page, 6);
 
   form = await at(page, 7);
