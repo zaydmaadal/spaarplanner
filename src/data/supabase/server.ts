@@ -28,3 +28,17 @@ export async function requireUserId(): Promise<string> {
   if (!data?.claims.sub) redirect("/inloggen");
   return data.claims.sub;
 }
+
+// For pages that need a finished onboarding; Task 13's (app)/layout.tsx calls it too.
+export async function requireOnboarded(): Promise<string> {
+  const userId = await requireUserId();
+  const supabase = await createServerSupabase();
+  const { data } = await supabase
+    .from("profiles")
+    .select("onboarding_step, onboarding_completed_at")
+    .eq("id", userId)
+    .single();
+  // Step 0 means "not started"; the first screen is /onboarding/1.
+  if (!data?.onboarding_completed_at) redirect(`/onboarding/${Math.max(1, data?.onboarding_step ?? 0)}`);
+  return userId;
+}
