@@ -245,7 +245,7 @@ Algemeen:
 
 | Tabel | Kolommen (belangrijkste) |
 |---|---|
-| `profiles` | `id` (= auth user), `username` (uniek, niet wijzigbaar), `display_name`, `locale` (`nl-BE`), `currency` (`EUR`), `timezone` (`Europe/Brussels`), `onboarding_step`, `onboarding_completed_at`, `prefs jsonb` (`no_interest_savings`, `show_basmala`, `first_job`, `theme`, `context_note`), `created_at` |
+| `profiles` | `id` (= auth user), `username` (uniek, niet wijzigbaar), `display_name`, `locale` (`nl-BE`), `currency` (`EUR`), `timezone` (`Europe/Brussels`), `onboarding_step`, `onboarding_completed_at`, `prefs jsonb` (`no_interest_savings`, `show_basmala`, `first_job`, `palette`, `theme`, `context_note`), `created_at` |
 | `plans` | `user_id` (pk), `monthly_savings_cents` (null = volgt spaarruimte), `emergency_share_pct` (0-100, standaard 100), `income_mode` (`careful`/`normal`), `include_one_off_income`, `updated_at` |
 | `income_sources` | `id`, `name`, `kind` (`salary`/`side`/`student`/`benefit`/`allowance`/`other`), `frequency` (`monthly`/`weekly`/`biweekly`/`yearly`/`once`), `amount_cents`, `amount_low_cents` (bij wisselend), `variability` (`fixed`/`variable`), `month` (bij yearly), `date` (bij once), `payday_rule jsonb` (`{type: day_of_month, day, weekend: before/after}`, `{type: last_working_day}`, `{type: weekday, weekday}` of `{type: irregular}`), `is_estimate`, `active` |
 | `budget_lines` | `id`, `kind` (`fixed`/`living`/`free`), `category`, `name`, `amount_cents`, `is_estimate`, `sort` |
@@ -293,7 +293,7 @@ Onderaan: Overzicht, Doelen, middenknop, Plan, Meer. In fase 1 is de middenknop 
 5. **Leven, vrije tijd en sparen:** budget voor eten, vervoer, uitgaan en hobby's. Daaronder het bedrag dat overblijft, als bewerkbaar veld "Dit wil ik sparen" (vooraf ingevuld met de spaarruimte, of het standaardvoorstel uit 5.1).
 6. **Wat je al hebt:** huidig spaargeld en je noodfonds. Voorstel doelbedrag = 3 × uitgaven per maand (vast + leven + vrij), aanpasbaar. Bestaand spaargeld wordt een transactie `Startsaldo` op het noodfonds, tot het doelbedrag; wat erboven ligt, kan je in stap 7 over je doelen verdelen.
 7. **Doelen:** voorbeeldkaarten (reis, rijbewijs, laptop, auto, huwelijk, Hajj, "iets anders"). Elke kaart heeft een standaardbedrag als schatting (bv. rijbewijs € 1.500, laptop € 1.000) voor wie "weet ik nog niet" kiest. De kaart "Stage vinden" maakt een checklist-item, geen pot. Het eerste doel dat je toevoegt wordt je hoofddoel. Heeft een doel een deadline, dan vraagt de app: "Noodfonds eerst helemaal vullen, of tegelijk met je doelen?" (100 % of 50 %). Daarna een preview van de tijdlijn.
-8. **Voorkeuren en installeren:** sparen zonder rente, persoonlijke elementen (optioneel, alleen bewaard als je het aanzet), en een tekstveld "Wat moet de app nog over jou weten?" (vakantiedagen, hobby's, plannen; bewaard in `prefs.context_note`, in fase 1 nog niet gebruikt in berekeningen). Dan de uitleg om de app op je beginscherm te zetten (iOS en Android apart), met: "Je logt één keer opnieuw in in de geïnstalleerde app."
+8. **Voorkeuren en installeren:** kleurpalet (Oceaan, Salie of Grafiet, met een klein voorbeeld), sparen zonder rente, persoonlijke elementen (optioneel, alleen bewaard als je het aanzet), en een tekstveld "Wat moet de app nog over jou weten?" (vakantiedagen, hobby's, plannen; bewaard in `prefs.context_note`, in fase 1 nog niet gebruikt in berekeningen). Dan de uitleg om de app op je beginscherm te zetten (iOS en Android apart), met: "Je logt één keer opnieuw in in de geïnstalleerde app."
 
 Na stap 8: het noodfonds-doel wordt aangemaakt (als stap 6 overgeslagen is: doelbedrag 3 × uitgaven, of € 1.000 als er geen uitgaven zijn, als schatting), de regels uit 5.8 maken de checklist, en de gebruiker komt op het overzicht.
 
@@ -318,7 +318,7 @@ Snelle flow vanuit de pushmelding: "Hoeveel zette je opzij?", per pot vooraf ing
 Tijdlijn: per doel de vulmaand, als lijst met mijlpalen. Checklist gegroepeerd per urgentie, afvinken en wegklikken, eigen item toevoegen.
 
 ### 8.7 Meer
-Profiel, inkomen, uitgaven, plan (spaardoel of "volgt mijn spaarruimte", noodfonds-aandeel, voorzichtig of normaal, eenmalig inkomen meetellen), "Wat de app over je weet" (de context-tekst), thema (licht/donker/systeem), meldingen, app installeren, privacy, gegevens downloaden, account wissen, uitloggen.
+Profiel, inkomen, uitgaven, plan (spaardoel of "volgt mijn spaarruimte", noodfonds-aandeel, voorzichtig of normaal, eenmalig inkomen meetellen), "Wat de app over je weet" (de context-tekst), kleurpalet (Oceaan, Salie, Grafiet) en thema (licht/donker/systeem), meldingen, app installeren, privacy, gegevens downloaden, account wissen, uitloggen.
 
 ### 8.8 Lege, laad- en foutstaten
 - Laden: de echte layout met grijze blokken op ware grootte, zonder shimmer.
@@ -343,7 +343,7 @@ Profiel, inkomen, uitgaven, plan (spaardoel of "volgt mijn spaarruimte", noodfon
 ### 10.1 Richting
 Richting **A (zacht en warm)** als basis: ronde kaarten (radius 20-28 px), witte vlakken op een zachte achtergrond, Gabarito voor koppen en bedragen, Figtree voor tekst.
 Bedragen zoals richting **B**: altijd tabelcijfers (`tabular-nums`), formaat `€ 1.240,00`, in lijsten rechts uitgelijnd in een vaste kolom met een totaalrij.
-**Palet:** standaard **Oceaan** (lichte blauwgrijze achtergrond, kobaltblauw accent) tot Zayd op het canvas een ander palet kiest (Salie of Grafiet). Alle kleuren staan als tokens in `globals.css` (`@theme`) en in `DESIGN.md`; een paletwissel is één bestand.
+**Palet: de gebruiker kiest zelf** uit drie paletten (canvas "Spaarplanner stijlrichtingen", tweede rij): **Oceaan** (standaard; lichte blauwgrijze achtergrond, kobaltblauw), **Salie** (salie-grijze achtergrond, dennengroen) en **Grafiet** (neutraal grijs, zwarte knoppen, violet voor voortgang). De keuze staat in `prefs.palette` en wordt toegepast met `data-palette` op `<html>`, zonder flits bij het laden. Omdat Grafiet zwarte knoppen en een violette voortgang heeft, zijn de tokens gesplitst in `action` (knoppen) en `progress` (voortgang en actieve tab). Alle kleuren staan als tokens in `globals.css` en in `DESIGN.md`; een palet toevoegen is één blok tokens.
 **Donker thema:** afgeleid van de grijstinten van B (achtergrond #0f0f10, vlakken tot #2e2e33, tekst #ededee en #b4b4b4, gedempte tekst #9a9a9a zodat ook die 4,5:1 haalt), met het accent van het gekozen palet.
 
 ### 10.2 Regels (uit de design-skills, samengevat)
@@ -359,7 +359,7 @@ Bedragen zoals richting **B**: altijd tabelcijfers (`tabular-nums`), formaat `�
 - Lettertypes via `next/font/google`: bij de build gedownload en zelf geserveerd, dus geen verzoeken naar Google bij gebruik.
 
 ### 10.3 Componenten die fase 1 nodig heeft
-`Money`, `CertaintyMeter`, `ProgressBar`, `StackedBar`, `PaydayStrip`, `PushCard`, `GoalCard`, `GoalForm` (met effect-preview), `Simulator`, `ChecklistItem`, `BottomNav`, `OnboardingStep`, `InstallGuide`, plus de shadcn-primitives.
+`Money`, `CertaintyMeter`, `ProgressBar`, `StackedBar`, `PaydayStrip`, `PushCard`, `GoalCard`, `GoalForm` (met effect-preview), `Simulator`, `PalettePicker`, `ChecklistItem`, `BottomNav`, `OnboardingStep`, `InstallGuide`, plus de shadcn-primitives.
 
 ## 11. Automatisering
 
@@ -442,7 +442,7 @@ De laag `src/domain` is herbruikbaar in een gsm-app; meerdere talen kunnen later
 
 - Nieuwe privérepo, los van het portfolio.
 - Fase 1 zonder AI.
-- Richting A met bedragen zoals B; donker thema afgeleid van B; standaardpalet Oceaan.
+- Richting A met bedragen zoals B; donker thema afgeleid van B; de gebruiker kiest zelf het palet (Oceaan, Salie, Grafiet), standaard Oceaan.
 - Open registratie, met een schakelaar die ook Supabase dichtzet.
 - Pushmelding op loondag in fase 1.
 - Bedragen in centen, rekenregels als pure TypeScript.
@@ -451,10 +451,8 @@ De laag `src/domain` is herbruikbaar in een gsm-app; meerdere talen kunnen later
 
 ## 17. Open punten voor Zayd
 
-1. Een palet kiezen op het canvas (Oceaan, Salie of Grafiet). Tot dan: Oceaan.
-2. De lege privérepo `spaarplanner` aanmaken op GitHub en de Claude GitHub App er toegang toe geven.
-3. Bij de eerste deploy: de 3 Supabase-instellingen uit §11 aanzetten, en de 2 backup-secrets in de GitHub-repo zetten (ik geef een stappenlijst).
-4. Fase 2: een betaalkaart toevoegen in Vercel voor het AI-tegoed.
+1. Bij de eerste deploy: de 3 Supabase-instellingen uit §11 aanzetten, en de 2 backup-secrets in de GitHub-repo zetten (ik geef een stappenlijst).
+2. Fase 2: een betaalkaart toevoegen in Vercel voor het AI-tegoed.
 
 ## 18. Wat de review veranderde
 
