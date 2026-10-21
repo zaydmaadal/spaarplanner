@@ -8,16 +8,17 @@ const eur = new Intl.NumberFormat("nl-BE", {
 
 export function formatEUR(cents: Cents): string {
   // ICU versions differ in which space they put after the euro sign; always use U+00A0.
-  const text = eur.format(Math.abs(cents) / 100).replace(/\s/g, " ");
-  return cents < 0 ? `− ${text}` : text;
+  const text = eur.format(Math.abs(cents) / 100).replace(/\s/g, "\u00a0");
+  return cents < 0 ? `\u2212\u00a0${text}` : text;
 }
 
 // Dutch notation: "." groups thousands, "," is the decimal. A lone "." with 1 to 2 digits after it is a decimal.
 export function parseEuroInput(text: string): Cents | null {
   const s = text.replace(/[€\s]/g, "");
-  const m = /^(\d+|\d{1,3}(?:\.\d{3})+)(?:,(\d{1,2}))?$/.exec(s) ?? /^(\d+)\.(\d{1,2})$/.exec(s);
+  const m = /^(\d+|[1-9]\d{0,2}(?:\.\d{3})+)(?:,(\d{1,2}))?$/.exec(s) ?? /^(\d+)\.(\d{1,2})$/.exec(s);
   if (!m) return null;
-  return Number(m[1].replace(/\./g, "")) * 100 + Number((m[2] ?? "").padEnd(2, "0"));
+  const cents = Number(m[1].replace(/\./g, "")) * 100 + Number((m[2] ?? "").padEnd(2, "0"));
+  return Number.isSafeInteger(cents) ? cents : null;
 }
 
 // yearly and once are not a monthly amount (0); shortcut: floors to whole cents, revisit if rounding drift matters.

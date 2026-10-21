@@ -3,11 +3,11 @@ import { ceilTo100, formatEUR, parseEuroInput, toMonthlyCents } from "./money";
 
 describe("formatEUR", () => {
   test("formats with nl-BE grouping and U+00A0 after the euro sign", () => {
-    expect(formatEUR(124000)).toBe("€ 1.240,00");
-    expect(formatEUR(0)).toBe("€ 0,00");
+    expect(formatEUR(124000)).toBe("€\u00a01.240,00");
+    expect(formatEUR(0)).toBe("€\u00a00,00");
   });
   test("negatives use U+2212", () => {
-    expect(formatEUR(-5000)).toBe("− € 50,00");
+    expect(formatEUR(-5000)).toBe("\u2212\u00a0€\u00a050,00");
   });
 });
 
@@ -21,9 +21,13 @@ describe("parseEuroInput", () => {
     expect(parseEuroInput("1.240")).toBe(124000); // one dot + exactly 3 digits = thousands
     expect(parseEuroInput("1.240.000")).toBe(124000000);
     expect(parseEuroInput(" € 50 ")).toBe(5000);
+    expect(parseEuroInput("0")).toBe(0);
+    expect(parseEuroInput("0,5")).toBe(50);
+    expect(parseEuroInput("0.5")).toBe(50);
+    expect(parseEuroInput("0.50")).toBe(50);
   });
   test("rejects invalid input", () => {
-    for (const bad of ["", "abc", "1,2,3", "-5", "0,005", "12,", "1.24.0"]) {
+    for (const bad of ["", "abc", "1,2,3", "-5", "0,005", "12,", "1.24.0", "0.500", "0.125", "99999999999999999"]) {
       expect(parseEuroInput(bad)).toBeNull();
     }
   });
