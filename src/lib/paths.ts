@@ -17,3 +17,11 @@ export function redirectTarget(
     ? "/wachtwoord-wijzigen"
     : null;
 }
+
+export const isAdminPath = (pathname: string) => pathname === "/beheer" || pathname.startsWith("/beheer/");
+
+// /beheer exists only for admins: everyone else must get the same 404 as a path that does not exist.
+// adminIds never holds "", so a missing sub is never an admin.
+export function hideAdminPath(pathname: string, sub: string | undefined, adminIds: string[]): boolean {
+  return isAdminPath(pathname) && !adminIds.includes(sub ?? "");
+}

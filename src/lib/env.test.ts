@@ -69,6 +69,21 @@ describe("serverEnv", () => {
   });
 });
 
+describe("adminUserIds", () => {
+  it("parses a comma list and works without the other secrets", async () => {
+    vi.stubEnv("ADMIN_USER_IDS", "u1, u2,,");
+    expect((await load()).adminUserIds()).toEqual(["u1", "u2"]);
+  });
+
+  it("is empty when unset or empty", async () => {
+    const { adminUserIds } = await load();
+    vi.stubEnv("ADMIN_USER_IDS", "");
+    expect(adminUserIds()).toEqual([]);
+    vi.stubEnv("ADMIN_USER_IDS", undefined);
+    expect(adminUserIds()).toEqual([]);
+  });
+});
+
 describe("publicEnv", () => {
   const stubAll = () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "http://127.0.0.1:54321");

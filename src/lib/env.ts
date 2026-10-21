@@ -12,7 +12,6 @@ const serverSchema = z.object({
   VAPID_PRIVATE_KEY: z.string().min(1),
   VAPID_SUBJECT: z.string().min(1),
   CRON_SECRET: z.string().min(32),
-  ADMIN_USER_IDS: z.string().default(""),
 });
 
 type PublicEnv = {
@@ -73,6 +72,11 @@ export function signupConfig(): { mode: "open" | "invite" | "closed"; inviteCode
   return { mode, inviteCode };
 }
 
+// Read on its own (not through serverEnv) so proxy.ts needs no other secret to hide /beheer from non-admins.
+export function adminUserIds(): string[] {
+  return (process.env.ADMIN_USER_IDS ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+}
+
 type ServerEnv = {
   supabaseSecretKey: string;
   vapidPrivateKey: string;
@@ -92,7 +96,7 @@ export function serverEnv(): ServerEnv {
       vapidPrivateKey: e.VAPID_PRIVATE_KEY,
       vapidSubject: e.VAPID_SUBJECT,
       cronSecret: e.CRON_SECRET,
-      adminUserIds: e.ADMIN_USER_IDS.split(",").map((s) => s.trim()).filter(Boolean),
+      adminUserIds: adminUserIds(),
     };
   }
   return serverCache;

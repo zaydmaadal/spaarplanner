@@ -1,17 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
-
-const password = "een-lang-wachtwoord";
-
-// The forms only work once React has hydrated (CSP blocks the pre-hydration submit), so a click before that does nothing.
-const hydrated = (page: Page) =>
-  page.waitForFunction(() => Object.keys(document.forms[0] ?? {}).some((k) => k.startsWith("__reactProps")));
-
-async function fillAndSubmit(page: Page, username: string, pw: string, button: string) {
-  await hydrated(page);
-  await page.getByLabel("Gebruikersnaam").fill(username);
-  await page.getByLabel("Wachtwoord").fill(pw);
-  await page.getByRole("button", { name: button }).click();
-}
+import { expect, test } from "@playwright/test";
+import { fillAndSubmit, password } from "./helpers";
 
 test("register, log out, log in", async ({ page }) => {
   const username = `haider-${Math.random().toString(36).slice(2, 8)}`;

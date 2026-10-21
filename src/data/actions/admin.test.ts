@@ -1,8 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const m = vi.hoisted(() => ({
-  userId: "admin-1",
-  notFound: vi.fn(),
+  requireAdmin: vi.fn(),
   createAdmin: vi.fn(),
   lookup: vi.fn(),
   updateUserById: vi.fn(),
@@ -10,20 +9,14 @@ const m = vi.hoisted(() => ({
 }));
 
 vi.mock("@/data/supabase/admin", () => ({ createAdminSupabase: m.createAdmin }));
-vi.mock("@/data/supabase/server", () => ({ requireUserId: async () => m.userId }));
-vi.mock("@/lib/env", () => ({ serverEnv: () => ({ adminUserIds: ["admin-1"] }) }));
-vi.mock("next/navigation", () => ({ notFound: m.notFound }));
+vi.mock("@/data/supabase/server", () => ({ requireAdmin: m.requireAdmin }));
 
-import { requireAdmin, resetPasswordAction } from "./admin";
+import { resetPasswordAction } from "./admin";
 
 const GENERIC = { ok: false, error: "Er ging iets mis. Probeer het opnieuw." };
 
 beforeEach(() => {
-  m.userId = "admin-1";
-  // The real notFound() throws, which stops the action; the mock must too.
-  m.notFound.mockImplementation(() => {
-    throw new Error("NEXT_NOT_FOUND");
-  });
+  m.requireAdmin.mockResolvedValue("admin-1");
   m.createAdmin.mockReturnValue({
     auth: { admin: { updateUserById: m.updateUserById } },
     from: (table: string) =>
@@ -37,20 +30,11 @@ beforeEach(() => {
 });
 afterEach(() => vi.resetAllMocks());
 
-describe("requireAdmin", () => {
-  it("returns the id of an admin and hides the page from everyone else", async () => {
-    expect(await requireAdmin()).toBe("admin-1");
-    m.userId = "user-1";
-    await expect(requireAdmin()).rejects.toThrow("NEXT_NOT_FOUND");
-    expect(m.notFound).toHaveBeenCalledTimes(1);
-  });
-});
-
 describe("resetPasswordAction", () => {
-  it("gives a non-admin a 404 and touches nothing", async () => {
-    m.userId = "user-1";
+  it("stops when requireAdmin throws (the 404 for a non-admin) and touches nothing", async () => {
+    // The real requireAdmin calls notFound(), which throws; see server.test.ts.
+    m.requireAdmin.mockRejectedValue(new Error("NEXT_NOT_FOUND"));
     await expect(resetPasswordAction({ username: "haider" })).rejects.toThrow("NEXT_NOT_FOUND");
-    expect(m.notFound).toHaveBeenCalled();
     expect(m.createAdmin).not.toHaveBeenCalled();
     expect(m.updateUserById).not.toHaveBeenCalled();
   });
@@ -73,11 +57,11 @@ describe("resetPasswordAction", () => {
     expect(m.lookup).not.toHaveBeenCalled();
   });
 
-  it("sets a random 16 character password, forces a change and writes one audit row", async () => {
+  it("sets a random 16 character password without look-alikes, forces a change and writes one audit row", async () => {
     const result = await resetPasswordAction({ username: " Haider " });
     if (!result.ok) throw new Error(result.error);
     const { tempPassword } = result.data;
-    expect(tempPassword).toMatch(/^[A-Za-z0-9_-]{16}$/);
+    expect(tempPassword).toMatch(/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{16}$/);
     expect(m.lookup).toHaveBeenCalledWith("username", "haider");
     expect(m.updateUserById).toHaveBeenCalledExactlyOnceWith("target-id", {
       password: tempPassword,
@@ -90,6 +74,15 @@ describe("resetPasswordAction", () => {
     });
     const second = await resetPasswordAction({ username: "haider" });
     expect(second.ok && second.data.tempPassword).not.toBe(tempPassword);
+  });
+
+  it("draws from all 32 symbols of the alphabet", async () => {
+    const seen = new Set<string>();
+    for (let i = 0; i < 100; i++) {
+      const result = await resetPasswordAction({ username: "haider" });
+      if (result.ok) [...result.data.tempPassword].forEach((c) => seen.add(c));
+    }
+    expect(seen.size).toBe(32);
   });
 
   it("fails without an audit row when the password cannot be set", async () => {

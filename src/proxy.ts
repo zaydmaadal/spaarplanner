@@ -1,8 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/data/database.types";
-import { publicEnv } from "@/lib/env";
-import { redirectTarget } from "@/lib/paths";
+import { adminUserIds, publicEnv } from "@/lib/env";
+import { hideAdminPath, redirectTarget } from "@/lib/paths";
 
 export async function proxy(request: NextRequest) {
   const nonce = btoa(crypto.randomUUID());
@@ -21,12 +21,13 @@ export async function proxy(request: NextRequest) {
   ].join("; ");
 
   // Next reads the nonce from the request's CSP header while rendering.
-  const next = () => {
+  const requestInit = () => {
     const headers = new Headers(request.headers);
     headers.set("x-nonce", nonce);
     headers.set("Content-Security-Policy", csp);
-    return NextResponse.next({ request: { headers } });
+    return { request: { headers } };
   };
+  const next = () => NextResponse.next(requestInit());
 
   let response = next();
   let authHeaders: Record<string, string> = {};
@@ -47,14 +48,22 @@ export async function proxy(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const target = redirectTarget(request.nextUrl.pathname, data?.claims ?? null);
 
+  // A redirect or rewrite must carry the refreshed auth cookies, or the session is lost.
+  const replaceResponse = (r: NextResponse) => {
+    response.headers.getSetCookie().forEach((c) => r.headers.append("set-cookie", c));
+    Object.entries(authHeaders).forEach(([k, v]) => r.headers.set(k, v));
+    return r;
+  };
+
   let result = response;
   if (target) {
     // 303 so a redirected POST (server action) is retried as GET; 307 keeps GET/HEAD as they are.
     const status = request.method === "GET" || request.method === "HEAD" ? 307 : 303;
-    result = NextResponse.redirect(new URL(target, request.url), status);
-    // A redirect must carry the refreshed auth cookies, or the session is lost.
-    response.headers.getSetCookie().forEach((c) => result.headers.append("set-cookie", c));
-    Object.entries(authHeaders).forEach(([k, v]) => result.headers.set(k, v));
+    result = replaceResponse(NextResponse.redirect(new URL(target, request.url), status));
+  } else if (hideAdminPath(request.nextUrl.pathname, data?.claims.sub, adminUserIds())) {
+    // The page's own notFound() comes too late: the layout has started streaming a 200 by then.
+    // Rewriting to a path that does not exist gives the same 404 as any unknown URL.
+    result = replaceResponse(NextResponse.rewrite(new URL("/niet-gevonden-beheer", request.url), requestInit()));
   }
 
   result.headers.set("Content-Security-Policy", csp);

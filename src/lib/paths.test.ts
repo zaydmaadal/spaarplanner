@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isPublicPath, redirectTarget } from "./paths";
+import { hideAdminPath, isAdminPath, isPublicPath, redirectTarget } from "./paths";
 
 describe("isPublicPath", () => {
   it.each([
@@ -35,4 +35,24 @@ describe("redirectTarget", () => {
   it("lets normal users through", () => expect(redirectTarget("/overzicht", normal)).toBeNull());
   it("keeps /wachtwoord-wijzigen private without a session", () =>
     expect(redirectTarget("/wachtwoord-wijzigen", null)).toBe("/inloggen"));
+});
+
+describe("isAdminPath", () => {
+  it.each(["/beheer", "/beheer/", "/beheer/x"])("%s is admin only", (p) => expect(isAdminPath(p)).toBe(true));
+  it.each(["/", "/beheerder", "/x/beheer", "/Beheer"])("%s is not", (p) => expect(isAdminPath(p)).toBe(false));
+});
+
+describe("hideAdminPath", () => {
+  const admins = ["admin-1"];
+  it("shows /beheer to an admin", () => expect(hideAdminPath("/beheer", "admin-1", admins)).toBe(false));
+  it("hides /beheer and below from other users", () => {
+    expect(hideAdminPath("/beheer", "user-1", admins)).toBe(true);
+    expect(hideAdminPath("/beheer/x", "user-1", admins)).toBe(true);
+  });
+  it("hides /beheer when nobody is an admin or there is no sub", () => {
+    expect(hideAdminPath("/beheer", "user-1", [])).toBe(true);
+    expect(hideAdminPath("/beheer", undefined, admins)).toBe(true);
+    expect(hideAdminPath("/beheer", undefined, [])).toBe(true);
+  });
+  it("leaves other paths alone", () => expect(hideAdminPath("/overzicht", "user-1", admins)).toBe(false));
 });

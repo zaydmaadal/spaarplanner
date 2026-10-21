@@ -19,15 +19,18 @@ export function ResetPasswordForm() {
         <FormError>{state && "error" in state ? state.error : undefined}</FormError>
         <SubmitButton pending={pending}>Wachtwoord resetten</SubmitButton>
       </form>
-      {state && "tempPassword" in state && (
-        <div role="status" className="flex flex-col gap-2 rounded-md border border-foreground/60 p-4">
-          <p className="font-medium">Tijdelijk wachtwoord</p>
-          <code className="font-mono text-lg break-all select-all">{state.tempPassword}</code>
-          <p className="text-sm text-foreground/70">
-            Geef dit wachtwoord persoonlijk door. Bij het inloggen moet de gebruiker het meteen wijzigen.
-          </p>
-        </div>
-      )}
+      {/* Always rendered: a live region is only announced when its content changes after it exists. */}
+      <div role="status">
+        {state && "tempPassword" in state && (
+          <div className="flex flex-col gap-2 rounded-md border border-foreground/60 p-4">
+            <p className="font-medium">Tijdelijk wachtwoord</p>
+            <code className="font-mono text-lg break-all select-all">{state.tempPassword}</code>
+            <p className="text-sm text-foreground/70">
+              Geef dit wachtwoord persoonlijk door. Bij het inloggen moet de gebruiker het meteen wijzigen.
+            </p>
+          </div>
+        )}
+      </div>
     </>
   );
 }

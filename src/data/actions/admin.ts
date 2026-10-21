@@ -1,20 +1,16 @@
 "use server";
 
 import { randomBytes } from "node:crypto";
-import { notFound } from "next/navigation";
 import { createAdminSupabase } from "@/data/supabase/admin";
-import { requireUserId } from "@/data/supabase/server";
+import { requireAdmin } from "@/data/supabase/server";
 import { usernameSchema, type ActionResult } from "@/data/schemas";
-import { serverEnv } from "@/lib/env";
 
 const SOMETHING_WRONG = "Er ging iets mis. Probeer het opnieuw.";
 
-// Non-admins get a 404, so the page does not reveal that it exists.
-export async function requireAdmin(): Promise<string> {
-  const userId = await requireUserId();
-  if (!serverEnv().adminUserIds.includes(userId)) notFound();
-  return userId;
-}
+// 32 symbols without look-alikes (no I, O, 0, 1): the password is read aloud or typed from a screen.
+// 32 divides 256, so `byte & 31` is uniform: 16 characters x 5 bits = 80 bits, no modulo bias.
+const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const randomPassword = () => Array.from(randomBytes(16), (b) => ALPHABET[b & 31]).join("");
 
 export async function resetPasswordAction(input: { username: string }): Promise<ActionResult<{ tempPassword: string }>> {
   // Server actions are callable directly, so the page check is not enough.
@@ -34,8 +30,7 @@ export async function resetPasswordAction(input: { username: string }): Promise<
   if (lookupError) return { ok: false, error: SOMETHING_WRONG };
   if (!profile) return notFoundResult;
 
-  // 12 random bytes are exactly 16 base64url characters (A-Z a-z 0-9 - _), without padding.
-  const tempPassword = randomBytes(12).toString("base64url");
+  const tempPassword = randomPassword();
   const { error } = await admin.auth.admin.updateUserById(profile.id, {
     password: tempPassword,
     app_metadata: { must_change_password: true },
