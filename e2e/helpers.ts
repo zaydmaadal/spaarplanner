@@ -1,5 +1,5 @@
+import { expect, type Page } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
-import type { Page } from "@playwright/test";
 
 export const password = "een-lang-wachtwoord";
 
@@ -19,6 +19,21 @@ export async function fillAndSubmit(page: Page, username: string, pw: string, bu
   await form.getByLabel("Wachtwoord", { exact: true }).fill(pw);
   await form.getByRole("button", { name: button }).click();
 }
+
+export async function register(page: Page, username: string) {
+  await page.goto("/registreren");
+  await fillAndSubmit(page, username, password, "Account maken");
+}
+
+// Next keeps the previous step mounted but hidden (React Activity): wait until the step's form is hydrated and only
+// look at the visible form.
+export async function at(page: Page, step: number) {
+  await expect(page).toHaveURL(new RegExp(`/onboarding/${step}$`));
+  await hydrated(page);
+  return page.locator("form").filter({ visible: true });
+}
+export const next = async (page: Page, step: number) => (await at(page, step)).getByRole("button", { name: "Volgende" }).click();
+export const skip = async (page: Page, step: number) => (await at(page, step)).getByRole("button", { name: "Overslaan" }).click();
 
 const need = (name: string) => {
   const value = process.env[name];

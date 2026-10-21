@@ -1,26 +1,9 @@
-import { expect, test, type Page } from "@playwright/test";
-import { adminClient, fillAndSubmit, hydrated, password } from "./helpers";
+import { expect, test } from "@playwright/test";
+import { adminClient, at, next, register, skip } from "./helpers";
 
-// /overzicht comes with the overview (Task 16), so these tests check the redirect and what ended up in the database.
-// Task 16 adds, to the same tests: "Hoi Haider" and the payday strip with "Volgende loondag" (Haider); no payday strip,
-// and the emergency fund card with "€ 1.000,00" and the label "schatting" (skip everything).
+// These tests check where onboarding ends (the overview), what that screen shows first, and what ended up in the database.
 
 const rand = () => Math.random().toString(36).slice(2, 8);
-
-async function register(page: Page, username: string) {
-  await page.goto("/registreren");
-  await fillAndSubmit(page, username, password, "Account maken");
-}
-
-// Next keeps the previous step mounted but hidden (React Activity): wait until the step's form is hydrated and only
-// look at the visible form.
-async function at(page: Page, step: number) {
-  await expect(page).toHaveURL(new RegExp(`/onboarding/${step}$`));
-  await hydrated(page);
-  return page.locator("form").filter({ visible: true });
-}
-const next = async (page: Page, step: number) => (await at(page, step)).getByRole("button", { name: "Volgende" }).click();
-const skip = async (page: Page, step: number) => (await at(page, step)).getByRole("button", { name: "Overslaan" }).click();
 
 // Reads with the service role; the user's own pages never do.
 async function stored(username: string) {
@@ -74,6 +57,8 @@ test("Haider: income, a trip with a deadline and the emergency fund next to it",
   form = await at(page, 8);
   await form.getByRole("button", { name: "Naar mijn overzicht" }).click();
   await expect(page).toHaveURL(/\/overzicht$/);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Hoi Haider");
+  await expect(page.getByText("Volgende loondag", { exact: true })).toBeVisible();
 
   const { profile, goals, plan, transactions } = await stored(username);
   expect(profile).toMatchObject({ display_name: "Haider", onboarding_step: 8 });
@@ -91,6 +76,12 @@ test("skipping every step still ends on the overview with an estimated emergency
   await register(page, username);
   for (let step = 1; step <= 8; step++) await skip(page, step);
   await expect(page).toHaveURL(/\/overzicht$/);
+  // No payday, so no strip; the emergency fund is the main goal, at the estimated € 1.000.
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await expect(page.getByText("Volgende loondag", { exact: true })).toHaveCount(0);
+  const fund = page.getByRole("region", { name: "Noodfonds" });
+  await expect(fund).toContainText("€\u00a01.000,00");
+  await expect(fund.getByText("schatting", { exact: true })).toBeVisible();
 
   const { profile, goals, plan, transactions } = await stored(username);
   expect(profile.onboarding_completed_at).not.toBeNull();
