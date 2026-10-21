@@ -14,11 +14,11 @@ export const usernameSchema = z
     "Gebruik 3 tot 20 tekens: letters, cijfers, punt, underscore of streepje. Begin en eindig met een letter of cijfer, en zet geen twee punten achter elkaar.",
   );
 
-// 72: Supabase Auth refuses longer passwords (bcrypt limit).
+// 72 bytes (not characters): Supabase Auth refuses longer passwords (bcrypt limit), and "é" is 2 bytes.
 export const passwordSchema = z
   .string()
   .min(10, "Kies een wachtwoord van minstens 10 tekens.")
-  .max(72, "Kies een wachtwoord van hoogstens 72 tekens.");
+  .refine((v) => new TextEncoder().encode(v).length <= 72, "Kies een wachtwoord van hoogstens 72 tekens.");
 
 // First message per field, for ActionResult.fieldErrors.
 export function fieldErrorsFrom(error: z.ZodError): Record<string, string> {

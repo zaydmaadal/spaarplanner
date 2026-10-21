@@ -1,5 +1,6 @@
 "use server";
 
+import { createHash, timingSafeEqual } from "node:crypto";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createAdminSupabase } from "@/data/supabase/admin";
@@ -11,7 +12,20 @@ import { signupConfig } from "@/lib/env";
 const MAX_NEW_ACCOUNTS_PER_HOUR = 5;
 const SOMETHING_WRONG = "Er ging iets mis. Probeer het opnieuw.";
 
+const CAP_REACHED = "Er zijn net veel accounts aangemaakt. Probeer het over een uur opnieuw.";
+
 const registerSchema = z.object({ username: usernameSchema, password: passwordSchema });
+
+// Digests have equal length, which timingSafeEqual needs; a client can send any type, so check it.
+const sha256 = (v: string) => createHash("sha256").update(v).digest();
+const isInviteCode = (given: unknown, expected: string | null) =>
+  typeof given === "string" && expected !== null && timingSafeEqual(sha256(given.trim()), sha256(expected));
+
+const recentAccounts = (admin: ReturnType<typeof createAdminSupabase>) =>
+  admin
+    .from("profiles")
+    .select("id", { count: "exact", head: true })
+    .gte("created_at", new Date(Date.now() - 60 * 60 * 1000).toISOString());
 
 export async function registerAction(input: {
   username: string;
@@ -20,7 +34,7 @@ export async function registerAction(input: {
 }): Promise<ActionResult> {
   const { mode, inviteCode } = signupConfig();
   if (mode === "closed") return { ok: false, error: "Registreren is nu gesloten." };
-  if (mode === "invite" && input.inviteCode?.trim() !== inviteCode) {
+  if (mode === "invite" && !isInviteCode(input.inviteCode, inviteCode)) {
     return { ok: false, error: "Deze uitnodigingscode klopt niet." };
   }
 
@@ -31,18 +45,11 @@ export async function registerAction(input: {
   const { username, password } = parsed.data;
 
   const admin = createAdminSupabase();
-  const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-  const { count, error: countError } = await admin
-    .from("profiles")
-    .select("id", { count: "exact", head: true })
-    .gte("created_at", since);
+  const { count, error: countError } = await recentAccounts(admin);
   if (countError) return { ok: false, error: SOMETHING_WRONG };
-  // shortcut: count-then-create is not atomic, so a burst can pass the cap by a few; fine for an abuse brake.
-  if ((count ?? 0) >= MAX_NEW_ACCOUNTS_PER_HOUR) {
-    return { ok: false, error: "Er zijn net veel accounts aangemaakt. Probeer het over een uur opnieuw." };
-  }
+  if ((count ?? 0) >= MAX_NEW_ACCOUNTS_PER_HOUR) return { ok: false, error: CAP_REACHED };
 
-  const { error } = await admin.auth.admin.createUser({
+  const { data, error } = await admin.auth.admin.createUser({
     email: usernameToEmail(username),
     password,
     email_confirm: true,
@@ -52,6 +59,14 @@ export async function registerAction(input: {
     return { ok: false, error: taken, fieldErrors: { username: taken } };
   }
   if (error) return { ok: false, error: SOMETHING_WRONG };
+
+  // Count again now that this account exists: parallel requests can all pass the first check.
+  // Whoever sees more than the cap undoes their own account. If this count fails, keep the account.
+  const { count: after } = await recentAccounts(admin);
+  if ((after ?? 0) > MAX_NEW_ACCOUNTS_PER_HOUR) {
+    await admin.auth.admin.deleteUser(data.user.id);
+    return { ok: false, error: CAP_REACHED };
+  }
   return { ok: true, data: undefined };
 }
 
@@ -78,7 +93,8 @@ export async function changePasswordAction(input: { password: string }): Promise
   if (clearError) return { ok: false, error: SOMETHING_WRONG };
 
   // New JWT without the flag, or the proxy keeps redirecting to /wachtwoord-wijzigen.
-  await supabase.auth.refreshSession();
+  const { error: refreshError } = await supabase.auth.refreshSession();
+  if (refreshError) return { ok: false, error: SOMETHING_WRONG };
   return { ok: true, data: undefined };
 }
 
