@@ -25,9 +25,11 @@ const KINDS = [
   { value: "student", label: "Studentenjob" },
   { value: "allowance", label: "Zakgeld" },
   { value: "benefit", label: "Uitkering" },
-  { value: "salary", label: "Loon" },
   { value: "other", label: "Iets anders" },
 ];
+// "Loon" is the main income above: an extra income cannot become salary, or after a reload they could swap roles.
+// A row that already is salary (made elsewhere) keeps showing it.
+const SALARY = { value: "salary", label: "Loon" };
 const WEEKDAYS = ["Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag", "Zondag"].map((label, i) => ({ value: String(i + 1), label }));
 const isRegular = (i: Income): i is Income & { frequency: Frequency } => i.frequency === "monthly" || i.frequency === "weekly" || i.frequency === "biweekly";
 
@@ -141,7 +143,7 @@ export function Step2({ mode, incomes, firstJob }: { mode: Mode; incomes: Income
         {extras.rows.map((row) => (
           <Item key={row.key} title={row.name || "Extra inkomen"} onRemove={() => extras.remove(row.key)}>
             <TextField label="Naam" value={row.name} onChange={(name) => extras.patch(row.key, { name })} error={errors[row.key]?.name} maxLength={80} />
-            <SelectField label="Soort" options={KINDS} value={row.kind} onChange={(kind) => extras.patch(row.key, { kind: kind as IncomeKind })} />
+            <SelectField label="Soort" options={row.kind === "salary" ? [...KINDS, SALARY] : KINDS} value={row.kind} onChange={(kind) => extras.patch(row.key, { kind: kind as IncomeKind })} />
             <MoneyField label="Netto bedrag" value={row.amount} onChange={(amount) => extras.patch(row.key, { amount })} error={errors[row.key]?.amount} />
             <Choice legend="Hoe vaak?" options={[...FREQUENCIES]} value={row.frequency} onChange={(frequency) => extras.patch(row.key, { frequency })} />
           </Item>

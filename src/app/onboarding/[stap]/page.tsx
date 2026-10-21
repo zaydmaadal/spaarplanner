@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { STEPS } from "@/components/onboarding/progress";
 import { Step1 } from "@/components/onboarding/step-1";
 import { Step2 } from "@/components/onboarding/step-2";
 import { Step3 } from "@/components/onboarding/step-3";
@@ -13,7 +14,11 @@ import { createServerSupabase, readProfile, requireUserId } from "@/data/supabas
 import { todayInTimeZone } from "@/domain/dates";
 import { parsePrefs } from "@/lib/prefs";
 
-export const metadata: Metadata = { title: "Aan de slag" };
+// The route announcer reads the title, so each step names itself.
+export async function generateMetadata({ params }: PageProps<"/onboarding/[stap]">): Promise<Metadata> {
+  const { stap } = await params;
+  return { title: /^[1-8]$/.test(stap) ? `Stap ${stap} van ${STEPS}: Aan de slag` : "Aan de slag" };
+}
 
 const cents = (v: unknown) => (typeof v === "number" ? v : null);
 

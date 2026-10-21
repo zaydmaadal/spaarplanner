@@ -47,6 +47,14 @@ describe("saveProfileAction", () => {
     expect((await saveProfileAction({ prefs: { startBalance: "veel" } })).ok).toBe(false);
   });
 
+  it("refuses a step 6 target of 0 on step 6 (the fund needs more than 0) but accepts a start balance of 0", async () => {
+    const calls = setup();
+    expect(await saveProfileAction({ prefs: { emergencyTarget: "0" } })).toMatchObject({ ok: false, fieldErrors: { emergencyTarget: "Vul een bedrag in dat groter is dan 0." } });
+    expect(calls).toHaveLength(0);
+    expect(await saveProfileAction({ prefs: { startBalance: "0", emergencyTarget: "1" } })).toMatchObject({ ok: true });
+    expect(args(update(calls), "update")![0]).toEqual({ prefs: { ...stored, start_balance_cents: 0, emergency_target_cents: 100 } });
+  });
+
   it("takes only whitelisted keys and values, so no extra key can reach the jsonb", async () => {
     const calls = setup();
     const bad = await saveProfileAction({ prefs: { palette: "neon" } } as never);

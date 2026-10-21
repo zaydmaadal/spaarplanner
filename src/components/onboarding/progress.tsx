@@ -8,7 +8,10 @@ export function OnboardingProgress({ step }: { step: number }) {
       <p className="text-sm font-semibold text-ink-2">
         Stap {step} van {STEPS}
       </p>
-      <ProgressBar value={step / STEPS} label={`Stap ${step} van ${STEPS}`} />
+      {/* The text above already says it; the bar is only a picture of it. */}
+      <div aria-hidden>
+        <ProgressBar value={step / STEPS} label={`Stap ${step} van ${STEPS}`} />
+      </div>
     </div>
   );
 }

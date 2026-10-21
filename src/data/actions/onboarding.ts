@@ -39,8 +39,8 @@ export async function completeOnboardingAction(input: z.input<typeof completeSch
 
   const supabase = await createServerSupabase();
   const [profile, goals, lines] = await Promise.all([
-    supabase.from("profiles").select("onboarding_completed_at, timezone").eq("id", userId).single(),
-    supabase.from("goals").select("id, kind, priority, target_cents").eq("user_id", userId),
+    supabase.from("profiles").select("onboarding_completed_at, timezone, prefs").eq("id", userId).single(),
+    supabase.from("goals").select("id, kind, priority, target_cents, is_main").eq("user_id", userId),
     supabase.from("budget_lines").select("amount_cents").eq("user_id", userId),
   ]);
   if (!profile.data || !goals.data || !lines.data) return dbFailure(profile.error ?? goals.error ?? lines.error ?? {});
@@ -57,23 +57,31 @@ export async function completeOnboardingAction(input: z.input<typeof completeSch
     const created = await supabase
       .from("goals")
       .insert({ user_id: userId, kind: "emergency", name: "Noodfonds", target_cents: target, target_is_estimate: emergencyTargetCents === null, priority: 1 })
-      .select("id, kind, priority, target_cents")
+      .select("id, kind, priority, target_cents, is_main")
       .single();
     if (created.data) fund = created.data;
     else if (created.error?.code === "23505") {
       // A parallel submit created the fund between our read and our insert (unique index goals_one_emergency).
-      const existing = await supabase.from("goals").select("id, kind, priority, target_cents").eq("user_id", userId).eq("kind", "emergency").single();
+      const existing = await supabase.from("goals").select("id, kind, priority, target_cents, is_main").eq("user_id", userId).eq("kind", "emergency").single();
       if (!existing.data) return dbFailure(existing.error ?? {});
       fund = existing.data;
     } else return dbFailure(created.error ?? {});
   }
 
-  // shortcut: savings above the target are not booked (spec 8.2 step 6 lets the user spread them over goals); add a
-  // transaction per goal when users ask for it.
-  const deposit = Math.min(startBalanceCents, fund.target_cents);
-  if (deposit > 0) {
+  // Spec 8.2 step 6: savings above the fund's target go to the main goal (step 7), up to what that goal needs.
+  // shortcut: whatever is left after that stays unbooked; add a transaction per goal when users ask for it.
+  const toFund = Math.min(startBalanceCents, fund.target_cents);
+  const main = goals.data.find((g) => g.is_main && g.kind !== "emergency");
+  const today = todayInTimeZone(profile.data.timezone, new Date());
+  const bookings = [
+    { goalId: fund.id, cents: toFund },
+    ...(main ? [{ goalId: main.id, cents: Math.min(startBalanceCents - toFund, main.target_cents) }] : []),
+  ];
+  // The goal's id is the client_ref, so each booking exists once however often this runs.
+  for (const { goalId, cents } of bookings) {
+    if (cents <= 0) continue;
     const { error } = await supabase.from("transactions").upsert(
-      { user_id: userId, goal_id: fund.id, amount_cents: deposit, occurred_on: todayInTimeZone(profile.data.timezone, new Date()), note: "Startsaldo", source: "start", client_ref: fund.id },
+      { user_id: userId, goal_id: goalId, amount_cents: cents, occurred_on: today, note: "Startsaldo", source: "start", client_ref: goalId },
       { onConflict: "user_id,client_ref", ignoreDuplicates: true },
     );
     if (error) return dbFailure(error);
@@ -81,6 +89,10 @@ export async function completeOnboardingAction(input: z.input<typeof completeSch
 
   const plan = await supabase.from("plans").update({ emergency_share_pct: emergencySharePct }).eq("user_id", userId);
   if (plan.error) return dbFailure(plan.error);
-  const { error } = await supabase.from("profiles").update({ onboarding_step: 8, onboarding_completed_at: new Date().toISOString() }).eq("id", userId);
+  // The step 6 answers have done their job: drop them from the prefs.
+  const prefs = typeof profile.data.prefs === "object" && profile.data.prefs !== null && !Array.isArray(profile.data.prefs) ? { ...profile.data.prefs } : {};
+  delete prefs.start_balance_cents;
+  delete prefs.emergency_target_cents;
+  const { error } = await supabase.from("profiles").update({ onboarding_step: 8, onboarding_completed_at: new Date().toISOString(), prefs }).eq("id", userId);
   return error ? dbFailure(error) : FINISHED;
 }

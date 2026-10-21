@@ -136,7 +136,7 @@ export function Choice<T extends string>({
 }) {
   const name = useId();
   return (
-    <fieldset className="flex flex-col gap-1.5">
+    <fieldset className="flex flex-col gap-1.5" aria-describedby={error ? `${name}-error` : undefined}>
       <legend className="mb-1.5 text-sm font-semibold">{legend}</legend>
       <div className="flex flex-wrap gap-2">
         {options.map((o) => (
@@ -148,7 +148,7 @@ export function Choice<T extends string>({
         ))}
       </div>
       {error && (
-        <p role="alert" className="text-sm text-error">
+        <p id={`${name}-error`} role="alert" className="text-sm text-error">
           {error}
         </p>
       )}

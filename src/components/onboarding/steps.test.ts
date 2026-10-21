@@ -13,6 +13,8 @@ vi.mock("@/data/actions/plan", () => ({}));
 vi.mock("@/data/actions/goals", () => ({}));
 vi.mock("@/data/actions/checklist", () => ({}));
 
+import { Choice } from "@/components/form-fields";
+import { OnboardingProgress } from "./progress";
 import { Step1 } from "./step-1";
 import { Step2 } from "./step-2";
 import { Step3 } from "./step-3";
@@ -104,6 +106,37 @@ describe("step 3 and 4", () => {
   });
 });
 
+describe("accessibility details", () => {
+  it("ties a Choice error to its fieldset", () => {
+    const page = html(h(Choice, { legend: "Wanneer?", value: "a", options: [{ value: "a", label: "A" }], onChange: () => {}, error: "Kies een dag." }));
+    const described = /<fieldset[^>]*aria-describedby="([^"]+)"/.exec(page)?.[1];
+    expect(described).toBeTruthy();
+    expect(page).toContain(`id="${described}"`);
+    expect(html(h(Choice, { legend: "Wanneer?", value: "a", options: [{ value: "a", label: "A" }], onChange: () => {} }))).not.toContain("aria-describedby");
+  });
+
+  it("says the step in text and hides the bar that only pictures it", () => {
+    const page = html(h(OnboardingProgress, { step: 3 }));
+    expect(page).toContain("Stap 3 van 8");
+    expect(page).toMatch(/<div aria-hidden="true"><div role="progressbar"/);
+  });
+});
+
+describe("step 2 extra incomes", () => {
+  const kinds = (page: string) => [...(/Soort<\/label><select[^>]*>([\s\S]*?)<\/select>/.exec(page)?.[1] ?? "").matchAll(/>([^<]+)<\/option>/g)].map((m) => m[1]);
+
+  it("cannot be made salary, so the main income keeps its role after a reload", () => {
+    const zakgeld = income({ id: "zakgeld", name: "Zakgeld", kind: "allowance", amountCents: 5000 });
+    const page = html(h(Step2, { mode: "onboarding", incomes: [haider, zakgeld], firstJob: false }));
+    expect(kinds(page)).toEqual(["Bijberoep of flexi-job", "Studentenjob", "Zakgeld", "Uitkering", "Iets anders"]);
+  });
+
+  it("still shows a second salary that was made elsewhere", () => {
+    const partner = income({ id: "partner", name: "Partner", amountCents: 100000 });
+    expect(kinds(html(h(Step2, { mode: "onboarding", incomes: [partner, { ...haider, id: "a" }].sort((a, b) => (a.id < b.id ? 1 : -1)), firstJob: false })))).toContain("Loon");
+  });
+});
+
 describe("step 5", () => {
   it("proposes 20 % of the income as 'Dit wil ik sparen' when there are no expenses (Haider: € 430)", () => {
     const page = html(h(Step5, { mode: "onboarding", incomes: [haider], lines: [], plan: plan() }));
@@ -135,7 +168,7 @@ describe("step 6", () => {
     const some = html(h(Step6, { mode: "onboarding", lines: [line("fixed", 165000)], startBalanceCents: 600000, emergencyTargetCents: null }));
     expect(value(some, "Doelbedrag voor je noodfonds")).toBe("4950");
     expect(value(some, "Hoeveel spaargeld heb je nu?")).toBe("6000");
-    expect(some).toContain("boeken we niet in je noodfonds");
+    expect(some).toContain("zetten we op je hoofddoel");
   });
 });
 

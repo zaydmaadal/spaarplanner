@@ -12,14 +12,14 @@ import { completeOnboardingAction, setOnboardingStepAction } from "./onboarding"
 
 const FUND = "3f2b1c9e-7d4a-4e8b-9c1d-2a6f5e0b8d71";
 const TRIP = "0b1c2d3e-4f50-4a61-8b72-93a4b5c6d7e8";
-type Goal = { id: string; kind: string; priority: number; target_cents: number };
+type Goal = { id: string; kind: string; priority: number; target_cents: number; is_main?: boolean };
 type DbError = { code: string; message: string };
-type Setup = { completed?: boolean; lines?: number[]; goals?: Goal[]; insertError?: DbError; raced?: Goal; writeError?: DbError };
+type Setup = { completed?: boolean; prefs?: object; lines?: number[]; goals?: Goal[]; insertError?: DbError; raced?: Goal; writeError?: DbError };
 
 // Reads answer from the options; the insert echoes the row it was given, like `.insert().select().single()`.
-function setup({ completed = false, lines = [], goals = [], insertError, raced, writeError }: Setup = {}) {
+function setup({ completed = false, prefs = {}, lines = [], goals = [], insertError, raced, writeError }: Setup = {}) {
   const db = fakeDb((call: Call) => {
-    if (call.table === "profiles" && has(call, "select")) return { data: { onboarding_completed_at: completed ? "2026-10-01T10:00:00Z" : null, timezone: "Europe/Brussels" } };
+    if (call.table === "profiles" && has(call, "select")) return { data: { onboarding_completed_at: completed ? "2026-10-01T10:00:00Z" : null, timezone: "Europe/Brussels", prefs } };
     if (call.table === "budget_lines") return { data: lines.map((amount_cents) => ({ amount_cents })) };
     if (call.table === "goals" && has(call, "insert")) {
       const row = args(call, "insert")![0] as Goal;
@@ -107,10 +107,57 @@ describe("completeOnboardingAction", () => {
     expect(plan.ops).toContainEqual(["eq", ["user_id", "user-1"]]);
     const last = calls.at(-1)!;
     expect(last.table).toBe("profiles");
-    expect(args(last, "update")![0]).toEqual({ onboarding_step: 8, onboarding_completed_at: expect.stringMatching(/^\d{4}-\d\d-\d\dT/) });
+    expect(args(last, "update")![0]).toEqual({ onboarding_step: 8, onboarding_completed_at: expect.stringMatching(/^\d{4}-\d\d-\d\dT/), prefs: {} });
     expect(last.ops).toContainEqual(["eq", ["id", "user-1"]]);
     // Refreshing would re-render /onboarding/8, which redirects now; the screen navigates itself.
     expect(m.revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it("clears the two step 6 answers from the prefs when it finishes, and keeps the other prefs", async () => {
+    const calls = setup({ prefs: { palette: "salie", context_note: "Stage in maart", start_balance_cents: 600000, emergency_target_cents: 400000 } });
+    await completeOnboardingAction(finish);
+    expect(args(calls.at(-1)!, "update")![0]).toMatchObject({ prefs: { palette: "salie", context_note: "Stage in maart" } });
+    expect(args(calls.at(-1)!, "update")![0]).not.toHaveProperty("prefs.start_balance_cents");
+    expect(args(calls.at(-1)!, "update")![0]).not.toHaveProperty("prefs.emergency_target_cents");
+  });
+
+  describe("a start balance above the emergency target", () => {
+    const MAIN = "0b1c2d3e-4f50-4a61-8b72-93a4b5c6d7e9";
+    const main = (target_cents: number): Goal => ({ id: MAIN, kind: "trip", priority: 1, target_cents, is_main: true });
+    const bookings = (calls: Call[]) => on(calls, "transactions", "upsert").map((c) => args(c, "upsert")!);
+
+    it("books the surplus on the main goal as a second start transaction with the main goal's id as client_ref", async () => {
+      const calls = setup({ goals: [main(250000)] });
+      await completeOnboardingAction({ ...finish, startBalanceCents: 150000 }); // fund target € 1.000 (nothing spent), € 500 over
+      expect(bookings(calls)).toEqual([
+        [expect.objectContaining({ goal_id: FUND, amount_cents: 100000, client_ref: FUND }), { onConflict: "user_id,client_ref", ignoreDuplicates: true }],
+        [
+          { user_id: "user-1", goal_id: MAIN, amount_cents: 50000, occurred_on: expect.stringMatching(/^\d{4}-\d\d-\d\d$/), note: "Startsaldo", source: "start", client_ref: MAIN },
+          { onConflict: "user_id,client_ref", ignoreDuplicates: true },
+        ],
+      ]);
+    });
+
+    it("books no more than the main goal still needs; the rest stays unbooked", async () => {
+      const calls = setup({ goals: [main(20000)] });
+      await completeOnboardingAction({ ...finish, startBalanceCents: 150000 });
+      expect(bookings(calls).map(([row]) => (row as { amount_cents: number }).amount_cents)).toEqual([100000, 20000]);
+    });
+
+    it("books nothing extra when there is no main goal, or when nothing is over", async () => {
+      const calls = setup({ goals: [{ ...main(250000), is_main: false }] });
+      await completeOnboardingAction({ ...finish, startBalanceCents: 150000 });
+      expect(bookings(calls)).toHaveLength(1);
+      const exact = setup({ goals: [main(250000)] });
+      await completeOnboardingAction({ ...finish, startBalanceCents: 100000 });
+      expect(bookings(exact)).toHaveLength(1);
+    });
+
+    it("never takes the emergency fund for the main goal", async () => {
+      const calls = setup({ goals: [{ id: FUND, kind: "emergency", priority: 1, target_cents: 100000, is_main: true }] });
+      await completeOnboardingAction({ ...finish, startBalanceCents: 150000 });
+      expect(bookings(calls)).toHaveLength(1);
+    });
   });
 
   it("is idempotent: a finished onboarding answers ok and writes nothing", async () => {

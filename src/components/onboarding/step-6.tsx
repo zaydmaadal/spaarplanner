@@ -10,7 +10,8 @@ import { outcome, StepShell, type Mode } from "./step-shell";
 
 const text = (cents: Cents | null) => (cents === null ? "" : toEuroInput(cents));
 
-// Nothing is booked here: the emergency fund is created after step 8, so both answers wait in the profile until then.
+// Nothing is booked here: the emergency fund is created after step 8, so both answers wait in the profile until then
+// (and are removed from it when the onboarding finishes).
 export function Step6({ mode, lines, startBalanceCents, emergencyTargetCents }: { mode: Mode; lines: BudgetLine[]; startBalanceCents: Cents | null; emergencyTargetCents: Cents | null }) {
   const [balance, setBalance] = useState(text(startBalanceCents));
   // null: the user has not typed a target, so the field shows the suggestion and the fund counts it as an estimate.
@@ -45,7 +46,7 @@ export function Step6({ mode, lines, startBalanceCents, emergencyTargetCents }: 
         error={errors.emergencyTarget}
       />
       {balanceCents !== null && targetCents !== null && balanceCents > targetCents && (
-        <p className="text-sm text-ink-2">Wat boven het doelbedrag uitkomt, boeken we niet in je noodfonds. Dat zet je later zelf op een doel.</p>
+        <p className="text-sm text-ink-2">Wat boven het doelbedrag uitkomt, zetten we op je hoofddoel. Dat is het eerste doel dat je in de volgende stap kiest, en alleen tot dat doel vol is.</p>
       )}
     </StepShell>
   );

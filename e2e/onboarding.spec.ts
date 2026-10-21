@@ -67,7 +67,7 @@ test("Haider: income, a trip with a deadline and the emergency fund next to it",
   form = await at(page, 7);
   await form.getByRole("button", { name: "Reis", pressed: false }).click();
   await form.getByLabel("Doelbedrag", { exact: true }).fill("2500");
-  await form.getByLabel("Klaar tegen", { exact: true }).fill(`${year}-07`);
+  await form.getByLabel("Klaar tegen (optioneel)", { exact: true }).fill(`${year}-07`);
   await form.getByText("Tegelijk", { exact: true }).click();
   await next(page, 7);
 
@@ -99,7 +99,7 @@ test("skipping every step still ends on the overview with an estimated emergency
   expect(transactions).toHaveLength(0);
 });
 
-test("a reload resumes at the saved step, and the start balance is booked once, capped at the emergency fund", async ({ page }) => {
+test("a reload resumes at the saved step; the start balance is booked once, the surplus goes to the main goal", async ({ page }) => {
   const username = `resume-${rand()}`;
   await register(page, username);
   await skip(page, 1);
@@ -130,16 +130,33 @@ test("a reload resumes at the saved step, and the start balance is booked once, 
   await expect(form.getByLabel("Doelbedrag voor je noodfonds", { exact: true })).toHaveValue("1650");
   await next(page, 6);
 
+  // The first goal is the main goal: it gets what is over, up to its own target (€ 6.000 - € 1.650 = € 4.350, the laptop needs € 1.000).
   form = await at(page, 7);
+  await form.getByRole("button", { name: "Laptop", pressed: false }).click();
   await form.getByRole("button", { name: "Stage vinden", pressed: false }).click();
   await next(page, 7);
-  await skip(page, 8);
+
+  // A double click on the last button must still book once.
+  form = await at(page, 8);
+  await form.getByRole("button", { name: "Naar mijn overzicht" }).dblclick();
   await expect(page).toHaveURL(/\/overzicht$/);
 
   const { profile, goals, transactions, lines, checklist } = await stored(username);
   expect(profile.onboarding_completed_at).not.toBeNull();
   expect(lines).toMatchObject([{ kind: "fixed", name: "Huur", amount_cents: 55000 }]);
-  expect(goals).toMatchObject([{ kind: "emergency", target_cents: 165000, target_is_estimate: true }]);
-  expect(transactions).toMatchObject([{ amount_cents: 165000, source: "start", goal_id: goals[0].id }]);
+  expect(goals).toMatchObject([
+    { kind: "emergency", target_cents: 165000, target_is_estimate: true },
+    { kind: "purchase", name: "Laptop", target_cents: 100000, is_main: true },
+  ]);
+  expect(transactions).toHaveLength(2);
+  expect(transactions).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ goal_id: goals[0].id, amount_cents: 165000, source: "start" }),
+      expect.objectContaining({ goal_id: goals[1].id, amount_cents: 100000, source: "start" }),
+    ]),
+  );
+  // The answers of step 6 have done their job.
+  expect(profile.prefs).not.toHaveProperty("start_balance_cents");
+  expect(profile.prefs).not.toHaveProperty("emergency_target_cents");
   expect(checklist).toMatchObject([{ title: "Stage vinden", source: "user" }]);
 });

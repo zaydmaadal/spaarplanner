@@ -130,8 +130,9 @@ export const profileSchema = z.object({
       showBasmala: z.boolean().optional(),
       contextNote: z.string().max(2000, "Je notitie mag hoogstens 2.000 tekens hebben.").optional(),
       // Step 6 of the onboarding, kept here because the emergency fund only exists after step 8 (null: not given).
+      // The target must be above 0 here, or finishing in step 8 would fail on a field the user cannot see.
       startBalance: moneySchema.nullable().optional(),
-      emergencyTarget: moneySchema.nullable().optional(),
+      emergencyTarget: positiveMoney.nullable().optional(),
     })
     .optional(),
 });

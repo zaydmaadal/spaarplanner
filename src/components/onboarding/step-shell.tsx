@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -75,6 +75,13 @@ export function StepShell({
 }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const heading = useRef<HTMLHeadingElement>(null);
+
+  // A new step is a new page for a screen reader: start at its title. Next keeps visited steps mounted but hidden, and
+  // React runs the effects again when one is shown again.
+  useEffect(() => {
+    if (mode === "onboarding") heading.current?.focus({ preventScroll: true });
+  }, [mode]);
 
   async function go(withSave: boolean) {
     setError(null);
@@ -93,7 +100,9 @@ export function StepShell({
       {mode === "onboarding" && <OnboardingProgress step={step} />}
       <div className="flex flex-col gap-5 rounded-card bg-surface p-5">
         <div className="flex flex-col gap-2">
-          <h1 className="font-display text-2xl font-semibold">{title}</h1>
+          <h1 ref={heading} tabIndex={-1} className="font-display text-2xl font-semibold outline-none">
+            {title}
+          </h1>
           {intro && <p className="text-ink-2">{intro}</p>}
         </div>
         {children}
