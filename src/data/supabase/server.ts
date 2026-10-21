@@ -1,0 +1,30 @@
+import "server-only";
+import { createServerClient } from "@supabase/ssr";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import type { Database } from "@/data/database.types";
+import { publicEnv } from "@/lib/env";
+
+export async function createServerSupabase(): Promise<SupabaseClient<Database>> {
+  const cookieStore = await cookies();
+  return createServerClient<Database>(publicEnv.supabaseUrl, publicEnv.supabasePublishableKey, {
+    cookies: {
+      getAll: () => cookieStore.getAll(),
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
+        } catch {
+          // Called from a Server Component, which cannot set cookies; proxy.ts refreshes the session.
+        }
+      },
+    },
+  });
+}
+
+export async function requireUserId(): Promise<string> {
+  const supabase = await createServerSupabase();
+  const { data } = await supabase.auth.getClaims();
+  if (!data?.claims.sub) redirect("/inloggen");
+  return data.claims.sub;
+}
