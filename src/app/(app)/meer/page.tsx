@@ -4,9 +4,10 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { BottomNav } from "@/components/bottom-nav";
 import { InstallGuide } from "@/components/install-guide";
+import { LogoutForm } from "@/components/logout-form";
+import { PushSettings } from "@/components/push-card";
 import { Appearance } from "@/components/settings/appearance";
 import { Button } from "@/components/ui/button";
-import { logoutAction } from "@/data/actions/auth";
 import { readPrefs } from "@/data/supabase/server";
 
 export const metadata: Metadata = { title: "Meer" };
@@ -35,7 +36,7 @@ const Item = ({ href, children }: { href: string; children: ReactNode }) => (
   </li>
 );
 
-// Spec 8.7. "Meldingen" comes with the push milestone. The settings of the onboarding live on their own pages here.
+// Spec 8.7. The settings of the onboarding live on their own pages here.
 export default async function MorePage() {
   const { palette, theme } = await readPrefs();
   return (
@@ -54,6 +55,7 @@ export default async function MorePage() {
         <Card title="Uiterlijk">
           <Appearance palette={palette} theme={theme} />
         </Card>
+        <PushSettings />
         <div className="rounded-card bg-surface p-5">
           <InstallGuide />
         </div>
@@ -71,11 +73,11 @@ export default async function MorePage() {
             <Item href="/meer/account">Account wissen</Item>
           </List>
         </Card>
-        <form action={logoutAction}>
+        <LogoutForm>
           <Button type="submit" variant="outline" size="lg" className="w-full">
             Uitloggen
           </Button>
-        </form>
+        </LogoutForm>
       </div>
       <BottomNav active="meer" />
     </>

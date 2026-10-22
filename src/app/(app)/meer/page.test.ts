@@ -6,6 +6,7 @@ const m = vi.hoisted(() => ({ prefs: { palette: "oceaan", theme: "system" } as {
 vi.mock("@/data/supabase/server", () => ({ readPrefs: async () => m.prefs }));
 vi.mock("@/data/actions/profile", () => ({ saveProfileAction: vi.fn() }));
 vi.mock("@/data/actions/auth", () => ({ logoutAction: vi.fn() }));
+vi.mock("@/data/actions/push", () => ({ removePushSubscriptionAction: vi.fn(), savePushSubscriptionAction: vi.fn() }));
 // Marks every link that goes through next/link, to see which ones do not.
 vi.mock("next/link", () => ({ default: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => createElement("a", { href, "data-next-link": "", ...rest }, children) }));
 

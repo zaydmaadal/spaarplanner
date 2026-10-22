@@ -17,10 +17,11 @@ export const invalid = (error: z.ZodError): Failure => ({
 
 // The row cap trigger (migration init.sql) raises check_violation (23514) with "row limit reached for <table>";
 // any other CHECK also has code 23514, so the message tells them apart.
-export function dbFailure(error: { code?: string; message?: string }): Failure {
-  const capped = error.code === "23514" && !!error.message?.startsWith("row limit reached for");
-  return fail(capped ? CAP_REACHED : SOMETHING_WRONG);
-}
+export const isRowCap = (error: { code?: string; message?: string }) =>
+  error.code === "23514" && !!error.message?.startsWith("row limit reached for");
+
+export const dbFailure = (error: { code?: string; message?: string }): Failure =>
+  fail(isRowCap(error) ? CAP_REACHED : SOMETHING_WRONG);
 
 // Every screen sits under the root layout, so one call refreshes whatever showed the changed data.
 export function done<T = void>(data?: T): ActionResult<T> {

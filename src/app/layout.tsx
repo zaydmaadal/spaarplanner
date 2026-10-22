@@ -11,6 +11,7 @@ const figtree = Figtree({ variable: "--font-figtree", subsets: ["latin"], weight
 export const metadata: Metadata = {
   title: "Spaarplanner",
   description: "Zie wat je per maand kunt sparen en hoe ver je spaardoelen zijn.",
+  icons: { apple: "/icons/apple-touch-icon.png" },
 };
 
 // Every page renders per request: only then does Next apply the proxy's CSP nonce to its scripts.

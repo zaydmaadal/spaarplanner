@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { logoutAction } from "@/data/actions/auth";
+import { LogoutForm } from "@/components/logout-form";
 import { requireClaims } from "@/data/supabase/server";
 import { ChangePasswordForm } from "./change-password-form";
 
@@ -11,14 +11,14 @@ export default async function WachtwoordWijzigenPage() {
     <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center gap-6 px-4 py-8">
       <h1 className="text-2xl font-semibold">Wachtwoord wijzigen</h1>
       <ChangePasswordForm forced={!!claims.app_metadata?.must_change_password} />
-      <form action={logoutAction}>
+      <LogoutForm>
         <button
           type="submit"
           className="h-11 font-medium underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
         >
           Uitloggen
         </button>
-      </form>
+      </LogoutForm>
     </main>
   );
 }
