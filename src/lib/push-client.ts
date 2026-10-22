@@ -48,14 +48,14 @@ export async function subscribeToPush(): Promise<"ok" | "denied" | "unsupported"
   return "ok";
 }
 
-// Best effort, never throws: logout calls it first. Server row first, while the session still exists. A row that stays
-// behind gets a 404 or 410 from the push service and is wiped by the cron.
+// Best effort, never throws: logout calls it first, with a time limit. The browser unsubscribes in parallel with the server
+// removal, so a slow server can never leave this device subscribed. A row that stays behind gets a 404 or 410 from the push
+// service and is wiped by the cron.
 export async function unsubscribeFromPush(): Promise<void> {
   try {
     const subscription = await (await navigator.serviceWorker.getRegistration())?.pushManager.getSubscription();
     if (!subscription) return;
-    await removePushSubscriptionAction(subscription.endpoint).catch(() => {});
-    await subscription.unsubscribe();
+    await Promise.allSettled([removePushSubscriptionAction(subscription.endpoint), subscription.unsubscribe()]);
   } catch {
     // nothing to undo
   }

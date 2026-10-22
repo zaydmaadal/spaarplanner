@@ -54,7 +54,7 @@ describe("signupConfig", () => {
 describe("serverEnv", () => {
   const valid = {
     SUPABASE_SECRET_KEY: "sb_secret_x",
-    VAPID_PRIVATE_KEY: "priv",
+    VAPID_PRIVATE_KEY: "a".repeat(43),
     VAPID_SUBJECT: "mailto:a@b.be",
     CRON_SECRET: "c".repeat(32),
     ADMIN_USER_IDS: "u1, u2",
@@ -62,11 +62,18 @@ describe("serverEnv", () => {
   const stub = (over: Record<string, string> = {}) =>
     Object.entries({ ...valid, ...over }).forEach(([k, v]) => vi.stubEnv(k, v));
 
+  it("rejects a VAPID subject or private key web-push would refuse", async () => {
+    stub({ VAPID_SUBJECT: "zayd@example.com" });
+    expect((await load()).serverEnv).toThrow(/VAPID_SUBJECT/);
+    stub({ VAPID_PRIVATE_KEY: "priv" });
+    expect((await load()).serverEnv).toThrow(/VAPID_PRIVATE_KEY/);
+  });
+
   it("parses the values and the admin list", async () => {
     stub();
     expect((await load()).serverEnv()).toEqual({
       supabaseSecretKey: "sb_secret_x",
-      vapidPrivateKey: "priv",
+      vapidPrivateKey: "a".repeat(43),
       vapidSubject: "mailto:a@b.be",
       cronSecret: "c".repeat(32),
       adminUserIds: ["u1", "u2"],

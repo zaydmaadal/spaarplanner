@@ -26,7 +26,7 @@ export async function runPaydayCron(now: Date, { db, send }: CronDeps) {
   const timezones = new Map<string, string>();
   for (let i = 0; i < ids.length; i += CHUNK) {
     const chunk = ids.slice(i, i + CHUNK);
-    for (const row of await readAll((a, b) => db.from("income_sources").select("*").in("user_id", chunk).eq("active", true).order("id").range(a, b)))
+    for (const row of await readAll((a, b) => db.from("income_sources").select("*").in("user_id", chunk).eq("active", true).order("name").order("id").range(a, b)))
       incomes.set(row.user_id, [...(incomes.get(row.user_id) ?? []), toIncome(row)]);
     for (const row of await readAll((a, b) => db.from("profiles").select("id, timezone").in("id", chunk).order("id").range(a, b)))
       timezones.set(row.id, row.timezone);
@@ -50,17 +50,22 @@ export async function runPaydayCron(now: Date, { db, send }: CronDeps) {
       if (!claim.data?.length) continue;
       result.claimed++;
 
+      // Each device on its own: the claim is spent, so a failed bookkeeping write must not skip the user's other devices.
       for (const sub of subs.filter((s) => s.user_id === userId)) {
-        const outcome = await send(sub, PAYLOAD);
-        const failures = sub.failure_count + 1;
-        if (outcome === "ok") {
-          result.sent++;
-          check(await db.from("push_subscriptions").update({ last_success_at: now.toISOString(), failure_count: 0 }).eq("id", sub.id));
-        } else if (outcome === "gone" || failures >= MAX_FAILURES) {
-          result.removed++;
-          check(await db.from("push_subscriptions").delete().eq("id", sub.id));
-        } else {
-          check(await db.from("push_subscriptions").update({ failure_count: failures }).eq("id", sub.id));
+        try {
+          const outcome = await send(sub, PAYLOAD);
+          const failures = sub.failure_count + 1;
+          if (outcome === "ok") {
+            result.sent++;
+            check(await db.from("push_subscriptions").update({ last_success_at: now.toISOString(), failure_count: 0 }).eq("id", sub.id));
+          } else if (outcome === "gone" || failures >= MAX_FAILURES) {
+            check(await db.from("push_subscriptions").delete().eq("id", sub.id));
+            result.removed++;
+          } else {
+            check(await db.from("push_subscriptions").update({ failure_count: failures }).eq("id", sub.id));
+          }
+        } catch (e) {
+          console.error("payday cron: device failed", sub.id, e);
         }
       }
     } catch (e) {

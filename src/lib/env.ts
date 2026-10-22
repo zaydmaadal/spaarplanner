@@ -9,8 +9,9 @@ const publicSchema = z.object({
 
 const serverSchema = z.object({
   SUPABASE_SECRET_KEY: z.string().min(1),
-  VAPID_PRIVATE_KEY: z.string().min(1),
-  VAPID_SUBJECT: z.string().min(1),
+  // Checked as strictly as web-push does, so a bad value fails the cron run loudly instead of every device's send.
+  VAPID_PRIVATE_KEY: z.string().regex(/^[A-Za-z0-9_-]{43}$/, "a base64url P-256 private key"),
+  VAPID_SUBJECT: z.string().regex(/^(mailto:\S+@\S+|https:\/\/\S+)$/, "mailto: or https: URL"),
   CRON_SECRET: z.string().min(32),
 });
 
