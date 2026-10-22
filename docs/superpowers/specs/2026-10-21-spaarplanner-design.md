@@ -99,7 +99,8 @@ spaarplanner/
 │  ├─ app/
 │  │  ├─ (publiek)/inloggen, registreren, privacy
 │  │  ├─ onboarding/[stap]
-│  │  ├─ (app)/overzicht, doelen, doelen/[id], plan, storten, meer, wachtwoord-wijzigen
+│  │  ├─ (app)/overzicht, doelen, doelen/[id], plan, storten, meer
+│  │  ├─ (account)/wachtwoord-wijzigen   (buiten (app): geen onboarding-check, anders een redirectlus met de proxy)
 │  │  ├─ beheer/                (alleen ADMIN_USER_IDS)
 │  │  ├─ api/cron/loondag/route.ts
 │  │  ├─ manifest.ts
@@ -127,6 +128,7 @@ Publieke variabelen worden bij de build gevalideerd (Zod, `src/lib/env.ts`). Geh
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | alle | Web Push |
 | `SIGNUP_MODE` | alle | `open`, `invite` of `closed`. Ontbreekt de variabele, dan geldt `closed`. Op productie: `open`. |
 | `INVITE_CODE` | alle | verplicht als `SIGNUP_MODE=invite` |
+| `SIGNUP_HOURLY_CAP` | alle | positief geheel getal, standaard 5; een ongeldige waarde laat registreren falen (nooit uitgeschakeld). CI zet 1000. |
 | `SUPABASE_SECRET_KEY` | alleen Production | registratie, cron, beheer, account wissen |
 | `SUPABASE_DB_URL` | alleen Production (build) | migraties tijdens de productiebuild (Supavisor session pooler, IPv4) |
 | `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | alleen Production | Web Push versturen |
@@ -267,7 +269,7 @@ Algemeen:
 - **Registreren** gebeurt in een server action:
   1. `SIGNUP_MODE` controleren (`closed` blokkeert, `invite` vraagt `INVITE_CODE`).
   2. Gebruikersnaam valideren: 3-20 tekens, `a-z 0-9 . _ -`, begint en eindigt met een letter of cijfer, geen twee punten na elkaar, wordt lowercase. Wachtwoord minimaal 10 tekens.
-  3. Maximaal 5 nieuwe accounts per uur voor de hele app (geteld in `profiles`).
+  3. Maximaal `SIGNUP_HOURLY_CAP` (standaard 5) nieuwe accounts per uur voor de hele app (geteld in `profiles`).
   4. `auth.admin.createUser({ email: <gebruikersnaam>@<NEXT_PUBLIC_AUTH_EMAIL_DOMAIN>, password, email_confirm: true })` met de secret key.
   5. De browser logt daarna in.
   Publieke registratie via Supabase staat **uit** (`enable_signup = false`), zodat niemand de app kan omzeilen met de publieke key. De schakelaar werkt dus echt.
