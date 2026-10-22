@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { ceilTo100, formatEUR, parseEuroInput, toMonthlyCents } from "./money";
+import { ceilTo100, formatEUR, parseEuroInput, toEuroInput, toMonthlyCents } from "./money";
 
 describe("formatEUR", () => {
   test("formats with nl-BE grouping and U+00A0 after the euro sign", () => {
@@ -44,4 +44,14 @@ test("toMonthlyCents", () => {
 test("ceilTo100", () => {
   expect(ceilTo100(8571)).toBe(8600);
   expect(ceilTo100(8600)).toBe(8600);
+});
+
+describe("toEuroInput", () => {
+  test("gives the text a person edits and parseEuroInput reads back", () => {
+    expect(toEuroInput(215000)).toBe("2150");
+    expect(toEuroInput(2150)).toBe("21,50");
+    expect(toEuroInput(5)).toBe("0,05");
+    expect(toEuroInput(0)).toBe("0");
+    for (const cents of [0, 5, 50, 100, 2150, 215000, 99999999]) expect(parseEuroInput(toEuroInput(cents))).toBe(cents);
+  });
 });

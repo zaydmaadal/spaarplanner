@@ -12,7 +12,7 @@ describe("isPublicPath", () => {
     "/_next/static/x.js",
   ])("%s is public", (p) => expect(isPublicPath(p)).toBe(true));
 
-  it.each(["/", "/overzicht", "/beheer", "/api/other", "/inloggen-nep", "/api/cronjob"])(
+  it.each(["/", "/overzicht", "/beheer", "/api/other", "/api/export", "/plan", "/meer", "/meer/account", "/meer/profiel", "/inloggen-nep", "/api/cronjob"])(
     "%s needs a session",
     (p) => expect(isPublicPath(p)).toBe(false),
   );

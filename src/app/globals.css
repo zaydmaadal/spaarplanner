@@ -1,26 +1,174 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+
+/*
+ * Design tokens, see DESIGN.md. One block per palette; the palette is chosen with data-palette on <html>.
+ * Every colour is light-dark(<light>, <dark>), switched by color-scheme (data-theme, or the system setting).
+ * A palette block only lists what differs from oceaan, because the swatches in the palette picker
+ * set data-palette on a card and inherit the rest. src/styles/contrast.test.ts checks every pair.
+ */
+:root,
+[data-palette="oceaan"] {
+  --color-ground: light-dark(#EDF1F7, #0f0f10);
+  --color-surface: light-dark(#FFFFFF, #161618);
+  --color-tint: light-dark(#E2E8F1, #222225);
+  --color-tint-accent: light-dark(#DAE3F8, #222225);
+  --color-hairline: light-dark(#DCE3ED, #2e2e33);
+  --color-ink: light-dark(#0F1A2E, #ededee);
+  --color-ink-2: light-dark(#4A586E, #b4b4b4);
+  --color-muted: light-dark(var(--color-ink-2), #9a9a9a);
+  --color-action: light-dark(#2E46B8, #8EA2FF);
+  --color-on-action: light-dark(#FFFFFF, #0f0f10);
+  --color-progress: light-dark(#2E46B8, #8EA2FF);
+  --color-active-bg: light-dark(#DAE3F8, #222225);
+  --color-active-ink: light-dark(#2E46B8, #8EA2FF);
+  --color-accent-ink: light-dark(#1F3392, #8EA2FF);
+  --color-pot-1: light-dark(#16244F, #C9D3EE);
+  --color-pot-2: var(--color-progress);
+  --color-pot-3: #C95A38;
+  --color-pot-4: #7D93B6;
+  --color-seg-fixed: light-dark(#16244F, #C9D3EE);
+  --color-seg-living: #7D93B6;
+  --color-seg-savings: var(--color-progress);
+  --color-seg-free: #F3BBA4;
+  --color-warn-bg: #FEEDC9;
+  --color-warn-ink: #81520A;
+  --color-error: light-dark(#C4242A, #F2777C);
+}
+
+[data-palette="salie"] {
+  --color-ground: light-dark(#EDF1EE, #0f0f10);
+  --color-tint: light-dark(#E4EAE6, #222225);
+  --color-tint-accent: light-dark(#DCEAE3, #222225);
+  --color-hairline: light-dark(#D9E1DC, #2e2e33);
+  --color-ink: light-dark(#17201D, #ededee);
+  --color-ink-2: light-dark(#56625C, #b4b4b4);
+  --color-action: light-dark(#22655B, #6FC2B0);
+  --color-progress: light-dark(#22655B, #6FC2B0);
+  --color-active-bg: light-dark(#DCEAE3, #222225);
+  --color-active-ink: light-dark(#22655B, #6FC2B0);
+  --color-accent-ink: light-dark(#174A43, #6FC2B0);
+  --color-pot-1: light-dark(#3F5976, #6F8FB5);
+  --color-pot-2: #6A8876;
+  --color-pot-3: #C59B52;
+  --color-pot-4: #93A79B;
+  --color-seg-fixed: light-dark(#1F2B33, #C5D3DC);
+  --color-seg-living: #93A79B;
+  --color-seg-free: #DEC690;
+}
+
+[data-palette="grafiet"] {
+  --color-ground: light-dark(#EEEFF2, #0f0f10);
+  --color-tint: light-dark(#E4E6EA, #222225);
+  --color-tint-accent: light-dark(#E2E4E9, #222225);
+  --color-hairline: light-dark(#E2E4E8, #2e2e33);
+  --color-ink: light-dark(#15161A, #ededee);
+  --color-ink-2: light-dark(#555A62, #b4b4b4);
+  --color-action: light-dark(#15161A, #ededee);
+  --color-progress: light-dark(#8F6BFF, #A88BFF);
+  --color-active-bg: light-dark(#8F6BFF, #222225);
+  --color-active-ink: light-dark(#15161A, #A88BFF);
+  --color-accent-ink: light-dark(#555A62, #A88BFF);
+  --color-pot-1: light-dark(#25272C, #D5D8DE);
+  --color-pot-3: #6A6F78;
+  --color-pot-4: #B7BBC2;
+  --color-seg-fixed: light-dark(#25272C, #D5D8DE);
+  --color-seg-living: light-dark(#50555D, #8C919A);
+  --color-seg-free: #B7BBC2;
+}
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light dark;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
 }
 
+/* Registers the tokens above as Tailwind utilities (bg-ground, text-ink, ...) without copying their values. */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-ground: var(--color-ground);
+  --color-surface: var(--color-surface);
+  --color-tint: var(--color-tint);
+  --color-tint-accent: var(--color-tint-accent);
+  --color-hairline: var(--color-hairline);
+  --color-ink: var(--color-ink);
+  --color-ink-2: var(--color-ink-2);
+  --color-muted: var(--color-muted);
+  --color-action: var(--color-action);
+  --color-on-action: var(--color-on-action);
+  --color-progress: var(--color-progress);
+  --color-active-bg: var(--color-active-bg);
+  --color-active-ink: var(--color-active-ink);
+  --color-accent-ink: var(--color-accent-ink);
+  --color-pot-1: var(--color-pot-1);
+  --color-pot-2: var(--color-pot-2);
+  --color-pot-3: var(--color-pot-3);
+  --color-pot-4: var(--color-pot-4);
+  --color-seg-fixed: var(--color-seg-fixed);
+  --color-seg-living: var(--color-seg-living);
+  --color-seg-savings: var(--color-seg-savings);
+  --color-seg-free: var(--color-seg-free);
+  --color-warn-bg: var(--color-warn-bg);
+  --color-warn-ink: var(--color-warn-ink);
+  --color-error: var(--color-error);
+
+  /* Names the existing forms and the shadcn components use. */
+  --color-background: var(--color-ground);
+  --color-foreground: var(--color-ink);
+  --color-card: var(--color-surface);
+  --color-card-foreground: var(--color-ink);
+  --color-popover: var(--color-surface);
+  --color-popover-foreground: var(--color-ink);
+  --color-primary: var(--color-action);
+  --color-primary-foreground: var(--color-on-action);
+  --color-secondary: var(--color-tint);
+  --color-secondary-foreground: var(--color-ink);
+  --color-muted-foreground: var(--color-muted);
+  --color-accent: var(--color-tint-accent);
+  --color-accent-foreground: var(--color-ink);
+  --color-destructive: var(--color-error);
+  --color-border: var(--color-hairline);
+  --color-input: var(--color-ink-2);
+  --color-ring: var(--color-ink);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@theme static {
+  --radius-strip: 20px;
+  --radius-card: 24px;
+  --radius-hero: 28px;
+  --font-display: var(--font-gabarito), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --duration-1: 120ms;
+  --duration-2: 200ms;
+  --duration-3: 320ms;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-hairline);
+  }
+  body {
+    background: var(--color-ground);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

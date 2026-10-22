@@ -21,6 +21,11 @@ export function parseEuroInput(text: string): Cents | null {
   return Number.isSafeInteger(cents) ? cents : null;
 }
 
+// The text a person edits in a field: "2150" or "21,50", which parseEuroInput reads back. Not for display, use formatEUR.
+export function toEuroInput(cents: Cents): string {
+  return (cents / 100).toFixed(2).replace(".", ",").replace(/,00$/, "");
+}
+
 // yearly and once are not a monthly amount (0); shortcut: floors to whole cents, revisit if rounding drift matters.
 export function toMonthlyCents(amountCents: Cents, frequency: Frequency): Cents {
   switch (frequency) {
