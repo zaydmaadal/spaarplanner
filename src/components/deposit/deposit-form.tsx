@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState, useTransition, type FormEvent } from "react";
+import { useEffect, useRef, useState, useTransition, type FormEvent } from "react";
 import { toast } from "sonner";
 import { Choice, MoneyField } from "@/components/form-fields";
 import { Money } from "@/components/money";
@@ -30,6 +30,14 @@ export function DepositForm({ pots, today, initial, only }: { pots: Pot[]; today
   // a deposit, so the direction is part of the key.
   const refs = useRef<Record<string, string>>({});
   const rows = pots.map((p) => ({ goalId: p.id, text: amounts[p.id] ?? "" }));
+
+  // An app left open over midnight or a payday has an old `today` and period: ask for fresh props when it comes back.
+  // The page keys this form on the prefill, so a new period starts it again and typed amounts survive an unchanged one.
+  useEffect(() => {
+    const refresh = () => document.visibilityState === "visible" && router.refresh();
+    document.addEventListener("visibilitychange", refresh);
+    return () => document.removeEventListener("visibilitychange", refresh);
+  }, [router]);
 
   function switchTo(next: Direction) {
     setDirection(next);

@@ -65,11 +65,13 @@ export function Simulator({ base, today, savingsCents, horizonYears }: { base: U
 
   function apply() {
     startTransition(async () => {
+      // A dropped connection throws, and a throw in a transition would show the error card of the whole screen.
       const saved = await savePlanAction({
         ...(savings !== null && { monthlySavings: toEuroInput(savings) }),
         ...(mode !== plan.incomeMode && { incomeMode: mode }),
-      });
-      if (saved.ok) toast.success("Je plan is aangepast.");
+      }).catch(() => null);
+      if (!saved) toast.error("Dat lukte niet. Probeer het opnieuw.");
+      else if (saved.ok) toast.success("Je plan is aangepast.");
       else toast.error(saved.error);
     });
   }

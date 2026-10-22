@@ -4,7 +4,7 @@ import { DeleteAccountForm } from "@/components/account/delete-account-form";
 
 export const metadata: Metadata = { title: "Account wissen" };
 
-// Spec 7: the password again, then the account and every table go. The export link is a plain link, not next/link (which would prefetch the download) and without a download attribute (the response forces the download).
+// Spec 7: the password again, then the account and every table go. The export link is a plain link, not next/link (which would prefetch the download) and with a download attribute, so WebKit saves the file too (the response also forces the download).
 export default function AccountPage() {
   return (
     <>

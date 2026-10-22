@@ -13,7 +13,7 @@ A palette swap is editing the tokens in `src/app/globals.css`, nothing else.
 - Change a colour: edit it in the palette block (`[data-palette="..."]`; `oceaan` is the complete block on `:root`). Every colour is `light-dark(<light>, <dark>)`.
 - Run `npm test`: `src/styles/contrast.test.ts` checks every text and non-text pair of the table below in light and dark for all palettes.
 - Add a palette: one new block in `globals.css` that lists only what differs from `oceaan`, plus its id in `PALETTES` (`src/lib/prefs.ts`), in the test's `PALETTES` and in `NAMES` of `src/components/palette-picker.tsx`.
-- Components use tokens only (`bg-ground`, `text-ink`, `bg-action`, `var(--color-pot-1)`), never a hex value, never Tailwind palette colours, and never the `dark:` variant (it follows the operating system, not `data-theme`).
+- Components use tokens only (`bg-ground`, `text-ink`, `bg-action`, `var(--color-pot-1)`), never a hex value, never Tailwind palette colours, and never the `dark:` variant (it follows the operating system, not `data-theme`). The one allowed non-token colour is the scrim behind a dialog or sheet, `bg-black/50`.
 
 ## Colour tokens
 

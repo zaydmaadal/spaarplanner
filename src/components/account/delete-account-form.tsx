@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { FormError } from "@/components/auth-form";
 import { TextField } from "@/components/form-fields";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ export function DeleteAccountForm() {
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirming, setConfirming] = useState(false);
+  const confirm = useRef<HTMLButtonElement>(null);
   const [state, action, pending] = useActionState(async (): Promise<State> => {
     if (!confirming) {
       setConfirming(true);
@@ -26,6 +27,11 @@ export function DeleteAccountForm() {
     router.replace("/inloggen");
     return null;
   }, null);
+
+  // The first button is replaced by the second: the focus goes along, or a keyboard user is left on nothing.
+  useEffect(() => {
+    if (confirming) confirm.current?.focus();
+  }, [confirming]);
 
   return (
     <form action={action} className="flex flex-col gap-4">
@@ -48,7 +54,7 @@ export function DeleteAccountForm() {
       <div className="flex flex-wrap gap-3">
         {/* The keys matter: without them React reuses one <button> and flips its type to submit during the first click, which then submits the form. */}
         {confirming ? (
-          <Button key="confirm" type="submit" variant="destructive" disabled={pending}>
+          <Button key="confirm" ref={confirm} type="submit" variant="destructive" disabled={pending}>
             Ja, wis mijn account
           </Button>
         ) : (

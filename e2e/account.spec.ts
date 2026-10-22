@@ -84,9 +84,11 @@ test("deleting the account asks for the password and a second tap, wipes the row
     await expect(form.getByText("Weet je het zeker? Dit kan niet ongedaan worden gemaakt.", { exact: true })).toBeVisible();
     // The confirm button must be idle (a first tap that submitted the form would leave it disabled, then leave the page) ...
     await expect(confirm).toBeEnabled();
+    await expect(confirm).toBeFocused(); // the button the first tap replaced had the focus
     await expect(page).toHaveURL(/\/meer\/account$/);
     // ... and the account must still be there a second later: a delete that was started by the first tap lands within that.
-    await expect(async () => expect((await admin.auth.admin.getUserById(id)).data.user).toBeNull()).not.toPass({ timeout: 1000, intervals: [250] });
+    await page.waitForTimeout(1000);
+    expect((await admin.auth.admin.getUserById(id)).data.user).not.toBeNull();
   });
 
   await test.step("the second tap deletes the account and sends you to the login page", async () => {

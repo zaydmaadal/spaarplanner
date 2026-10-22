@@ -84,8 +84,7 @@ test("the simulator moves the fill month, keeps trials to itself and stores only
   await savings.focus();
   await savings.press("End");
   await expect(savings).toHaveAttribute("aria-valuetext", "€ 2.000,00");
-  await expect(trip).not.toHaveText(before);
-  expect(monthOf(await trip.innerText())).toBeLessThan(monthOf(before));
+  await expect.poll(async () => monthOf(await trip.innerText())).toBeLessThan(monthOf(before));
   await expect(apply).toBeEnabled();
 
   await apply.click();

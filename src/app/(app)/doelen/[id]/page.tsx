@@ -49,7 +49,7 @@ export default async function GoalPage({ params }: PageProps<"/doelen/[id]">) {
           Terug naar je doelen
         </Link>
         <header className="flex flex-col gap-1">
-          <h1 className="font-display text-2xl font-semibold break-words">{goal.name}</h1>
+          <h1 tabIndex={-1} className="font-display text-2xl font-semibold break-words outline-none">{goal.name}</h1>
           {(goal.isMain || isEmergency) && <p className="text-sm font-semibold text-ink-2">{[goal.isMain && "Hoofddoel", isEmergency && "Noodfonds"].filter(Boolean).join(" · ")}</p>}
         </header>
         <section aria-label="Stand van dit doel" className="flex flex-col gap-4 rounded-hero bg-surface p-5">

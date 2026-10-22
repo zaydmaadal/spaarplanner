@@ -25,8 +25,8 @@ export function EffectPreview({ before, after }: { before: ProjectionInput; afte
           </div>
           {shifts.length > 0 ? (
             <ul className="flex flex-col gap-2 border-t border-hairline pt-3">
-              {shifts.map((sentence) => (
-                <li key={sentence}>{sentence}</li>
+              {shifts.map((sentence, i) => (
+                <li key={i}>{sentence}</li>
               ))}
             </ul>
           ) : (
