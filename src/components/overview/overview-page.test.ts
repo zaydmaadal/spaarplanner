@@ -1,6 +1,8 @@
+import { isValidElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import type { UserData } from "@/domain/dashboard";
+import { Simulator } from "@/components/overview/simulator";
 import { haider, tiener } from "@/domain/fixtures/personas";
 
 const m = vi.hoisted(() => ({ data: undefined as unknown, steps: [] as { id: string; title: string; urgency: string }[] }));
@@ -48,16 +50,42 @@ describe("the overview page (spec 8.3)", () => {
     expect(headings(await render({ ...haider, profile: { ...haider.profile, displayName: " " } }), 1)).toEqual(["Hoi"]);
   });
 
-  test("next steps: the first three rules, then the steps the user wrote in the order the loader gives them", async () => {
+  test("next steps: the three most urgent of the rules and the steps the user wrote, rules first within an urgency", async () => {
     m.steps = [
-      { id: "b", title: "Stage vinden", urgency: "week" },
       { id: "a", title: "Later iets", urgency: "later" },
+      { id: "b", title: "Stage vinden", urgency: "week" },
     ];
     const out = await render(haider);
     const list = out.slice(out.indexOf("Volgende stappen"));
-    expect(list).toContain("Zet € 430,00 opzij op 29 oktober");
-    expect(list.indexOf("Stage vinden")).toBeGreaterThan(list.indexOf("Zet €"));
-    expect(list.indexOf("Stage vinden")).toBeLessThan(list.indexOf("Later iets"));
-    expect(list.match(/<li/g)).toHaveLength(5); // 3 rules + 2 own
+    expect(list.match(/<li/g)).toHaveLength(3);
+    expect(list.indexOf("Zet €\u00a0430,00 opzij")).toBeGreaterThan(-1);
+    expect(list.indexOf("Stage vinden")).toBeGreaterThan(list.indexOf("Zet €")); // same urgency: the rule goes first
+    expect(list).not.toContain("Later iets"); // less urgent than the rules that fill the list
+  });
+
+  test("an urgent step of your own pushes a less urgent rule out", async () => {
+    m.steps = [1, 2, 3].map((n) => ({ id: `s${n}`, title: `Eigen ${n}`, urgency: "week" }));
+    const list = (await render(haider)).split("Volgende stappen").pop()!;
+    expect(list.match(/<li/g)).toHaveLength(3);
+    expect(list).toContain("Eigen 1");
+    expect(list).toContain("Eigen 2");
+    expect(list).not.toContain("Eigen 3");
+  });
+
+  test("the simulator starts again when the stored savings or income mode change", async () => {
+    const keyOf = (node: unknown): string | null => {
+      if (Array.isArray(node)) return node.map(keyOf).find((k) => k !== null) ?? null;
+      if (!isValidElement<{ children?: unknown }>(node)) return null;
+      return node.type === Simulator ? node.key : keyOf(node.props.children);
+    };
+    const key = async (plan: Partial<UserData["plan"]>) => {
+      m.data = { ...haider, plan: { ...haider.plan, ...plan } };
+      return keyOf(await OverviewPage());
+    };
+    const a = await key({});
+    expect(a).not.toBeNull();
+    expect(await key({})).toBe(a);
+    expect(await key({ monthlySavingsCents: 25000 })).not.toBe(a);
+    expect(await key({ incomeMode: "careful" })).not.toBe(a);
   });
 });

@@ -49,7 +49,7 @@ describe("MainGoalCard", () => {
 describe("SalarySplit", () => {
   const split = (data: UserData) => {
     const d = dash(data);
-    return html(h(SalarySplit, { lines: data.lines, budget: d.budget, savingsCents: d.savingsCents, savingsCertainty: d.savingsCertainty }));
+    return html(h(SalarySplit, { lines: data.lines, budget: d.budget, savingsCents: d.savingsCents, savingsCertainty: d.savingsCertainty, warnings: d.warnings }));
   };
 
   test("lists what the income goes to and ends with the total", () => {
@@ -61,6 +61,12 @@ describe("SalarySplit", () => {
 
   test("what is not spent or saved shows as left over", () => {
     expect(split(haider)).toContain("Over"); // 2.150 income, 430 saved
+  });
+
+  test("savings above the room have no Over row and say so in the warning", () => {
+    const out = split({ ...haider, plan: { ...haider.plan, monthlySavingsCents: 300000 } }); // 2.150 income
+    expect(out).not.toContain("Over<");
+    expect(out).toContain("Je wil €\u00a03.000,00 sparen maar houdt €\u00a02.150,00 over.");
   });
 
   test("without income or costs it asks for the income instead of an empty bar", () => {

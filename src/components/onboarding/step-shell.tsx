@@ -89,14 +89,19 @@ export function StepShell({
 
   async function go(withSave: boolean) {
     setError(null);
-    const message = withSave ? await save() : null;
-    if (message) return setError(message);
-    if (mode === "edit") return void toast.success("Opgeslagen.");
-    const last = step === STEPS;
-    const moved = last ? await finish!() : await setOnboardingStepAction(step + 1);
-    if (!moved.ok) return setError(moved.error);
-    if (last) router.replace("/overzicht");
-    else router.push(`/onboarding/${step + 1}`);
+    // A dropped connection throws; catching it keeps the typed values and shows the message instead of the error card.
+    try {
+      const message = withSave ? await save() : null;
+      if (message) return setError(message);
+      if (mode === "edit") return void toast.success("Opgeslagen.");
+      const last = step === STEPS;
+      const moved = last ? await finish!() : await setOnboardingStepAction(step + 1);
+      if (!moved.ok) return setError(moved.error);
+      if (last) router.replace("/overzicht");
+      else router.push(`/onboarding/${step + 1}`);
+    } catch {
+      setError("Opslaan lukte niet. Probeer het opnieuw.");
+    }
   }
 
   return (

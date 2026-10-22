@@ -9,12 +9,13 @@ import { SalarySplit } from "@/components/overview/salary-split";
 import { Simulator } from "@/components/overview/simulator";
 import { loadOpenUserSteps, loadUserData } from "@/data/load";
 import { readProfile, requireUserId } from "@/data/supabase/server";
+import { URGENCY_RANK } from "@/domain/checklist-rules";
 import { buildDashboard } from "@/domain/dashboard";
 import { todayInTimeZone } from "@/domain/dates";
 
 export const metadata: Metadata = { title: "Overzicht" };
 
-const MAX_OWN_STEPS = 3; // the rest is in Plan
+const MAX_STEPS = 3; // the rest is in Plan
 
 // Spec 8.3, top to bottom. The data is read here; only the simulator needs the browser.
 export default async function OverviewPage() {
@@ -26,7 +27,10 @@ export default async function OverviewPage() {
 
   const d = buildDashboard(data, today);
   const horizonYears = Math.floor(d.horizon / 12);
-  const ownSteps = own.slice(0, MAX_OWN_STEPS).map(({ id, title, urgency }) => ({ key: id, title, urgency }));
+  // The most urgent of both (spec 8.3); the sort is stable, so within an urgency the rule steps come first.
+  const steps = [...d.rules, ...own.map(({ id, title, urgency }) => ({ key: id, title, urgency }))]
+    .sort((a, b) => URGENCY_RANK[a.urgency] - URGENCY_RANK[b.urgency])
+    .slice(0, MAX_STEPS);
   const name = data.profile.displayName.trim();
 
   return (
@@ -38,10 +42,10 @@ export default async function OverviewPage() {
         </header>
         {d.nextPayday !== null && d.daysToPayday !== null && <PaydayStrip nextPayday={d.nextPayday} daysToPayday={d.daysToPayday} progress={d.progress} />}
         {d.mainGoal && <MainGoalCard goal={d.mainGoal} waitsFor={d.mainGoalWaitsFor} horizonYears={horizonYears} />}
-        <SalarySplit lines={data.lines} budget={d.budget} savingsCents={d.savingsCents} savingsCertainty={d.savingsCertainty} />
+        <SalarySplit lines={data.lines} budget={d.budget} savingsCents={d.savingsCents} savingsCertainty={d.savingsCertainty} warnings={d.warnings} />
         <PotsList goals={d.goals} horizonYears={horizonYears} />
-        <Simulator base={data} today={today} savingsCents={d.savingsCents} horizonYears={horizonYears} />
-        <NextSteps steps={[...d.rules.slice(0, 3).map(({ key, title, urgency }) => ({ key, title, urgency })), ...ownSteps]} />
+        <Simulator key={`${data.plan.monthlySavingsCents}-${data.plan.incomeMode}`} base={data} today={today} savingsCents={d.savingsCents} horizonYears={horizonYears} />
+        <NextSteps steps={steps} />
       </div>
       <BottomNav active="overzicht" />
     </>

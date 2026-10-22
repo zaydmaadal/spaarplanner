@@ -1,15 +1,17 @@
 import Link from "next/link";
+import { BudgetWarnings } from "@/components/budget-warnings";
 import { CertaintyMeter } from "@/components/certainty-meter";
 import { Money } from "@/components/money";
 import { StackedBar, type Segment } from "@/components/stacked-bar";
-import type { Budget } from "@/domain/budget";
+import type { Budget, BudgetWarning } from "@/domain/budget";
 import type { Dashboard } from "@/domain/dashboard";
 import type { BudgetLine, Cents } from "@/domain/types";
 
 const sumOf = (lines: BudgetLine[], kind: BudgetLine["kind"]) => lines.filter((l) => l.kind === kind).reduce((total, l) => total + l.amountCents, 0);
 
-// Where the net income of a month goes (spec 8.3). The legend of the bar is the table; the total row closes it.
-export function SalarySplit({ lines, budget, savingsCents, savingsCertainty }: { lines: BudgetLine[]; budget: Budget; savingsCents: Cents; savingsCertainty: Dashboard["savingsCertainty"] }) {
+// Where the net income of a month goes (spec 8.3). The legend of the bar is the table; the total row closes it. With more
+// savings than room there is no "Over" row, and the warning says why.
+export function SalarySplit({ lines, budget, savingsCents, savingsCertainty, warnings }: { lines: BudgetLine[]; budget: Budget; savingsCents: Cents; savingsCertainty: Dashboard["savingsCertainty"]; warnings: BudgetWarning[] }) {
   const left = budget.roomCents - savingsCents;
   const parts: Segment[] = [
     { label: "Vaste kosten", cents: sumOf(lines, "fixed"), color: "var(--color-seg-fixed)" },
@@ -35,6 +37,7 @@ export function SalarySplit({ lines, budget, savingsCents, savingsCertainty }: {
       ) : (
         <>
           <StackedBar segments={segments} />
+          <BudgetWarnings warnings={warnings} />
           <div className="flex items-center justify-between gap-3 border-t pt-3 font-semibold">
             <span>Netto per maand</span>
             <Money cents={budget.incomeCents} />

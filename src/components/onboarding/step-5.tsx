@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { BudgetWarnings } from "@/components/budget-warnings";
 import { MoneyField } from "@/components/form-fields";
 import { Money } from "@/components/money";
 import { deleteBudgetLineAction, saveBudgetLineAction } from "@/data/actions/budget";
 import { savePlanAction } from "@/data/actions/plan";
 import { budgetWarnings, monthlyBudget, savingsTarget } from "@/domain/budget";
-import { formatEUR, parseEuroInput, toEuroInput } from "@/domain/money";
+import { parseEuroInput, toEuroInput } from "@/domain/money";
 import type { BudgetLine, Income, PlanSettings } from "@/domain/types";
 import { deleteRows, refuseBlank, saveRows, useRows, type Errors, type Row } from "./rows";
 import { savingsChange } from "./savings";
@@ -90,11 +91,7 @@ export function Step5({ mode, incomes, lines, plan }: { mode: Mode; incomes: Inc
         <p className="text-sm font-semibold text-ink-2">Dit blijft er per maand over</p>
         <Money cents={budget.roomCents} className="text-[32px] leading-tight" />
       </div>
-      {warnings.map((w) => (
-        <p key={w.key} role="status" className="rounded-strip bg-warn-bg p-3 text-sm font-semibold text-warn-ink">
-          {w.key === "negative_budget" ? "Je geeft meer uit dan je verdient. Kijk je vaste kosten na." : `Je wil ${formatEUR(w.wantCents)} sparen maar houdt ${formatEUR(w.roomCents)} over.`}
-        </p>
-      ))}
+      <BudgetWarnings warnings={warnings} />
       <MoneyField
         label="Dit wil ik sparen"
         hint={

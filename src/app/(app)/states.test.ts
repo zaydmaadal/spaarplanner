@@ -1,6 +1,7 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
+import OnboardingError from "@/app/onboarding/error";
 import AppError from "./error";
 import AppLoading from "./loading";
 
@@ -14,6 +15,10 @@ describe("the error state of the app screens (spec 8.8)", () => {
     expect(html).not.toContain("geheime");
     expect(html).not.toContain("digest");
     expect(html).not.toContain(String.fromCharCode(0x2014));
+  });
+
+  test("the onboarding, outside the app group, shows the same card", () => {
+    expect(OnboardingError).toBe(AppError);
   });
 });
 

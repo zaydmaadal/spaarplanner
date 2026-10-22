@@ -1,6 +1,9 @@
 import { renderToStaticMarkup } from "react-dom/server";
+import { isValidElement } from "react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { UserData } from "@/domain/dashboard";
+import { Step5 } from "@/components/onboarding/step-5";
+import { PlanSettingsForm } from "@/components/settings/plan-settings";
 import { haider, student } from "@/domain/fixtures/personas";
 
 const m = vi.hoisted(() => ({ data: undefined as unknown, prefs: {} as Record<string, unknown> }));
@@ -26,6 +29,13 @@ const render = async (page: () => Promise<React.JSX.Element>, data: UserData = h
 const headings = (out: string, level: number) => [...out.matchAll(new RegExp(`<h${level}[^>]*>(.*?)</h${level}>`, "g"))].map((x) => x[1].replace(/<[^>]+>/g, ""));
 const value = (out: string, label: string) => new RegExp(`${label}</label>[\\s\\S]*?value="([^"]*)"`).exec(out)?.[1];
 const saveButtons = (out: string) => out.match(/<button[^>]*type="submit"[^>]*>Opslaan<\/button>/g) ?? [];
+
+// The key of the first element of this component in a tree.
+const keyOf = (node: unknown, type: unknown): string | null => {
+  if (Array.isArray(node)) return node.map((n) => keyOf(n, type)).find((k) => k !== null) ?? null;
+  if (!isValidElement<{ children?: unknown }>(node)) return null;
+  return node.type === type ? node.key : keyOf(node.props.children, type);
+};
 
 beforeEach(() => {
   m.prefs = {};
@@ -107,5 +117,24 @@ describe("/meer/plan (spec 8.7)", () => {
 
   test("a stored savings amount is the value of the field", async () => {
     expect(value(await render(PlanPage, { ...haider, plan: { ...haider.plan, monthlySavingsCents: 25000 } }), "Dit wil ik sparen")).toBe("250");
+  });
+});
+
+describe("the plan forms of a kept-alive visit (Next keeps visited routes mounted)", () => {
+  const keys = async (plan: Partial<UserData["plan"]>) => {
+    m.data = { ...haider, plan: { ...haider.plan, ...plan } };
+    const page = await PlanPage();
+    return { savings: keyOf(page, Step5), settings: keyOf(page, PlanSettingsForm) };
+  };
+
+  test("the forms start again when a stored value changes, and not before", async () => {
+    const a = await keys({});
+    expect(a.savings).not.toBeNull();
+    expect(a.settings).not.toBeNull();
+    expect(await keys({})).toEqual(a);
+    expect((await keys({ monthlySavingsCents: 25000 })).savings).not.toBe(a.savings);
+    for (const change of [{ incomeMode: "careful" }, { includeOneOffIncome: !haider.plan.includeOneOffIncome }, { emergencySharePct: 50 }] as const) {
+      expect((await keys(change)).settings).not.toBe(a.settings);
+    }
   });
 });
