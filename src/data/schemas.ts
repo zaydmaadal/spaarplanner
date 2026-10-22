@@ -138,3 +138,13 @@ export const profileSchema = z.object({
 });
 
 export const idSchema = uuid;
+
+// Spec 6: the same allow-list as the check on push_subscriptions.endpoint (init.sql), so a bad endpoint is refused here
+// and not by the database. Lengths match the columns.
+const PUSH_ENDPOINT =
+  /^https:\/\/(fcm\.googleapis\.com|[a-z0-9.-]+\.push\.apple\.com|updates\.push\.services\.mozilla\.com|[a-z0-9.-]+\.notify\.windows\.com)\//;
+
+export const pushSubscriptionSchema = z.object({
+  endpoint: z.string().max(1000).regex(PUSH_ENDPOINT),
+  keys: z.object({ p256dh: z.string().min(1).max(200), auth: z.string().min(1).max(200) }),
+});

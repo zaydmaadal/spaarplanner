@@ -7,6 +7,7 @@ import { PaydayStrip } from "@/components/overview/payday-strip";
 import { PotsList } from "@/components/overview/pots-list";
 import { SalarySplit } from "@/components/overview/salary-split";
 import { Simulator } from "@/components/overview/simulator";
+import { PushCard } from "@/components/push-card";
 import { loadOpenUserSteps, loadUserData } from "@/data/load";
 import { readProfile, requireUserId } from "@/data/supabase/server";
 import { URGENCY_RANK } from "@/domain/checklist-rules";
@@ -41,6 +42,7 @@ export default async function OverviewPage() {
           <p className="text-ink-2 first-letter:uppercase">{longDateNl(today)}</p>
         </header>
         {d.nextPayday !== null && d.daysToPayday !== null && <PaydayStrip nextPayday={d.nextPayday} daysToPayday={d.daysToPayday} progress={d.progress} />}
+        <PushCard />
         {d.mainGoal && <MainGoalCard goal={d.mainGoal} waitsFor={d.mainGoalWaitsFor} horizonYears={horizonYears} />}
         <SalarySplit lines={data.lines} budget={d.budget} savingsCents={d.savingsCents} savingsCertainty={d.savingsCertainty} warnings={d.warnings} />
         <PotsList goals={d.goals} horizonYears={horizonYears} />

@@ -1,17 +1,5 @@
+import { readAll } from "@/data/read-all";
 import { createServerSupabase } from "@/data/supabase/server";
-
-const PAGE = 1000; // max_rows in supabase/config.toml: the API never returns more rows per request
-
-// Every table is read page by page. Each page is ordered by a column the table has, or the pages could overlap.
-async function readAll<T>(page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: unknown }>): Promise<T[]> {
-  const rows: T[] = [];
-  for (let from = 0; ; from += PAGE) {
-    const { data, error } = await page(from, from + PAGE - 1);
-    if (error || !data) throw error ?? new Error("Missing rows");
-    rows.push(...data);
-    if (data.length < PAGE) return rows;
-  }
-}
 
 // Spec 7: the own rows of the 8 user tables as one JSON download. Row level security does the scoping, so nothing from the
 // request is used to pick rows. Of the push subscriptions only the bookkeeping is exported, not the keys (p256dh, auth) or the endpoint.

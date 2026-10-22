@@ -9,6 +9,8 @@ describe("isPublicPath", () => {
     "/api/cron/loondag",
     "/manifest.webmanifest",
     "/icons/icon-192.png",
+    "/icons/apple-touch-icon.png",
+    "/_next/static/service-worker/sw.js",
     "/_next/static/x.js",
   ])("%s is public", (p) => expect(isPublicPath(p)).toBe(true));
 

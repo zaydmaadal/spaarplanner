@@ -17,7 +17,11 @@ export default function PrivacyPage() {
       <section className="flex flex-col gap-2">
         <h2 className={h2}>Wie is verantwoordelijk</h2>
         <p>
-          Zayd Maadal maakt en beheert Spaarplanner en is verantwoordelijk voor je gegevens. Heb je een vraag of een klacht? Vraag het aan Zayd. Je kan ook een
+          Zayd Maadal maakt en beheert Spaarplanner en is verantwoordelijk voor je gegevens. Heb je een vraag of een klacht? Mail naar{" "}
+          <a href="mailto:zayd.maadal@hotmail.com" className="underline underline-offset-4">
+            zayd.maadal@hotmail.com
+          </a>
+          . Je kan ook een
           klacht indienen bij de Gegevensbeschermingsautoriteit.
         </p>
       </section>

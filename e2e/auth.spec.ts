@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { expectNoncedScripts, fillAndSubmit, password, publicClient } from "./helpers";
+import { expectNoncedScripts, fillAndSubmit, hydrated, password, publicClient } from "./helpers";
 
 test("register, log out, log in", async ({ page }) => {
   const username = `haider-${Math.random().toString(36).slice(2, 8)}`;
@@ -10,6 +10,7 @@ test("register, log out, log in", async ({ page }) => {
 
   // The (app) shell with its logout button comes later; the change-password page already has one.
   await page.goto("/wachtwoord-wijzigen");
+  await hydrated(page); // the logout form first unsubscribes from push in the browser
   await page.getByRole("button", { name: "Uitloggen" }).click();
   await expect(page).toHaveURL(/\/inloggen$/);
 

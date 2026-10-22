@@ -1,0 +1,40 @@
+name: Backup
+on:
+  schedule:
+    - cron: '17 3 * * 0'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      # The CLI version is the one in package-lock.json, so the dump and the local restore use the same tool.
+      - run: npm ci
+      # Every dump goes straight into gpg: no plaintext file is ever written. pipefail fails the step when a dump fails.
+      - name: Dump and encrypt
+        run: |
+          set -euo pipefail
+          : "${SUPABASE_DB_URL:?secret SUPABASE_DB_URL is not set}"
+          : "${BACKUP_PASSPHRASE:?secret BACKUP_PASSPHRASE is not set}"
+          enc() { gpg --batch --symmetric --cipher-algo AES256 --passphrase-fd 3 3<<<"$BACKUP_PASSPHRASE"; }
+          npx supabase db dump --db-url "$SUPABASE_DB_URL" --role-only | enc > roles.sql.gpg
+          npx supabase db dump --db-url "$SUPABASE_DB_URL" | enc > schema.sql.gpg
+          npx supabase db dump --db-url "$SUPABASE_DB_URL" --data-only --use-copy | enc > data.sql.gpg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: backup
+          path: |
+            roles.sql.gpg
+            schema.sql.gpg
+            data.sql.gpg
+          if-no-files-found: error
+          retention-days: 90

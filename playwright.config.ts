@@ -11,6 +11,8 @@ const server = (port: number, signupMode: string) => ({
 
 export default defineConfig({
   testDir: "e2e",
+  // The production smoke test runs by hand with playwright.smoke.config.ts.
+  testIgnore: "**/*.prod.spec.ts",
   globalSetup: "./e2e/global-setup.ts",
   forbidOnly: !!process.env.CI,
   // CI uploads playwright-report/ and test-results/ (traces) when a run fails.
