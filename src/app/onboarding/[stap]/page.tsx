@@ -13,6 +13,7 @@ import { Step8 } from "@/components/onboarding/step-8";
 import { loadScreenData } from "@/data/load";
 import { createServerSupabase, readProfile, requireUserId } from "@/data/supabase/server";
 import { parsePrefs, parseStep8Prefs } from "@/lib/prefs";
+import { cn } from "@/lib/utils";
 
 // The route announcer reads the title, so each step names itself.
 export async function generateMetadata({ params }: PageProps<"/onboarding/[stap]">): Promise<Metadata> {
@@ -72,8 +73,14 @@ export default async function OnboardingPage({ params }: PageProps<"/onboarding/
     );
   }
   return (
-    <main className="mx-auto flex w-full max-w-lg flex-1 flex-col px-4 py-6 min-[400px]:px-5 md:max-w-xl lg:max-w-2xl lg:justify-center lg:py-12">
-      {step === 1 && <AuthHero className="mb-5 rounded-hero p-6 lg:p-10" tagline="Welkom. Zo bouwen we samen je spaarplan." />}
+    // Step 1 shows the welcome hero; from 1024px it sits next to the form instead of above it.
+    <main
+      className={cn(
+        "mx-auto flex w-full max-w-lg flex-1 flex-col px-4 py-6 min-[400px]:px-5 md:max-w-xl lg:max-w-2xl lg:justify-center lg:py-12",
+        step === 1 && "lg:grid lg:max-w-5xl lg:grid-cols-2 lg:content-center lg:items-center lg:gap-10",
+      )}
+    >
+      {step === 1 && <AuthHero className="mb-5 rounded-hero p-6 lg:mb-0 lg:p-10" tagline="Welkom. Zo bouwen we samen je spaarplan." />}
       {content}
     </main>
   );
