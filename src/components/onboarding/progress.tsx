@@ -1,4 +1,4 @@
-import { ProgressBar } from "@/components/progress-bar";
+import { cn } from "@/lib/utils";
 
 export const STEPS = 8;
 
@@ -8,9 +8,11 @@ export function OnboardingProgress({ step }: { step: number }) {
       <p className="text-sm font-semibold text-ink-2">
         Stap {step} van {STEPS}
       </p>
-      {/* The text above already says it; the bar is only a picture of it. */}
-      <div aria-hidden>
-        <ProgressBar value={step / STEPS} label={`Stap ${step} van ${STEPS}`} />
+      {/* The text above already says it; the segments are only a picture of it. */}
+      <div aria-hidden className="grid grid-cols-8 gap-1">
+        {Array.from({ length: STEPS }, (_, i) => (
+          <span key={i} className={cn("h-1.5 rounded-full", i < step ? "bar-fill bg-progress" : "bg-tint")} style={{ "--i": i } as React.CSSProperties} />
+        ))}
       </div>
     </div>
   );

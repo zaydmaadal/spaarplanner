@@ -8,8 +8,9 @@ const iso = (ym: YearMonth, day: number): ISODate => `${ym.year}-${pad(ym.month)
 
 // shortcut: Belgian public holidays are not counted, add them when a user gets a wrong reminder.
 export function paydayInMonth(rule: PaydayRule, ym: YearMonth): ISODate | null {
-  if (rule.type !== "day_of_month" && rule.type !== "last_working_day") return null;
   const last = daysInMonth(ym);
+  if (rule.type === "last_weekday") return iso(ym, last - ((weekdayOf(iso(ym, last)) - rule.weekday + 7) % 7));
+  if (rule.type !== "day_of_month" && rule.type !== "last_working_day") return null;
   const day = rule.type === "last_working_day" ? last : Math.min(rule.day, last);
   const wd = weekdayOf(iso(ym, day));
   const after = rule.type === "day_of_month" && rule.weekend === "after";
@@ -48,7 +49,7 @@ export function periodProgress(p: Period, today: ISODate): number {
 export function primaryPaydayRule(incomes: Income[]): PaydayRule | null {
   let best: Income | null = null;
   for (const i of incomes) {
-    const fixedDay = i.paydayRule.type === "day_of_month" || i.paydayRule.type === "last_working_day";
+    const fixedDay = ["day_of_month", "last_working_day", "last_weekday"].includes(i.paydayRule.type);
     if (i.active && i.frequency === "monthly" && fixedDay && (!best || i.amountCents > best.amountCents)) best = i;
   }
   return best?.paydayRule ?? null;

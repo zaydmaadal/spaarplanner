@@ -73,7 +73,7 @@ Tick each item when it is done. The agent can do some through its Supabase and V
 - [ ] Apply the migrations once: `npx supabase db push --db-url <pooler url>`, then run the advisors.
 - [ ] Supabase dashboard, three settings:
   - Authentication, Sign In / Providers: "Allow new users to sign up" off (the app creates users with the secret key).
-  - Authentication, minimum password length 10.
+  - Authentication, minimum password length 8.
   - Authentication, audit logs: "write to database" off.
 - [ ] Vercel project linked to `zaydmaadal/spaarplanner` (Next.js, Node 24). Environment variables:
   - All environments: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_AUTH_EMAIL_DOMAIN=u.zaydmaadal.site` (never change it after launch), `NEXT_PUBLIC_VAPID_PUBLIC_KEY`.

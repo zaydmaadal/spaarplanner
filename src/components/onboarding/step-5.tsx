@@ -17,8 +17,26 @@ type Spend = Row & { removing?: boolean; name: string; kind: "living" | "free"; 
 
 // A fixed set, so the form stays short. Other living or free lines (made elsewhere) are left alone.
 const GROUPS: { legend: string; items: { name: string; kind: Spend["kind"] }[] }[] = [
-  { legend: "Leven", items: [{ name: "Eten", kind: "living" }, { name: "Vervoer", kind: "living" }] },
-  { legend: "Vrije tijd", items: [{ name: "Uitgaan", kind: "free" }, { name: "Hobby's", kind: "free" }] },
+  {
+    legend: "Leven",
+    items: [
+      { name: "Eten", kind: "living" },
+      { name: "Vervoer", kind: "living" },
+      { name: "Kleding", kind: "living" },
+      { name: "Verzorging", kind: "living" },
+      { name: "Gezondheid", kind: "living" },
+      { name: "Huisdier", kind: "living" },
+    ],
+  },
+  {
+    legend: "Vrije tijd",
+    items: [
+      { name: "Uitgaan", kind: "free" },
+      { name: "Uit eten", kind: "free" },
+      { name: "Hobby's", kind: "free" },
+      { name: "Cadeaus", kind: "free" },
+    ],
+  },
 ];
 const ITEMS = GROUPS.flatMap((g) => g.items);
 

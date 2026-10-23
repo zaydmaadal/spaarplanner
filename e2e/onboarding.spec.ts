@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { adminClient, at, next, register, skip } from "./helpers";
+import { adminClient, at, fillMainIncome, next, register, skip } from "./helpers";
 
 // These tests check where onboarding ends (the overview), what that screen shows first, and what ended up in the database.
 
@@ -30,8 +30,7 @@ test("Haider: income, a trip with a deadline and the emergency fund next to it",
   await next(page, 1);
 
   form = await at(page, 2);
-  await form.getByLabel("Netto bedrag", { exact: true }).fill("2150");
-  await form.getByLabel("Dag van de maand", { exact: true }).fill("29");
+  await fillMainIncome(form);
   await next(page, 2);
 
   await skip(page, 3);

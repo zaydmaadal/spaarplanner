@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition, type FormEvent } from "react";
 import { toast } from "sonner";
-import { CheckField, MoneyField, TextField } from "@/components/form-fields";
+import { CheckField, MoneyField, MonthField, TextField } from "@/components/form-fields";
 import { Button } from "@/components/ui/button";
 import { saveGoalAction } from "@/data/actions/goals";
 import { buildDashboard, type UserData } from "@/domain/dashboard";
@@ -16,15 +16,17 @@ import { goalError } from "./helpers";
 
 // Spec 8.4: a new goal, or `goal` edited, with what it does to the other goals shown before saving (spec 5.4).
 // saveGoalAction replaces the whole goal, so every field is sent; the weight is not edited here and stays as it was.
-export function GoalForm({ data, today, goal }: { data: UserData; today: ISODate; goal?: Goal }) {
+export function GoalForm({ data, today, goal, suggested }: { data: UserData; today: ISODate; goal?: Goal; suggested?: { deadline?: string; target?: string } }) {
   const router = useRouter();
   const [name, setName] = useState(goal?.name ?? "");
-  const [target, setTarget] = useState(goal ? toEuroInput(goal.targetCents) : "");
+  const stored = { name: goal?.name ?? "", target: goal ? toEuroInput(goal.targetCents) : "", deadline: goal?.deadline ? `${goal.deadline.year}-${String(goal.deadline.month).padStart(2, "0")}` : "" };
+  const [target, setTarget] = useState(suggested?.target ?? stored.target);
   const [estimate, setEstimate] = useState(goal?.targetIsEstimate ?? false);
-  const [deadline, setDeadline] = useState(goal?.deadline ? `${goal.deadline.year}-${String(goal.deadline.month).padStart(2, "0")}` : "");
+  const [deadline, setDeadline] = useState(suggested?.deadline ?? stored.deadline);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const changed = name !== stored.name || target !== stored.target || deadline !== stored.deadline; // the preview waits for a change
   const isFund = goal?.kind === "emergency"; // the emergency fund has no deadline (spec 5.3)
 
   const dashboard = useMemo(() => buildDashboard(data, today), [data, today]);
@@ -60,17 +62,14 @@ export function GoalForm({ data, today, goal }: { data: UserData; today: ISODate
         <MoneyField label="Doelbedrag" value={target} onChange={setTarget} error={errors.target} />
         <CheckField label="Dit bedrag is een schatting" hint="Je kan het later aanpassen als je de echte prijs weet." checked={estimate} onChange={setEstimate} />
         {!isFund && (
-          <TextField
-            label="Klaar tegen (optioneel)"
-            hint="Kies een maand en een jaar als je een deadline hebt."
-            type="month"
-            placeholder="jjjj-mm"
-            value={deadline}
-            onChange={setDeadline}
-            error={errors.deadline}
-          />
+          <MonthField label="Klaar tegen (optioneel)" hint="Kies een maand en een jaar als je een deadline hebt." value={deadline} onChange={setDeadline} error={errors.deadline} />
         )}
-        {inputs ? <EffectPreview before={inputs.before} after={inputs.after} /> : <p className="text-ink-2">Vul een naam en een bedrag in om te zien wat dit voor je andere potten betekent.</p>}
+        {changed &&
+          (inputs ? (
+            <EffectPreview before={inputs.before} after={inputs.after} savingsCents={dashboard.savingsCents} onDeadline={setDeadline} onTarget={setTarget} />
+          ) : (
+            <p className="text-ink-2">Vul een naam en een bedrag in om te zien wat dit voor je andere potten betekent.</p>
+          ))}
       </div>
       {error && (
         <p role="alert" className="text-sm font-semibold text-error">

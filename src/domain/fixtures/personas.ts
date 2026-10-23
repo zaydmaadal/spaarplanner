@@ -17,7 +17,7 @@ const base = (): Pick<UserData, "depositsThisPeriod" | "closedRuleKeys"> => ({ d
 // First job, € 1.000 to mama, emergency fund first, long goals, savings without interest.
 export const zayd: UserData = {
   ...base(),
-  profile: profile("Zayd", { firstJob: true, noInterestSavings: true }),
+  profile: profile("Zayd", { ziekenfonds: "nee", noInterestSavings: true }),
   plan: plan(),
   incomes: [income({ id: "loon", amountCents: 220000, paydayRule: { type: "last_working_day" } })],
   lines: [bl("mama", "fixed", "familie", "Mama", 100000), bl("eigen", "free", "vrij", "Eigen uitgaven", 20000, true)],
@@ -33,7 +33,7 @@ export const zayd: UserData = {
 // First job, no system yet: nothing but income, so the standard proposal applies.
 export const haider: UserData = {
   ...base(),
-  profile: profile("Haider", { firstJob: true }),
+  profile: profile("Haider", { ziekenfonds: "nee" }),
   plan: plan(),
   incomes: [income({ id: "loon", amountCents: 215000, paydayRule: { type: "day_of_month", day: 29, weekend: "before" } })],
   lines: [],

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BackLink } from "@/components/back-link";
 import { BottomNav } from "@/components/bottom-nav";
 import { Step2 } from "@/components/onboarding/step-2";
 import { Step3 } from "@/components/onboarding/step-3";
@@ -12,7 +13,8 @@ export default async function IncomePage() {
   return (
     <>
       <div className="flex flex-col gap-8">
-        <Step2 mode="edit" incomes={data.incomes} firstJob={data.profile.prefs.firstJob === true} />
+        <BackLink href="/meer" parent="Meer" />
+        <Step2 mode="edit" incomes={data.incomes} ziekenfonds={data.profile.prefs.ziekenfonds} />
         <Step3 mode="edit" incomes={data.incomes} level={2} />
       </div>
       <BottomNav active="meer" />

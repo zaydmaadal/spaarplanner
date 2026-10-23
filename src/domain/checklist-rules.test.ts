@@ -115,12 +115,14 @@ describe("checklist rules (spec 5.8)", () => {
   });
 
   test("prefs and income kinds", () => {
-    expect(rule(evaluateRules(ctx({ prefs: { firstJob: true } })), "ziekenfonds")).toMatchObject({
-      title: "Sluit aan bij een ziekenfonds als titularis",
+    expect(rule(evaluateRules(ctx({ prefs: { ziekenfonds: "weet_niet" } })), "ziekenfonds")).toMatchObject({ title: "Check of je bij een ziekenfonds zit" });
+    expect(rule(evaluateRules(ctx({ prefs: { ziekenfonds: "nee" } })), "ziekenfonds")).toMatchObject({
+      title: "Sluit aan bij een ziekenfonds",
       urgency: "month",
       certainty: { level: 3 },
     });
-    expect(keys(evaluateRules(ctx({ prefs: { firstJob: false } })))).not.toContain("ziekenfonds");
+    expect(keys(evaluateRules(ctx({ prefs: { ziekenfonds: "ja" } })))).not.toContain("ziekenfonds");
+    expect(keys(evaluateRules(ctx({ prefs: {} })))).not.toContain("ziekenfonds"); // never asked: no advice
     expect(keys(evaluateRules(ctx({ incomes: [income({ kind: "student" })] })))).toContain("student_hours");
     expect(keys(evaluateRules(ctx({ incomes: [income({ kind: "side" })] })))).toContain("side_income_tax");
     expect(keys(evaluateRules(ctx({ prefs: { noInterestSavings: true } })))).toContain("no_interest");
@@ -140,7 +142,7 @@ describe("checklist rules (spec 5.8)", () => {
         nextPayday: "2026-10-29",
         warnings: [{ key: "negative_budget" }],
         goals: [goalRule({ id: "g2", targetIsEstimate: true }), goalRule({ status: "niet_haalbaar", extraNeededCents: 100 })],
-        prefs: { firstJob: true },
+        prefs: { ziekenfonds: "nee" },
       }),
     );
     expect(keys(items)).toEqual([

@@ -105,11 +105,11 @@ export function StepShell({
   }
 
   return (
-    <form action={() => go(true)} noValidate className="flex flex-col gap-6">
+    <form action={() => go(true)} noValidate className="flex flex-col gap-5">
       {mode === "onboarding" && <OnboardingProgress step={step} />}
-      <div className="flex flex-col gap-5 rounded-card bg-surface p-5">
+      <div className="rise flex flex-col gap-4 rounded-card bg-surface p-4 shadow-card lg:gap-5 lg:p-8">
         <div className="flex flex-col gap-2">
-          <Heading ref={heading} tabIndex={-1} className={cn("font-display font-semibold outline-none", level === 2 ? "text-xl" : "text-2xl")}>
+          <Heading ref={heading} tabIndex={-1} className={cn("font-display font-bold outline-none", level === 2 ? "text-xl" : "text-2xl lg:text-3xl")}>
             {title}
           </Heading>
           {intro && <p className="text-ink-2">{intro}</p>}

@@ -10,7 +10,7 @@ vi.mock("@/data/supabase/server", () => ({
 
 import { saveProfileAction } from "./profile";
 
-const stored = { palette: "oceaan", context_note: "Ik heb stage in maart", first_job: true, future_key: 1 };
+const stored = { palette: "zonsopgang", context_note: "Ik heb stage in maart", ziekenfonds: "nee", future_key: 1 };
 
 function setup(error: { code?: string; message?: string } | null = null) {
   const db = fakeDb((call: Call) => (has(call, "select") ? { data: { prefs: stored } } : { error }));
@@ -24,9 +24,9 @@ beforeEach(() => vi.resetAllMocks());
 describe("saveProfileAction", () => {
   it("merges the new prefs into the stored jsonb: context_note and other keys survive a palette change", async () => {
     const calls = setup();
-    expect(await saveProfileAction({ prefs: { palette: "grafiet", theme: "dark" } })).toEqual({ ok: true, data: undefined });
+    expect(await saveProfileAction({ prefs: { palette: "lagune", theme: "dark" } })).toEqual({ ok: true, data: undefined });
     expect(args(update(calls), "update")).toEqual([
-      { prefs: { palette: "grafiet", theme: "dark", context_note: "Ik heb stage in maart", first_job: true, future_key: 1 } },
+      { prefs: { palette: "lagune", theme: "dark", context_note: "Ik heb stage in maart", ziekenfonds: "nee", future_key: 1 } },
     ]);
     expect(update(calls).ops).toContainEqual(["eq", ["id", "user-1"]]);
     expect(m.revalidatePath).toHaveBeenCalledWith("/", "layout");
@@ -34,9 +34,9 @@ describe("saveProfileAction", () => {
 
   it("writes camelCase input to the snake_case keys", async () => {
     const calls = setup();
-    await saveProfileAction({ prefs: { firstJob: false, noInterestSavings: true, showBasmala: true, contextNote: "nieuw" } });
+    await saveProfileAction({ prefs: { ziekenfonds: "ja", noInterestSavings: true, contextNote: "nieuw" } });
     expect(args(update(calls), "update")![0]).toEqual({
-      prefs: { ...stored, first_job: false, no_interest_savings: true, show_basmala: true, context_note: "nieuw" },
+      prefs: { ...stored, ziekenfonds: "ja", no_interest_savings: true, context_note: "nieuw" },
     });
   });
 
@@ -45,6 +45,12 @@ describe("saveProfileAction", () => {
     await saveProfileAction({ prefs: { startBalance: "6.000", emergencyTarget: null } });
     expect(args(update(calls), "update")![0]).toEqual({ prefs: { ...stored, start_balance_cents: 600000, emergency_target_cents: null } });
     expect((await saveProfileAction({ prefs: { startBalance: "veel" } })).ok).toBe(false);
+  });
+
+  it("remembers that the user picked the emergency share in step 7", async () => {
+    const calls = setup();
+    await saveProfileAction({ prefs: { emergencyShareChosen: true } });
+    expect(args(update(calls), "update")![0]).toEqual({ prefs: { ...stored, emergency_share_chosen: true } });
   });
 
   it("refuses a step 6 target of 0 on step 6 (the fund needs more than 0) but accepts a start balance of 0", async () => {

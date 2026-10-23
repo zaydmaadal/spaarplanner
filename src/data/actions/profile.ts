@@ -9,12 +9,12 @@ import { dbFailure, done, invalid } from "./shared";
 const PREF_KEYS = {
   palette: "palette",
   theme: "theme",
-  firstJob: "first_job",
+  ziekenfonds: "ziekenfonds",
   noInterestSavings: "no_interest_savings",
-  showBasmala: "show_basmala",
   contextNote: "context_note",
   startBalance: "start_balance_cents",
   emergencyTarget: "emergency_target_cents",
+  emergencyShareChosen: "emergency_share_chosen",
 } as const;
 
 export async function saveProfileAction(input: z.input<typeof profileSchema>): Promise<ActionResult> {

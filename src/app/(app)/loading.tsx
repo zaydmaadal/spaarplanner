@@ -1,14 +1,9 @@
-// Spec 8.8: the layout of a screen as grey blocks at their real size, without shimmer.
-const Block = ({ className }: { className: string }) => <div aria-hidden className={`bg-tint ${className}`} />;
-
+// Spec 8.8: the shell stays and a thin bar runs along the top. No skeleton: it flashed on every tab switch.
 export default function AppLoading() {
   return (
-    <div role="status" className="flex flex-col gap-4">
+    <div role="status" className="fixed inset-x-0 top-0 z-50 h-0.5 overflow-hidden">
       <span className="sr-only">Even laden</span>
-      <Block className="h-8 w-40 rounded-md" />
-      <Block className="h-36 rounded-card" />
-      <Block className="h-48 rounded-card" />
-      <Block className="h-48 rounded-card" />
+      <div aria-hidden className="load-bar h-full w-2/5 rounded-full bg-action" />
     </div>
   );
 }

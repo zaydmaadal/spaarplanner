@@ -5,6 +5,7 @@ import { MAX_CENTS, type ActionResult } from "@/data/schemas";
 import { createServerSupabase, requireUserId } from "@/data/supabase/server";
 import { suggestedEmergencyTarget } from "@/domain/budget";
 import { todayInTimeZone } from "@/domain/dates";
+import { potToken } from "@/lib/pot-token";
 import { dbFailure, done, fail, invalid, SOMETHING_WRONG } from "./shared";
 
 // done() would refresh the layout, which re-renders the onboarding page; that page redirects once onboarding is finished,
@@ -56,7 +57,7 @@ export async function completeOnboardingAction(input: z.input<typeof completeSch
 
     const created = await supabase
       .from("goals")
-      .insert({ user_id: userId, kind: "emergency", name: "Noodfonds", target_cents: target, target_is_estimate: emergencyTargetCents === null, priority: 1 })
+      .insert({ user_id: userId, kind: "emergency", name: "Noodfonds", target_cents: target, target_is_estimate: emergencyTargetCents === null, priority: 1, color_token: potToken(goals.data.length) })
       .select("id, kind, priority, target_cents, is_main")
       .single();
     if (created.data) fund = created.data;
@@ -93,6 +94,7 @@ export async function completeOnboardingAction(input: z.input<typeof completeSch
   const prefs = typeof profile.data.prefs === "object" && profile.data.prefs !== null && !Array.isArray(profile.data.prefs) ? { ...profile.data.prefs } : {};
   delete prefs.start_balance_cents;
   delete prefs.emergency_target_cents;
+  delete prefs.emergency_share_chosen;
   const { error } = await supabase.from("profiles").update({ onboarding_step: 8, onboarding_completed_at: new Date().toISOString(), prefs }).eq("id", userId);
   return error ? dbFailure(error) : FINISHED;
 }

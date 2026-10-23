@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { savePlanAction } from "@/data/actions/plan";
 import type { UserData } from "@/domain/dashboard";
+import { monthIndex } from "@/domain/dates";
 import { formatEUR, toEuroInput } from "@/domain/money";
-import type { Cents, ISODate } from "@/domain/types";
+import type { Cents, ISODate, YearMonth } from "@/domain/types";
+import { cn } from "@/lib/utils";
 import { fillText } from "./labels";
 import { simulate } from "./simulate";
 
@@ -18,18 +20,30 @@ const SAVINGS_STEP = 2500;
 const EXTRA_MAX = 100_000;
 const EXTRA_STEP = 5000;
 
+type Fill = YearMonth | "full" | null;
+
+// "Reis: 2 maanden vroeger". Only a move to or from a month is a sentence; "full" stays full.
+function shiftText(name: string, before: Fill, after: Fill, horizonYears: number): string | null {
+  if (before === after || before === "full" || after === "full") return null;
+  if (before && after) {
+    const n = monthIndex(after) - monthIndex(before);
+    return n === 0 ? null : `${name}: ${Math.abs(n)} ${Math.abs(n) === 1 ? "maand" : "maanden"} ${n < 0 ? "vroeger" : "later"}`;
+  }
+  return after ? `${name}: nu wel binnen ${horizonYears} jaar vol` : `${name}: niet meer binnen ${horizonYears} jaar vol`;
+}
+
 function SliderField({ label, cents, max, step, hint, onChange }: { label: string; cents: Cents; max: number; step: number; hint?: string; onChange: (cents: Cents) => void }) {
   const labelId = useId();
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col">
       <div className="flex items-baseline justify-between gap-3">
         <span id={labelId} className="text-sm font-semibold">
           {label}
         </span>
-        <Money cents={cents} className="text-xl" />
+        <Money cents={cents} className="text-lg text-accent-ink" />
       </div>
       <Slider aria-labelledby={labelId} aria-valuetext={formatEUR(cents)} min={0} max={max} step={step} value={[cents]} onValueChange={([next]) => onChange(next)} />
-      {hint && <p className="text-sm text-ink-2">{hint}</p>}
+      {hint && <p className="text-xs text-ink-2">{hint}</p>}
     </div>
   );
 }
@@ -45,10 +59,28 @@ export function Simulator({ base, today, savingsCents, horizonYears }: { base: U
   const [pending, startTransition] = useTransition();
 
   const result = useMemo(
-    () => simulate(base, today, { savingsCents: savings, extraIncomeCents: extraIncome, extraExpensesCents: extraExpenses, incomeMode: mode }),
+    () =>
+      simulate(base, today, {
+        savingsCents: savings,
+        extraIncomeCents: extraIncome,
+        extraExpensesCents: extraExpenses,
+        incomeMode: mode,
+      }),
     [base, today, savings, extraIncome, extraExpenses, mode],
   );
   const goals = base.goals.filter((g) => !g.archived);
+  // The same projection with untouched sliders: what the plan says now, to say how far the sliders move each pot.
+  const start = useMemo(
+    () =>
+      simulate(base, today, {
+        savingsCents: null,
+        extraIncomeCents: 0,
+        extraExpensesCents: 0,
+        incomeMode: plan.incomeMode,
+      }),
+    [base, today, plan.incomeMode],
+  );
+  const shifts = goals.map((g) => shiftText(g.name, start.fills[g.id], result.fills[g.id], horizonYears)).filter((t): t is string => t !== null);
   const hasVariableIncome = base.incomes.some((i) => i.active && i.variability === "variable");
   // Only what the user picked is stored; the extras are a trial and a proposal is never stored (spec 5.5).
   const canApply = (savings !== null && savings !== plan.monthlySavingsCents) || mode !== plan.incomeMode;
@@ -84,55 +116,70 @@ export function Simulator({ base, today, savingsCents, horizonYears }: { base: U
   }
 
   return (
-    <section aria-labelledby={titleId} className="flex flex-col gap-5 rounded-card bg-surface p-5">
-      <div className="flex flex-col gap-1">
+    <section aria-labelledby={titleId} className="grid gap-x-8 gap-y-3 rounded-card bg-surface p-4 shadow-card lg:grid-cols-2 lg:p-6">
+      <div className="flex flex-col gap-1 lg:col-span-2">
         <h2 id={titleId} className="font-display text-xl font-semibold">
           Wat als?
         </h2>
-        <p className="text-ink-2">Schuif en zie wanneer je potten vol zijn. Extra inkomen en uitgaven zijn een proef: je echte bedragen pas je aan bij Meer.</p>
-      </div>
-      <SliderField label="Sparen per maand" cents={result.savingsCents} max={Math.max(200_000, 2 * savingsCents)} step={SAVINGS_STEP} hint={savingsHint} onChange={setSavings} />
-      <SliderField label="Extra inkomen per maand" cents={extraIncome} max={EXTRA_MAX} step={EXTRA_STEP} onChange={setExtraIncome} />
-      <SliderField label="Extra uitgaven per maand" cents={extraExpenses} max={EXTRA_MAX} step={EXTRA_STEP} onChange={setExtraExpenses} />
-      {hasVariableIncome && (
-        <div className="flex flex-col gap-1.5">
-          <Choice
-            legend="Wisselend inkomen"
-            value={mode}
-            onChange={setMode}
-            options={[
-              { value: "careful", label: "Voorzichtig" },
-              { value: "normal", label: "Normaal" },
-            ]}
-          />
-          <p className="text-sm text-ink-2">Voorzichtig rekent met het lage bedrag. Dit telt alleen als je spaarbedrag je spaarruimte volgt.</p>
-        </div>
-      )}
-      <div className="flex flex-col gap-2 border-t pt-4">
-        <h3 className="text-sm font-semibold">Zo ziet je plan eruit</h3>
-        <ul aria-live="polite" className="flex flex-col gap-2">
-          {goals.map((g) => (
-            <li key={g.id} className="flex items-baseline justify-between gap-3">
-              <span className="font-semibold">{g.name}</span>
-              <span className="text-right">{fillText(result.fills[g.id], horizonYears)}</span>
-            </li>
-          ))}
-        </ul>
+        <p className="text-sm text-ink-2">Schuif en zie wanneer je potten vol zijn. Extra inkomen en uitgaven zijn een proef: je echte bedragen pas je aan bij Meer.</p>
       </div>
       <div className="flex flex-col gap-2">
-        <Button size="lg" onClick={apply} disabled={!canApply || pending} aria-describedby={canApply ? undefined : hintId}>
-          Zo instellen
-        </Button>
-        {!canApply && (
-          <p id={hintId} className="text-sm text-ink-2">
-            Kies zelf een bedrag bij Sparen per maand om het in te stellen.
-          </p>
+        <SliderField label="Sparen per maand" cents={result.savingsCents} max={Math.max(200_000, 2 * savingsCents)} step={SAVINGS_STEP} hint={savingsHint} onChange={setSavings} />
+        <SliderField label="Extra inkomen per maand" cents={extraIncome} max={EXTRA_MAX} step={EXTRA_STEP} onChange={setExtraIncome} />
+        <SliderField label="Extra uitgaven per maand" cents={extraExpenses} max={EXTRA_MAX} step={EXTRA_STEP} onChange={setExtraExpenses} />
+        {hasVariableIncome && (
+          <div className="flex flex-col gap-1">
+            <Choice
+              legend="Wisselend inkomen"
+              value={mode}
+              onChange={setMode}
+              options={[
+                { value: "careful", label: "Voorzichtig" },
+                { value: "normal", label: "Normaal" },
+              ]}
+            />
+            <p className="text-sm text-ink-2">Voorzichtig rekent met het lage bedrag. Dit telt alleen als je spaarbedrag je spaarruimte volgt.</p>
+          </div>
         )}
-        {touched && (
-          <Button variant="ghost" onClick={reset} disabled={pending}>
-            Zet terug
+      </div>
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2 border-t pt-3 lg:border-t-0 lg:pt-0">
+          <h3 className="text-sm font-semibold">Zo ziet je plan eruit</h3>
+          <ul aria-live="polite" className="flex flex-col gap-1.5">
+            {goals.map((g) => {
+              const text = fillText(result.fills[g.id], horizonYears);
+              return (
+                <li key={g.id} className="flex items-baseline justify-between gap-3 rounded-strip bg-tint px-3 py-2">
+                  <span className="font-semibold">{g.name}</span>
+                  {/* A new key replays the entrance, so a date that shifts visibly arrives. */}
+                  <span key={text} className={cn("text-right", touched && "rise")}>
+                    {text}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+          {shifts.length > 0 && (
+            <p role="status" className="rise text-sm font-semibold text-accent-ink">
+              {shifts.join(". ")}
+            </p>
+          )}
+        </div>
+        <div className="flex flex-col gap-2">
+          <Button size="lg" onClick={apply} disabled={!canApply || pending} aria-describedby={canApply ? undefined : hintId}>
+            Zo instellen
           </Button>
-        )}
+          {!canApply && (
+            <p id={hintId} className="text-sm text-ink-2">
+              Kies zelf een bedrag bij Sparen per maand om het in te stellen.
+            </p>
+          )}
+          {touched && (
+            <Button variant="ghost" onClick={reset} disabled={pending}>
+              Zet terug
+            </Button>
+          )}
+        </div>
       </div>
     </section>
   );

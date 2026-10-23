@@ -25,14 +25,10 @@ describe("the error state of the app screens (spec 8.8)", () => {
 describe("the loading state of the app screens (spec 8.8)", () => {
   const html = renderToStaticMarkup(createElement(AppLoading));
 
-  test("is grey blocks on tokens, announced as loading, without shimmer or animation", () => {
+  test("is a thin bar that is announced as loading, without a skeleton", () => {
     expect(html).toContain('role="status"');
     expect(html).toContain("Even laden");
-    expect(html).toContain("bg-tint");
-    expect(html).not.toMatch(/animate-|shimmer|pulse/);
-  });
-
-  test("gives no block two radii", () => {
-    for (const [, cls] of html.matchAll(/class="([^"]*)"/g)) expect(cls.match(/rounded-\w+/g)?.length ?? 0).toBeLessThanOrEqual(1);
+    expect(html).toContain("load-bar");
+    expect(html).not.toContain("bg-tint");
   });
 });

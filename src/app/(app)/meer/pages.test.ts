@@ -83,11 +83,11 @@ describe("the forms are filled with what is stored", () => {
   });
 
   test("context: the note, without the palette (that is under Uiterlijk on Meer)", async () => {
-    m.prefs = { palette: "salie", context_note: "Ik heb 20 vakantiedagen.", no_interest_savings: true };
+    m.prefs = { palette: "smaragd", context_note: "Ik heb 20 vakantiedagen.", no_interest_savings: true };
     const out = await render(ContextPage);
     expect(out).toContain("Ik heb 20 vakantiedagen.</textarea>");
     expect(out).not.toContain("Kleurenpalet");
-    expect(out.match(/aria-checked="true"/g)).toHaveLength(1); // the no-interest box is on, the basmala box is off
+    expect(out.match(/aria-checked="true"/g)).toHaveLength(1); // the no-interest box is on
   });
 });
 
@@ -96,7 +96,7 @@ describe("/meer/plan (spec 8.7)", () => {
     const out = await render(PlanPage);
     expect(value(out, "Dit wil ik sparen")).toBe("430"); // the proposal is only shown
     expect(headings(out, 2).slice(-1)).toEqual(["Zo rekenen we"]);
-    expect(out).toContain("Eenmalig inkomen meetellen");
+    expect(out).toContain("Tel je vakantiegeld en 13de maand mee in je plan?");
     expect(saveButtons(out)).toHaveLength(2);
   });
 

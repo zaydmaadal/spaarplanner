@@ -2,45 +2,49 @@ import { CalendarDays, Ellipsis, House, Plus, Target } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-type Tab = "overzicht" | "doelen" | "plan" | "meer";
+export type Tab = "overzicht" | "doelen" | "plan" | "meer";
 
-const TABS = {
+export const TABS = {
   overzicht: { href: "/overzicht", label: "Overzicht", Icon: House },
   doelen: { href: "/doelen", label: "Doelen", Icon: Target },
   plan: { href: "/plan", label: "Plan", Icon: CalendarDays },
   meer: { href: "/meer", label: "Meer", Icon: Ellipsis },
 } as const;
 
-const item = "flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 rounded-strip text-xs font-semibold";
+const item = "press relative flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 rounded-full text-xs font-semibold";
 
-// Every screen renders its own tab as active. The fixed bar needs bottom padding on the page content, see (app)/layout.tsx.
+// Every screen renders its own tab as active. Each copy has the same named pill, so the browser slides it to the new tab
+// during a route change (view transition). From 1024 px the sidebar in (app)/layout.tsx replaces this bar.
 export function BottomNav({ active }: { active: Tab | "storten" }) {
   const tab = (key: Tab) => {
     const { href, label, Icon } = TABS[key];
+    const on = active === key;
     return (
-      <Link
-        key={key}
-        href={href}
-        aria-current={active === key ? "page" : undefined}
-        className={cn(item, active === key ? "bg-active-bg text-active-ink" : "text-ink-2")}
-      >
-        <Icon aria-hidden className="size-6" />
-        {label}
+      <Link key={key} href={href} aria-current={on ? "page" : undefined} className={cn(item, on ? "text-active-ink" : "text-ink-2")}>
+        {on && <span aria-hidden className="absolute inset-0.5 rounded-full bg-active-bg" style={{ viewTransitionName: "nav-pill" }} />}
+        <Icon aria-hidden className="relative size-5.5" />
+        <span className="relative">{label}</span>
       </Link>
     );
   };
   return (
-    <nav aria-label="Hoofdmenu" className="fixed inset-x-0 bottom-0 z-40 border-t bg-surface pb-[env(safe-area-inset-bottom)]">
-      <div className="mx-auto flex max-w-lg items-center gap-1 px-2 py-2">
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] lg:hidden">
+      <nav
+        aria-label="Hoofdmenu"
+        style={{ viewTransitionName: "bottom-nav" }}
+        className="pointer-events-auto flex w-full max-w-md items-center gap-0.5 rounded-full border bg-surface p-1.5 shadow-nav"
+      >
         {tab("overzicht")}
         {tab("doelen")}
-        <Link href="/storten" aria-current={active === "storten" ? "page" : undefined} className={cn(item, "bg-action text-on-action")}>
-          <Plus aria-hidden className="size-6" />
-          Storten
+        <Link href="/storten" aria-current={active === "storten" ? "page" : undefined} className={cn(item, "text-ink")}>
+          <span className="-mt-5 grid size-11 place-items-center rounded-full bg-action text-on-action shadow-card ring-4 ring-surface">
+            <Plus aria-hidden className="size-6" />
+          </span>
+          <span>Storten</span>
         </Link>
         {tab("plan")}
         {tab("meer")}
-      </div>
-    </nav>
+      </nav>
+    </div>
   );
 }

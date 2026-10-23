@@ -1,19 +1,19 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-// Reads the real tokens: oceaan is the complete block, salie and grafiet override what differs.
+// Reads the real tokens: every palette block lists all tokens.
 // A token is `#hex`, `var(--color-x)` or `light-dark(<light>, <dark>)` of those two.
 const css = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
 const blocks = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, selector, body]) => ({
   selector: selector.trim(),
   vars: Object.fromEntries([...body.matchAll(/--color-([\w-]+)\s*:\s*([^;]+);/g)].map(([, k, v]) => [k, v.trim()])),
 }));
-const PALETTES = ["oceaan", "salie", "grafiet"] as const;
+const PALETTES = ["zonsopgang", "smaragd", "lagune", "kersen"] as const;
 const MODES = ["light", "dark"] as const;
 type Mode = (typeof MODES)[number];
 
 const varsOf = (palette: string) => blocks.find((b) => b.selector.includes(`[data-palette="${palette}"]`))?.vars;
-const tokensOf = (palette: string): Record<string, string> => ({ ...varsOf("oceaan"), ...varsOf(palette) });
+const tokensOf = (palette: string): Record<string, string> => ({ ...varsOf("zonsopgang"), ...varsOf(palette) });
 
 function color(tokens: Record<string, string>, name: string, mode: Mode): string {
   const raw = tokens[name];
@@ -54,8 +54,14 @@ const PAIRS: [string, string, number, readonly Mode[]][] = [
   ["error", "surface", 4.5, MODES],
   ["error", "ground", 4.5, MODES],
   ["progress", "surface", 3, MODES],
+  // The dark hero card is the same in light and dark: its text, its muted text, and the highlight colour on it and under text.
+  ["hero-ink", "hero-bg", 4.5, MODES],
+  ["hero-muted", "hero-bg", 4.5, MODES],
+  ["spark", "hero-bg", 3, MODES],
+  ["hero-accent", "hero-bg", 3, MODES],
+  ["on-spark", "spark", 4.5, MODES],
   // Bars must stay visible on a dark card; in light the pastel segments are fixed by the design and always carry a text label.
-  ...["pot-1", "pot-2", "pot-3", "pot-4", "seg-fixed", "seg-living", "seg-savings", "seg-free"].map(
+  ...["pot-1", "pot-2", "pot-3", "pot-4", "pot-5", "seg-fixed", "seg-living", "seg-savings", "seg-free"].map(
     (t): [string, string, number, readonly Mode[]] => [t, "surface", 3, ["dark"]],
   ),
 ];

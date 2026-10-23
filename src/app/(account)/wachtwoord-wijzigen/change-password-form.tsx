@@ -35,7 +35,7 @@ export function ChangePasswordForm({ forced }: { forced: boolean }) {
         label="Nieuw wachtwoord"
         name="password"
         type="password"
-        hint="Minstens 10 tekens."
+        hint="Minstens 8 tekens."
         autoComplete="new-password"
         error={state?.fieldErrors?.password}
       />

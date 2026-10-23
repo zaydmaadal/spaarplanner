@@ -29,13 +29,17 @@ export async function subscribeToPush(): Promise<"ok" | "denied" | "unsupported"
   if (!pushSupported()) return "unsupported";
   if ((await Notification.requestPermission()) !== "granted") return "denied";
 
-  let subscription: PushSubscription;
-  try {
+  // Right after the permission prompt on desktop the first subscribe can fail while the worker settles: one more try, in this same tap.
+  const subscribe = async () => {
     await register();
-    subscription = await (await navigator.serviceWorker.ready).pushManager.subscribe({
+    return (await navigator.serviceWorker.ready).pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: keyBytes(publicEnv.vapidPublicKey),
     });
+  };
+  let subscription: PushSubscription;
+  try {
+    subscription = await subscribe().catch(subscribe);
   } catch {
     throw new Error(SOMETHING_WRONG);
   }

@@ -1,10 +1,11 @@
 "use client";
 
 import { useId, useState } from "react";
-import { Choice, Item, MoneyField, TextField, Toggles } from "@/components/form-fields";
+import { Choice, Item, MoneyField, MonthField, TextField, Toggles } from "@/components/form-fields";
 import { addChecklistItemAction } from "@/data/actions/checklist";
 import { archiveGoalAction, saveGoalAction, setMainGoalAction } from "@/data/actions/goals";
 import { savePlanAction } from "@/data/actions/plan";
+import { saveProfileAction } from "@/data/actions/profile";
 import { monthlyBudget, savingsTarget, suggestedEmergencyTarget } from "@/domain/budget";
 import { formatMonthNl } from "@/domain/dates";
 import { formatEUR, parseEuroInput, toEuroInput } from "@/domain/money";
@@ -42,6 +43,7 @@ export function Step7(props: {
   startBalanceCents: Cents | null;
   emergencyTargetCents: Cents | null;
   stageAdded: boolean;
+  shareChosen: boolean; // the user picked the emergency share before, so the stored value is theirs
 }) {
   const { mode, today, incomes, lines, plan, goals, stageAdded } = props;
   const pots = useRows<Pot>(
@@ -58,7 +60,13 @@ export function Step7(props: {
       isMain: g.isMain,
     })),
   );
-  const [share, setShare] = useState(plan.emergencySharePct === 50 ? "50" : "100");
+  // While onboarding nothing is pre-selected until the user picks; the pick is stored at once, so it survives a reload.
+  const [share, setShare] = useState(mode === "edit" || props.shareChosen ? (plan.emergencySharePct === 50 ? "50" : "100") : "");
+  async function pickShare(value: string) {
+    setShare(value);
+    const saved = await savePlanAction({ emergencySharePct: Number(value) });
+    if (saved.ok) await saveProfileAction({ prefs: { emergencyShareChosen: true } });
+  }
   const [stage, setStage] = useState(stageAdded);
   const [stageSaved, setStageSaved] = useState(false);
   const [errors, setErrors] = useState<Record<string, Errors>>({});
@@ -68,6 +76,7 @@ export function Step7(props: {
   const sharePct = anyDeadline && share === "50" ? 50 : 100;
 
   async function save() {
+    if (anyDeadline && !share) return "Kies of je eerst je noodfonds vult of tegelijk met je doelen.";
     const ids: Record<string, string> = {};
     const saved = await saveRows(
       pots.rows,
@@ -142,12 +151,10 @@ export function Step7(props: {
             onChange={(amount) => pots.patch(row.key, { amount, estimate: false })}
             error={errors[row.key]?.target}
           />
-          <TextField
+          <MonthField
             label="Klaar tegen (optioneel)"
             hint="Kies een maand en een jaar als je een deadline hebt."
-            type="month"
             min={today.slice(0, 7)}
-            placeholder="jjjj-mm"
             value={row.deadline}
             onChange={(deadline) => pots.patch(row.key, { deadline })}
             error={errors[row.key]?.deadline}
@@ -160,7 +167,7 @@ export function Step7(props: {
             legend="Noodfonds eerst helemaal vullen, of tegelijk met je doelen?"
             options={[{ value: "100", label: "Eerst noodfonds" }, { value: "50", label: "Tegelijk" }]}
             value={share}
-            onChange={setShare}
+            onChange={pickShare}
           />
           <p className="text-sm text-ink-2">Bij tegelijk gaat de helft van wat je spaart naar je noodfonds en de rest naar je doelen.</p>
         </div>

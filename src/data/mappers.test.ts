@@ -27,7 +27,7 @@ const profileRow: Tables<"profiles"> = {
   timezone: "Europe/Brussels",
   onboarding_step: 8,
   onboarding_completed_at: "2026-10-02T10:00:00Z",
-  prefs: { first_job: true, no_interest_savings: true, palette: "salie", context_note: "x" },
+  prefs: { ziekenfonds: "nee", no_interest_savings: true, palette: "smaragd", context_note: "x" },
   created_at: "2026-10-01T10:00:00Z",
 };
 
@@ -46,6 +46,7 @@ describe("toGoal", () => {
       isMain: true,
       archived: false,
       createdAt: "2026-10-01T10:00:00Z",
+      colorToken: null,
     });
   });
 
@@ -59,12 +60,12 @@ describe("toProfile", () => {
     expect(toProfile(profileRow)).toEqual({
       displayName: "Haider",
       timeZone: "Europe/Brussels",
-      prefs: { firstJob: true, noInterestSavings: true },
+      prefs: { ziekenfonds: "nee", noInterestSavings: true },
     });
   });
 
   it("leaves a flag out when it is not a stored boolean, and has an empty name for a missing display name", () => {
-    const p = toProfile({ ...profileRow, display_name: null, prefs: { first_job: "yes" } });
+    const p = toProfile({ ...profileRow, display_name: null, prefs: { ziekenfonds: "yes" } });
     expect(p.displayName).toBe("");
     expect(p.prefs).toEqual({});
   });

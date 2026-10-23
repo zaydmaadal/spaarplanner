@@ -8,8 +8,7 @@ import { haider, tiener } from "@/domain/fixtures/personas";
 const m = vi.hoisted(() => ({ data: undefined as unknown, steps: [] as { id: string; title: string; urgency: string }[] }));
 vi.mock("@/data/actions/plan", () => ({ savePlanAction: vi.fn() }));
 vi.mock("@/data/actions/push", () => ({ removePushSubscriptionAction: vi.fn(), savePushSubscriptionAction: vi.fn() }));
-vi.mock("@/data/load", () => ({ loadUserData: async () => m.data, loadOpenUserSteps: async () => m.steps }));
-vi.mock("@/data/supabase/server", () => ({ requireUserId: async () => "user-1", readProfile: async () => ({ timezone: "Europe/Brussels" }) }));
+vi.mock("@/data/load", () => ({ loadScreenData: async () => ({ today: "2026-10-20", data: m.data }), loadOpenUserSteps: async () => m.steps }));
 
 import OverviewPage from "@/app/(app)/overzicht/page";
 

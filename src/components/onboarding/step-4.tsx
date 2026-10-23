@@ -11,7 +11,7 @@ import { StepShell, type Mode } from "./step-shell";
 
 type Cost = Row & { name: string; category: string; amount: string; isEstimate: boolean; custom: boolean };
 
-const PRESETS = ["Huur", "Gsm", "Verzekering", "Abonnementen", "Bijdrage thuis", "Lening"];
+const PRESETS = ["Huur", "Energie", "Internet", "Gsm", "Verzekering", "Ziekenfonds", "Abonnementen", "Bijdrage thuis", "Lening"];
 
 export function Step4({ mode, lines }: { mode: Mode; lines: BudgetLine[] }) {
   const rows = useRows<Cost>(

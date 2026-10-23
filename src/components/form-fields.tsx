@@ -1,9 +1,10 @@
 "use client";
 
-import { Check, Plus } from "lucide-react";
+import { CalendarDays, Check, Plus, Trash2 } from "lucide-react";
 import { useId, type ComponentProps, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { PasswordToggle } from "@/components/password-toggle";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -42,7 +43,40 @@ type Extra<T extends "input" | "select" | "textarea"> = Omit<ComponentProps<T>, 
 export function TextField({ label, hint, error, value, onChange, ...input }: Base & Controlled & Extra<"input">) {
   return (
     <Frame label={label} hint={hint} error={error}>
-      {(aria) => <Input {...input} {...aria} value={value} onChange={(e) => onChange(e.target.value)} />}
+      {(aria) =>
+        input.type === "password" ? (
+          <PasswordToggle>{(type) => <Input {...input} {...aria} type={type} className="pr-12" value={value} onChange={(e) => onChange(e.target.value)} />}</PasswordToggle>
+        ) : (
+          <Input {...input} {...aria} value={value} onChange={(e) => onChange(e.target.value)} />
+        )
+      }
+    </Frame>
+  );
+}
+
+// A month picker that looks like a date field: calendar icon, a placeholder, and it never grows past its card
+// (a native month input has a wide intrinsic width on iOS). The native text is hidden while empty so the placeholder can show.
+export function MonthField({ label, hint, error, value, onChange, ...input }: Base & Controlled & Omit<Extra<"input">, "type">) {
+  return (
+    <Frame label={label} hint={hint} error={error}>
+      {(aria) => (
+        <div className="relative w-full min-w-0">
+          <CalendarDays aria-hidden className="pointer-events-none absolute top-1/2 left-3 size-5 -translate-y-1/2 text-ink-2" />
+          <Input
+            {...input}
+            {...aria}
+            type="month"
+            className={cn("peer block min-w-0 max-w-full appearance-none pl-10", !value && "text-transparent focus:text-ink")}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+          />
+          {!value && (
+            <span aria-hidden className="pointer-events-none absolute top-1/2 left-10 -translate-y-1/2 text-ink-2 peer-focus:hidden">
+              Kies een maand
+            </span>
+          )}
+        </div>
+      )}
     </Frame>
   );
 }
@@ -137,7 +171,7 @@ export function Choice<T extends string>({
   error,
 }: {
   legend: string;
-  value: T;
+  value: T | ""; // "": nothing picked yet
   options: { value: T; label: string }[];
   onChange: (value: T) => void;
   error?: string;
@@ -207,8 +241,9 @@ export function Item({ title, onRemove, children }: { title: string; onRemove: (
     <div role="group" aria-label={title} className="flex flex-col gap-4 border-t border-hairline pt-4">
       <div className="flex items-center justify-between gap-2">
         <p className="font-semibold">{title}</p>
-        <Button type="button" variant="ghost" onClick={onRemove} aria-label={`${title} verwijderen`}>
-          Verwijderen
+        <Button type="button" variant="outline" onClick={onRemove} aria-label={`${title} verwijderen`}>
+          <Trash2 aria-hidden />
+          Verwijder
         </Button>
       </div>
       {children}

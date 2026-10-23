@@ -19,7 +19,7 @@ export const usernameSchema = z
 // 72 bytes (not characters): Supabase Auth refuses longer passwords (bcrypt limit), and "é" is 2 bytes.
 export const passwordSchema = z
   .string()
-  .min(10, "Kies een wachtwoord van minstens 10 tekens.")
+  .min(8, "Kies een wachtwoord van minstens 8 tekens.")
   .refine((v) => new TextEncoder().encode(v).length <= 72, "Kies een wachtwoord van hoogstens 72 tekens.");
 
 // First message per field, for ActionResult.fieldErrors. Keys are the leaf path segment: a bad payday rule reports under type/day/weekend, not paydayRule.
@@ -56,6 +56,7 @@ const paydayRuleSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("day_of_month"), day: z.number().int(DAY).min(1, DAY).max(31, DAY), weekend: z.enum(["before", "after"]) }),
   z.object({ type: z.literal("last_working_day") }),
   z.object({ type: z.literal("weekday"), weekday: z.number().int(WEEKDAY).min(1, WEEKDAY).max(7, WEEKDAY) }),
+  z.object({ type: z.literal("last_weekday"), weekday: z.number().int(WEEKDAY).min(1, WEEKDAY).max(7, WEEKDAY) }),
   z.object({ type: z.literal("irregular") }),
 ]);
 
@@ -125,14 +126,15 @@ export const profileSchema = z.object({
     .object({
       palette: z.enum(PALETTES).optional(),
       theme: z.enum(THEMES).optional(),
-      firstJob: z.boolean().optional(),
+      ziekenfonds: z.enum(["ja", "nee", "weet_niet"]).optional(),
       noInterestSavings: z.boolean().optional(),
-      showBasmala: z.boolean().optional(),
       contextNote: z.string().max(2000, "Je notitie mag hoogstens 2.000 tekens hebben.").optional(),
       // Step 6 of the onboarding, kept here because the emergency fund only exists after step 8 (null: not given).
       // The target must be above 0 here, or finishing in step 8 would fail on a field the user cannot see.
       startBalance: moneySchema.nullable().optional(),
       emergencyTarget: positiveMoney.nullable().optional(),
+      // Step 7: set once the user has picked the emergency share, so a reload does not pick one for them.
+      emergencyShareChosen: z.boolean().optional(),
     })
     .optional(),
 });

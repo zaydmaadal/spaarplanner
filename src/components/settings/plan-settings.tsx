@@ -39,7 +39,7 @@ export function PlanSettingsForm({ plan, variableIncome, hasPots }: { plan: Plan
           <p className="text-sm text-ink-2">Voorzichtig rekent met het lage bedrag. Dit telt alleen als je spaarbedrag je spaarruimte volgt.</p>
         </div>
       )}
-      <CheckField label="Eenmalig inkomen meetellen" hint="Je 13de maand, vakantiegeld en andere eenmalige bedragen tellen mee in wanneer je potten vol zijn." checked={oneOff} onChange={setOneOff} />
+      <CheckField label="Tel je vakantiegeld en 13de maand mee in je plan?" checked={oneOff} onChange={setOneOff} />
       {hasPots && (
         <div className="flex flex-col gap-2">
           <Choice

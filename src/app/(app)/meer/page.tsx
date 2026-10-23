@@ -12,12 +12,12 @@ import { readPrefs } from "@/data/supabase/server";
 
 export const metadata: Metadata = { title: "Meer" };
 
-const row = "flex min-h-14 items-center justify-between gap-3 py-2 font-semibold";
+const row = "press flex min-h-12 items-center justify-between gap-3 rounded-strip px-2 py-1.5 font-semibold hover:bg-tint";
 const chevron = <ChevronRight aria-hidden className="size-5 shrink-0 text-ink-2" />;
 
 function Card({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section aria-label={title} className="flex flex-col gap-2 rounded-card bg-surface p-5">
+    <section aria-label={title} className="rise flex flex-col gap-1 rounded-card bg-surface p-4 shadow-card">
       <h2 className="font-display text-xl font-semibold">
         {title}
       </h2>
@@ -26,7 +26,7 @@ function Card({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-const List = ({ children }: { children: ReactNode }) => <ul className="flex flex-col divide-y divide-hairline">{children}</ul>;
+const List = ({ children }: { children: ReactNode }) => <ul className="flex flex-col">{children}</ul>;
 const Item = ({ href, children }: { href: string; children: ReactNode }) => (
   <li>
     <Link href={href} className={row}>
@@ -41,8 +41,9 @@ export default async function MorePage() {
   const { palette, theme } = await readPrefs();
   return (
     <>
-      <div className="flex flex-col gap-4">
-        <h1 className="font-display text-2xl font-semibold">Meer</h1>
+      <div className="flex flex-col gap-3 lg:gap-6">
+        <h1 className="font-display text-3xl font-bold">Meer</h1>
+        <div className="grid items-start gap-3 lg:grid-cols-2 lg:gap-4">
         <Card title="Je gegevens">
           <List>
             <Item href="/meer/profiel">Profiel</Item>
@@ -53,10 +54,10 @@ export default async function MorePage() {
           </List>
         </Card>
         <Card title="Uiterlijk">
-          <Appearance palette={palette} theme={theme} />
+          <Appearance key={`${palette}/${theme}`} palette={palette} theme={theme} />
         </Card>
         <PushSettings />
-        <div className="rounded-card bg-surface p-5">
+        <div className="rise rounded-card bg-surface p-4 shadow-card">
           <InstallGuide />
         </div>
         <Card title="Privacy en account">
@@ -73,6 +74,7 @@ export default async function MorePage() {
             <Item href="/meer/account">Account wissen</Item>
           </List>
         </Card>
+        </div>
         <LogoutForm>
           <Button type="submit" variant="outline" size="lg" className="w-full">
             Uitloggen

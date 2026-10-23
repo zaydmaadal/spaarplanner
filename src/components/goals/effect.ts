@@ -1,13 +1,13 @@
 import { oneOffIncomes } from "@/domain/budget";
-import { goalUnreachableTitle } from "@/domain/checklist-rules";
 import { formatMonthNl, toYearMonth } from "@/domain/dates";
 import { parseEuroInput } from "@/domain/money";
-import { compareProjections, extraNeededCents, fillMonth, goalStatus, horizonFor, project, type GoalStatus, type ProjectionInput } from "@/domain/projection";
+import { compareProjections, fillMonth, goalStatus, horizonFor, project, type GoalStatus, type ProjectionInput } from "@/domain/projection";
 import type { Goal, Income, ISODate, YearMonth } from "@/domain/types";
+import { wayOuts, type WayOut } from "@/domain/way-outs";
 
 // The texts of the goal form. The deadline is a month as <input type="month"> gives it ("2027-03"), or empty.
 export type Draft = { name: string; target: string; deadline: string };
-export type Effect = { subject: { name: string; headline: string; status: GoalStatus | null; advice: string | null } | null; shifts: string[] };
+export type Effect = { subject: { name: string; headline: string; status: GoalStatus | null; ways: WayOut[] } | null; shifts: string[] };
 
 const MONTH = /^(19|20|21)\d\d-(0[1-9]|1[0-2])$/; // the same months saveGoalAction accepts
 
@@ -22,7 +22,7 @@ export function draftGoals(goals: Goal[], draft: Draft, existing: Goal | null): 
   if (existing) return goals.map((g) => (g.id === existing.id ? { ...g, ...edited } : g));
   const priority = Math.max(0, ...goals.map((g) => g.priority)) + 1;
   // createdAt sorts last, so the new goal loses every tie in the allocation, as it will after saving.
-  return [...goals, { id: "nieuw", kind: "other", ...edited, targetIsEstimate: false, balanceCents: 0, priority, weight: 1, isMain: false, archived: false, createdAt: "9999-12-31T00:00:00Z" }];
+  return [...goals, { id: "nieuw", kind: "other", ...edited, targetIsEstimate: false, balanceCents: 0, priority, weight: 1, isMain: false, archived: false, createdAt: "9999-12-31T00:00:00Z", colorToken: null }];
 }
 
 // Projections only compare when they cover the same months, so both run on the longer of the two horizons, and the
@@ -67,7 +67,7 @@ export function effectOf(before: ProjectionInput, after: ProjectionInput): Effec
       name: changed.name,
       headline: old !== undefined && when(old) !== when(fill) ? `${headline} (was ${when(old)})` : headline,
       status,
-      advice: status === "niet_haalbaar" ? goalUnreachableTitle(changed.name, extraNeededCents({ ...after, horizon }, changed.id)) : null,
+      ways: wayOuts({ ...after, horizon }, changed.id),
     },
     shifts,
   };

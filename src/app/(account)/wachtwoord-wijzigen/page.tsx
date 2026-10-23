@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BackLink } from "@/components/back-link";
 import { LogoutForm } from "@/components/logout-form";
 import { requireClaims } from "@/data/supabase/server";
 import { ChangePasswordForm } from "./change-password-form";
@@ -7,10 +8,12 @@ export const metadata: Metadata = { title: "Wachtwoord wijzigen" };
 
 export default async function WachtwoordWijzigenPage() {
   const claims = await requireClaims();
+  const forced = !!claims.app_metadata?.must_change_password;
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center gap-6 px-4 py-8">
+      {!forced && <BackLink href="/meer" parent="Meer" />}
       <h1 className="text-2xl font-semibold">Wachtwoord wijzigen</h1>
-      <ChangePasswordForm forced={!!claims.app_metadata?.must_change_password} />
+      <ChangePasswordForm forced={forced} />
       <LogoutForm>
         <button
           type="submit"

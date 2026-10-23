@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BackLink } from "@/components/back-link";
 import { BottomNav } from "@/components/bottom-nav";
 import { Step8 } from "@/components/onboarding/step-8";
 import { readProfile, requireUserId } from "@/data/supabase/server";
@@ -12,7 +13,10 @@ export default async function ContextPage() {
   const prefs = (await readProfile(await requireUserId()))?.prefs;
   return (
     <>
-      <Step8 mode="edit" palette={parsePrefs(prefs).palette} {...parseStep8Prefs(prefs)} startBalanceCents={null} emergencyTargetCents={null} emergencySharePct={100} />
+      <div className="flex flex-col gap-4">
+        <BackLink href="/meer" parent="Meer" />
+        <Step8 mode="edit" palette={parsePrefs(prefs).palette} {...parseStep8Prefs(prefs)} startBalanceCents={null} emergencyTargetCents={null} emergencySharePct={100} />
+      </div>
       <BottomNav active="meer" />
     </>
   );

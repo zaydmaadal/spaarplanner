@@ -79,8 +79,9 @@ describe("SalarySplit", () => {
 describe("PotsList", () => {
   test("every pot shows its month and how sure that is", () => {
     const out = html(h(PotsList, { goals: dash(haider).goals, horizonYears: years(haider) }));
-    expect(out).toContain("vol rond nov 2026 · schatting");
-    expect(out).toContain("vol rond mei 2027 · schatting");
+    expect(out).toMatch(/vol rond nov 2026 · <span[^>]*>schatting/);
+    expect(out).toMatch(/vol rond mei 2027 · <span[^>]*>schatting/);
+    expect(out).toContain("Waarom is dit een schatting?"); // the info button that explains the estimate
     expect(out).toContain("€\u00a02.500,00");
   });
 
@@ -98,8 +99,8 @@ describe("PaydayStrip and NextSteps", () => {
     const out = html(h(PaydayStrip, { nextPayday: "2026-10-29", daysToPayday: 9, progress: 0.5 }));
     expect(out).toContain("Volgende loondag");
     expect(out).toContain("donderdag 29 oktober");
-    expect(out).toContain("over 9 dagen");
-    expect(html(h(PaydayStrip, { nextPayday: "2026-10-21", daysToPayday: 1, progress: 0.9 }))).toContain("morgen");
+    expect(out.replace(/<[^>]+>/g, "")).toContain("Nog 9 dagen"); // the number is a loud element of its own
+    expect(html(h(PaydayStrip, { nextPayday: "2026-10-21", daysToPayday: 1, progress: 0.9 }))).toContain("Morgen");
   });
 
   test("steps carry their urgency in words", () => {

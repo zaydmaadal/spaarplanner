@@ -14,7 +14,6 @@ export function Step8(props: {
   mode: Mode;
   palette: Palette;
   noInterestSavings: boolean;
-  showBasmala: boolean;
   contextNote: string;
   startBalanceCents: number | null;
   emergencyTargetCents: number | null;
@@ -23,7 +22,6 @@ export function Step8(props: {
   const { mode } = props;
   const [palette, setPalette] = useState(props.palette);
   const [noInterest, setNoInterest] = useState(props.noInterestSavings);
-  const [basmala, setBasmala] = useState(props.showBasmala);
   const [note, setNote] = useState(props.contextNote);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -43,8 +41,7 @@ export function Step8(props: {
       save={async () =>
         outcome(
           await saveProfileAction({
-            // Personal elements are only stored when they are switched on (or were, and are switched off now).
-            prefs: { noInterestSavings: noInterest, contextNote: note, ...(basmala || props.showBasmala ? { showBasmala: basmala } : {}) },
+            prefs: { noInterestSavings: noInterest, contextNote: note },
           }),
           setErrors,
         )
@@ -59,7 +56,6 @@ export function Step8(props: {
     >
       {mode === "onboarding" && <PalettePicker value={palette} onChange={pick} />}
       <CheckField label="Ik wil sparen zonder rente" hint="Dan herinneren we je eraan een spaarpot zonder rente te kiezen bij je bank." checked={noInterest} onChange={setNoInterest} />
-      <CheckField label="Toon de basmala in de app" hint="Optioneel. We bewaren dit alleen als je het aanzet." checked={basmala} onChange={setBasmala} />
       <TextareaField
         label="Wat moet de app nog over jou weten?"
         hint="Bijvoorbeeld vakantiedagen, hobby's of plannen. We gebruiken dit nog niet in berekeningen."

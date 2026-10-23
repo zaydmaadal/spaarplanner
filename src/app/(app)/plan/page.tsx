@@ -15,10 +15,12 @@ export default async function PlanPage() {
   const d = buildDashboard(data, today);
   return (
     <>
-      <div className="flex flex-col gap-4">
-        <h1 className="font-display text-2xl font-semibold">Plan</h1>
-        <Timeline goals={d.goals} horizonYears={Math.floor(d.horizon / 12)} />
-        <Checklist groups={checklistGroups(d.rules, own)} />
+      <div className="flex flex-col gap-4 lg:gap-6">
+        <h1 className="font-display text-3xl font-bold">Plan</h1>
+        <div className="grid items-start gap-4 lg:grid-cols-2 lg:gap-6">
+          <Timeline goals={d.goals} horizonYears={Math.floor(d.horizon / 12)} />
+          <Checklist groups={checklistGroups(d.rules, own)} />
+        </div>
       </div>
       <BottomNav active="plan" />
     </>
