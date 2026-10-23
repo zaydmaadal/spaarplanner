@@ -21,7 +21,7 @@ export default async function DepositPage({ searchParams }: PageProps<"/storten"
   return (
     <>
       <div className="flex flex-col gap-4 lg:gap-6">
-        <BackLink href="/overzicht" parent="je overzicht" />
+        <BackLink href={only ? `/doelen/${only.id}` : "/overzicht"} parent={only ? only.name : "je overzicht"} />
         <h1 className="font-display text-3xl font-bold">Storten</h1>
         {pots.length === 0 ? (
           <>

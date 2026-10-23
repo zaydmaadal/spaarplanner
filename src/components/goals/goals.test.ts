@@ -47,8 +47,9 @@ describe("EffectPreview", () => {
 
 describe("History", () => {
   const bookings = [
-    { id: "b", amountCents: -5000, occurredOn: "2026-10-12", note: null },
-    { id: "a", amountCents: 21500, occurredOn: "2026-10-02", note: "Startsaldo" },
+    { id: "b", amountCents: -5000, occurredOn: "2026-10-12", note: null, source: "manual" },
+    { id: "a", amountCents: 21500, occurredOn: "2026-10-02", note: "Startsaldo", source: "start" },
+    { id: "c", amountCents: 1000, occurredOn: "2026-10-03", note: "Verjaardag", source: "manual" },
   ];
 
   test("lists the bookings newest first with words for the kind and a closing balance", () => {
@@ -56,10 +57,13 @@ describe("History", () => {
     expect(out).toContain("Geschiedenis");
     expect(out).toContain("12 oktober 2026");
     expect(out).toContain("Opname");
-    expect(out).toContain("Storting · Startsaldo");
+    expect(out).toContain("Storting · Verjaardag");
+    expect(out).toContain("Startbedrag");
+    expect(out).not.toContain("Startsaldo");
+    expect(out).not.toContain("Storting · Startsaldo");
     expect(out).toContain("− € 50,00");
     expect(out).toContain("€ 215,00");
-    expect(out.match(/<li/g)).toHaveLength(2); // the balance row is not a booking
+    expect(out.match(/<li/g)).toHaveLength(3); // the balance row is not a booking
     expect(out).toContain("Saldo");
     expect(out).toContain("€ 165,00");
   });

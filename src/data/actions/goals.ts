@@ -104,3 +104,18 @@ export async function unarchiveGoalAction(id: string): Promise<ActionResult> {
   const { error } = await supabase.from("goals").update({ status: "active" }).eq("id", id).eq("user_id", userId);
   return error ? dbFailure(error) : done();
 }
+
+// Removes the goal and, through the foreign key (on delete cascade), all of its transactions. The emergency fund stays:
+// the plan reserves a share for it, and a user has exactly one. The own-row policy keeps this to the user's goals.
+export async function deleteGoalAction(id: string): Promise<ActionResult> {
+  const userId = await requireUserId();
+  if (!idSchema.safeParse(id).success) return fail(SOMETHING_WRONG);
+  const supabase = await createServerSupabase();
+  const goal = await supabase.from("goals").select("kind").eq("id", id).eq("user_id", userId).maybeSingle();
+  if (goal.error) return dbFailure(goal.error);
+  if (!goal.data) return fail("Dit doel bestaat niet meer.");
+  if (goal.data.kind === "emergency") return fail("Je noodfonds kan je niet verwijderen.");
+
+  const { error } = await supabase.from("goals").delete().eq("id", id).eq("user_id", userId);
+  return error ? dbFailure(error) : done();
+}

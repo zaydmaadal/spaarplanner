@@ -8,7 +8,7 @@ vi.mock("@/data/supabase/server", () => ({
   createServerSupabase: async () => m.db,
 }));
 
-import { archiveGoalAction, reorderGoalsAction, saveGoalAction, setMainGoalAction, unarchiveGoalAction } from "./goals";
+import { archiveGoalAction, deleteGoalAction, reorderGoalsAction, saveGoalAction, setMainGoalAction, unarchiveGoalAction } from "./goals";
 
 const ID = "3f2b1c9e-7d4a-4e8b-9c1d-2a6f5e0b8d71";
 const ID_2 = "0b1c2d3e-4f50-4a61-8b72-93a4b5c6d7e8";
@@ -54,6 +54,31 @@ describe("archiveGoalAction", () => {
     const calls = setup();
     expect((await archiveGoalAction("1; drop table goals")).ok).toBe(false);
     expect(calls).toHaveLength(0);
+  });
+});
+
+describe("deleteGoalAction", () => {
+  it("deletes the own goal, with a balance too: the transactions go with it through the foreign key", async () => {
+    const calls = setup({ balance: 25000 });
+    expect(await deleteGoalAction(ID)).toMatchObject({ ok: true });
+    const [remove] = writes(calls);
+    expect(has(remove, "delete")).toBe(true);
+    expect(remove.table).toBe("goals");
+    expect(remove.ops.filter(([op]) => op === "eq")).toEqual([["eq", ["id", ID]], ["eq", ["user_id", "user-1"]]]);
+    expect(m.revalidatePath).toHaveBeenCalledWith("/", "layout");
+  });
+
+  it("refuses the emergency fund", async () => {
+    const calls = setup({ kind: "emergency" });
+    expect(await deleteGoalAction(ID)).toEqual({ ok: false, error: "Je noodfonds kan je niet verwijderen." });
+    expect(writes(calls)).toHaveLength(0);
+  });
+
+  it("says so for a goal that is gone, and rejects an id that is not a uuid", async () => {
+    const calls = setup({ missing: true });
+    expect(await deleteGoalAction(ID)).toEqual({ ok: false, error: "Dit doel bestaat niet meer." });
+    expect(writes(calls)).toHaveLength(0);
+    expect((await deleteGoalAction("1; drop table goals")).ok).toBe(false);
   });
 });
 

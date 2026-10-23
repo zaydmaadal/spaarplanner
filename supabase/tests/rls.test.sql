@@ -1,5 +1,5 @@
 begin;
-select plan(58);
+select plan(65);
 
 -- Users a and b; the trigger gives each a profile and a plan. Every other user table gets one row per user.
 insert into auth.users (id, email) values
@@ -18,6 +18,8 @@ insert into transactions (user_id, goal_id, amount_cents, occurred_on, client_re
   ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '22222222-2222-2222-2222-222222222222', 700, '2026-10-21', gen_random_uuid());
 insert into checklist_items (user_id, title)
   select u, 'Titel' from unnest(array['aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb']::uuid[]) u;
+insert into feedback (user_id, kind, message)
+  select u, 'feedback', 'Bericht' from unnest(array['aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb']::uuid[]) u;
 insert into push_subscriptions (user_id, endpoint, p256dh, auth, user_agent) values
   ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'https://fcm.googleapis.com/fcm/send/a', 'p', 'a', 'agent'),
   ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'https://fcm.googleapis.com/fcm/send/b', 'p', 'a', 'agent');
@@ -34,6 +36,7 @@ select is(c, 0::bigint, 'a cannot see the rows of b in ' || t) from (
   union all select 'goals', count(*) from goals where user_id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
   union all select 'transactions', count(*) from transactions where user_id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
   union all select 'checklist_items', count(*) from checklist_items where user_id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
+  union all select 'feedback', count(*) from feedback where user_id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
   union all select 'push_subscriptions', count(*) from push_subscriptions where user_id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb') s;
 
 -- a does see their own rows (so the zeros above are not an empty-table artefact).
@@ -45,6 +48,7 @@ select is(c, 1::bigint, 'a sees their own row in ' || t) from (
   union all select 'goals', count(*) from goals where user_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
   union all select 'transactions', count(*) from transactions where user_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
   union all select 'checklist_items', count(*) from checklist_items where user_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+  union all select 'feedback', count(*) from feedback where user_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
   union all select 'push_subscriptions', count(*) from push_subscriptions where user_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa') s;
 
 -- Updates and deletes against the rows of b match nothing (checked below, after reset role).
@@ -76,6 +80,9 @@ select throws_ok($$insert into goals (user_id, kind, name, target_cents, priorit
 select throws_ok($$insert into transactions (user_id, goal_id, amount_cents, occurred_on, client_ref) values ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '22222222-2222-2222-2222-222222222222', 100, '2026-10-21', gen_random_uuid())$$, '42501', null, 'a cannot insert a transaction for b');
 select throws_ok($$insert into checklist_items (user_id, title) values ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'x')$$, '42501', null, 'a cannot insert a checklist item for b');
 select throws_ok($$insert into push_subscriptions (user_id, endpoint, p256dh, auth) values ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'https://fcm.googleapis.com/fcm/send/x', 'p', 'a')$$, '42501', null, 'a cannot insert a push subscription for b');
+select throws_ok($$insert into feedback (user_id, kind, message) values ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'bug', 'x')$$, '42501', null, 'a cannot insert feedback for b');
+select lives_ok($$insert into feedback (user_id, kind, message) values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'bug', 'Nog een')$$, 'a can insert their own feedback');
+select throws_ok($$update feedback set handled_at = now() where user_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'$$, '42501', null, 'a cannot mark feedback as handled');
 
 -- The rest of what a may and may not do.
 select throws_ok($$insert into transactions (user_id, goal_id, amount_cents, occurred_on, client_ref) values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '22222222-2222-2222-2222-222222222222', 100, '2026-10-21', gen_random_uuid())$$,
@@ -106,13 +113,14 @@ select is(c, 1::bigint, 'the row of b in ' || t || ' is untouched') from (
   union all select 'goals', count(*) from goals where user_id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb' and name = 'Reis B'
   union all select 'transactions', count(*) from transactions where user_id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb' and amount_cents = 700
   union all select 'checklist_items', count(*) from checklist_items where user_id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb' and title = 'Titel'
+  union all select 'feedback', count(*) from feedback where user_id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb' and message = 'Bericht'
   union all select 'push_subscriptions', count(*) from push_subscriptions where user_id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb' and user_agent = 'agent') s;
 
 -- anon has no privilege of any kind (table or column level) on the tables and the view.
 select ok(not (has_table_privilege('anon', 'public.' || t, 'select,insert,update,delete,truncate,references,trigger')
   or has_any_column_privilege('anon', 'public.' || t, 'select,insert,update,references')), 'anon has no privileges on ' || t)
 from unnest(array['profiles', 'plans', 'income_sources', 'budget_lines', 'goals', 'transactions',
-  'checklist_items', 'push_subscriptions', 'notification_log', 'admin_audit', 'goal_balances']) as t;
+  'checklist_items', 'push_subscriptions', 'notification_log', 'admin_audit', 'feedback', 'goal_balances']) as t;
 
 -- And it really is refused.
 set local role anon;

@@ -141,6 +141,13 @@ export const profileSchema = z.object({
 
 export const idSchema = uuid;
 
+export const FEEDBACK_KINDS = ["feedback", "bug"] as const;
+export const feedbackSchema = z.object({
+  kind: z.enum(FEEDBACK_KINDS),
+  message: z.string().trim().min(1, "Schrijf eerst je bericht.").max(2000, "Je bericht mag hoogstens 2.000 tekens hebben."),
+  page: z.string().trim().max(200, "Dit mag hoogstens 200 tekens hebben.").optional(),
+});
+
 // Spec 6: the same allow-list as the check on push_subscriptions.endpoint (init.sql), so a bad endpoint is refused here
 // and not by the database. Lengths match the columns.
 const PUSH_ENDPOINT =

@@ -12,7 +12,6 @@ import { toEuroInput } from "@/domain/money";
 import type { Goal, ISODate } from "@/domain/types";
 import { draftGoals, previewInputs } from "./effect";
 import { EffectPreview } from "./effect-preview";
-import { goalError } from "./helpers";
 
 // Spec 8.4: a new goal, or `goal` edited, with what it does to the other goals shown before saving (spec 5.4).
 // saveGoalAction replaces the whole goal, so every field is sent; the weight is not edited here and stays as it was.
@@ -42,7 +41,7 @@ export function GoalForm({ data, today, goal, suggested }: { data: UserData; tod
       setError(null);
       const saved = await saveGoalAction({ id: goal?.id, kind: "other", name, target, targetIsEstimate: estimate, deadline: isFund ? null : deadline || null, weight: goal?.weight ?? 1 });
       setErrors(saved.ok ? {} : (saved.fieldErrors ?? {}));
-      if (!saved.ok) return setError(goalError(saved.error));
+      if (!saved.ok) return setError(saved.error);
       toast.success("Doel opgeslagen.");
       // Next keeps this page mounted, hidden, after leaving it: a new goal starts from an empty form next time.
       if (!goal) {
