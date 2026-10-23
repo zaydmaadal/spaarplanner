@@ -59,7 +59,7 @@ export function PushSettings() {
   const { status, wanted, turnOn, turnOff } = usePush();
   if (status === "loading" || status === "unsupported") return null;
   return (
-    <section aria-label="Meldingen" className="flex flex-col gap-2 rounded-card bg-surface p-5">
+    <section aria-label="Meldingen" className="rise flex flex-col gap-2 rounded-card bg-surface p-4 shadow-card">
       <h2 className="font-display text-xl font-semibold">Meldingen</h2>
       {status === "denied" ? (
         <p className="text-ink-2">Meldingen staan uit voor Spaarplanner. Zet ze aan in de instellingen van je toestel.</p>

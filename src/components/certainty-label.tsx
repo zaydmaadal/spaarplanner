@@ -16,7 +16,7 @@ export function CertaintyLabel({ level, reason }: { level: Level; reason: string
       <Popover.Root>
         <Popover.Trigger
           aria-label={`Waarom is dit een ${label}?`}
-          className="relative z-10 -my-3 inline-flex size-11 items-center justify-center rounded-full text-ink-2 hover:text-ink focus-visible:outline-2 focus-visible:outline-ink"
+          className="relative z-10 -my-3 inline-flex size-11 items-center justify-center rounded-full text-current opacity-70 hover:opacity-100 focus-visible:outline-2 focus-visible:outline-ink"
         >
           <Info aria-hidden className="size-4" />
         </Popover.Trigger>
