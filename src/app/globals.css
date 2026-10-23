@@ -25,10 +25,10 @@
   --color-active-ink: light-dark(#5B2A8C, #D3B8F5);
   --color-accent-ink: light-dark(#4A2178, #D3B8F5);
   --color-pot-1: light-dark(#3B1F5C, #CDB6EB);
-  --color-pot-2: var(--color-progress);
-  --color-pot-3: #D9622B;
+  --color-pot-2: #D9622B;
+  --color-pot-3: #2E8B83;
   --color-pot-4: #E0A23A;
-  --color-pot-5: #2E8B83;
+  --color-pot-5: var(--color-progress);
   --color-seg-fixed: light-dark(#3B1F5C, #CDB6EB);
   --color-seg-living: #A68BC9;
   --color-seg-savings: var(--color-progress);
@@ -95,10 +95,10 @@
   --color-active-ink: light-dark(#0B5668, #7BD3E5);
   --color-accent-ink: light-dark(#0B5668, #7BD3E5);
   --color-pot-1: light-dark(#0C3947, #B5D6DE);
-  --color-pot-2: var(--color-progress);
-  --color-pot-3: light-dark(#E0614A, #F08A76);
+  --color-pot-2: light-dark(#E0614A, #F08A76);
+  --color-pot-3: light-dark(#6F65B5, #A096E0);
   --color-pot-4: #E7B65C;
-  --color-pot-5: light-dark(#6F65B5, #A096E0);
+  --color-pot-5: var(--color-progress);
   --color-seg-fixed: light-dark(#0C3947, #B5D6DE);
   --color-seg-living: #86B3BF;
   --color-seg-savings: var(--color-progress);
@@ -130,10 +130,10 @@
   --color-active-ink: light-dark(#8E1C44, #F6A6BC);
   --color-accent-ink: light-dark(#8E1C44, #F6A6BC);
   --color-pot-1: light-dark(#4A1426, #E8BCC8);
-  --color-pot-2: var(--color-progress);
-  --color-pot-3: light-dark(#2F7D6D, #4FB5A0);
+  --color-pot-2: light-dark(#2F7D6D, #4FB5A0);
+  --color-pot-3: light-dark(#7C5BA8, #B596DC);
   --color-pot-4: light-dark(#E09A3A, #E9AE5A);
-  --color-pot-5: light-dark(#7C5BA8, #B596DC);
+  --color-pot-5: var(--color-progress);
   --color-seg-fixed: light-dark(#4A1426, #E8BCC8);
   --color-seg-living: #C99AA9;
   --color-seg-savings: var(--color-progress);
@@ -246,6 +246,8 @@
     font-family: var(--font-body);
     font-size: 15px;
     line-height: 1.5;
+    /* Lining figures: Playfair defaults to old-style ones, which make amounts and dates bounce. Inherited everywhere. */
+    font-feature-settings: "lnum";
   }
   :focus-visible {
     outline: 2px solid var(--color-ink);

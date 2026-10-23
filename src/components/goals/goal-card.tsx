@@ -26,7 +26,7 @@ export function GoalCard({ goal, horizonYears, handle }: { goal: GoalView; horiz
         {handle}
       </div>
       <div className="flex items-baseline justify-between gap-3">
-        <Money cents={goal.balanceCents} className="text-2xl" />
+        <Money cents={goal.balanceCents} className="font-display text-2xl" />
         <p className="text-right text-sm text-ink-2">
           van <Money cents={goal.targetCents} className="font-semibold text-ink" />
         </p>

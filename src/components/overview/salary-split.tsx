@@ -41,7 +41,7 @@ export function SalarySplit({ lines, budget, savingsCents, savingsCertainty, war
                 className={cn("flex flex-col rounded-strip border px-3 py-2", p.spark ? "col-span-2 border-spark bg-spark text-on-spark" : "border-hero-line bg-hero-tile")}
               >
                 <span className={cn("text-xs", p.spark ? "font-semibold" : "text-hero-muted")}>{p.label}</span>
-                <Money cents={p.cents} className={p.spark ? "text-2xl" : "text-lg"} />
+                <Money cents={p.cents} className={cn("font-display", p.spark ? "text-2xl" : "text-lg")} />
               </li>
             ))}
           </ul>

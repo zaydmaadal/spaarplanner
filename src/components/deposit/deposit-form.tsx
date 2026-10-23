@@ -63,7 +63,7 @@ function Success({ done, to, only }: { done: Done; to: string; only: boolean }) 
           </svg>
         </span>
         <p className="font-display text-2xl font-bold">{done.direction === "in" ? "Gestort" : "Opname opgeslagen"}</p>
-        <Money cents={done.totalCents} className="text-5xl leading-none font-bold text-hero-accent" />
+        <Money cents={done.totalCents} className="font-display text-5xl leading-none font-bold text-hero-accent" />
       </div>
       <ul className="relative flex flex-col gap-2">
         {done.pots.map((p, i) => (
@@ -183,7 +183,7 @@ function DepositForm({ pots, today, initial, onDone }: { pots: Pot[]; today: ISO
       <div className="flex flex-col gap-3 lg:sticky lg:top-10">
         <div className="rise flex flex-col gap-1 rounded-hero bg-hero-bg p-4 text-hero-ink lg:p-5" style={stagger(2)}>
           <span className="text-xs font-semibold tracking-widest text-hero-muted uppercase">{direction === "in" ? "Totaal van deze storting" : "Totaal van deze opname"}</span>
-          <Money cents={total} className="text-5xl leading-none font-bold" />
+          <Money cents={total} className="font-display text-5xl leading-none font-bold" />
         </div>
         {error && (
           <p role="alert" className="text-sm font-semibold text-error">
