@@ -20,11 +20,11 @@ beforeEach(() => {
   m.prefs = { palette: "zonsopgang", theme: "system" };
 });
 
-describe("the Meer page (spec 8.7)", () => {
-  test("has one h1 and the sections in order, with the Meer tab active", async () => {
+describe("the Profiel page (spec 8.7)", () => {
+  test("has one h1 and the sections in order, with the Profiel tab active", async () => {
     const out = await render();
-    expect(headings(out, 1)).toEqual(["Meer"]);
-    expect(headings(out, 2)).toEqual(["Je gegevens", "Uiterlijk", "Zet de app op je beginscherm", "Privacy en account"]);
+    expect(headings(out, 1)).toEqual(["Profiel"]);
+    expect(headings(out, 2)).toEqual(["Je gegevens", "Uiterlijk", "Zet de app op je beginscherm", "Feedback", "Privacy en account"]);
     expect(out.match(/aria-current="page"/g)).toHaveLength(1);
     expect(anchor(out, "/meer")).toContain('aria-current="page"');
   });
@@ -38,7 +38,8 @@ describe("the Meer page (spec 8.7)", () => {
   test("links to the settings pages, privacy, the password and account deletion", async () => {
     const out = await render();
     for (const [href, label] of [
-      ["/meer/profiel", "Profiel"],
+      ["/meer/profiel", "Je naam"],
+      ["/meer/feedback", "Feedback geven"],
       ["/meer/inkomen", "Inkomen"],
       ["/meer/uitgaven", "Uitgaven"],
       ["/meer/plan", "Spaarplan"],

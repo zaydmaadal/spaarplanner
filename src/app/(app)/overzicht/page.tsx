@@ -32,11 +32,11 @@ export default async function OverviewPage() {
 
   return (
     <>
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4 lg:gap-6">
         {/* The dark hero: greeting, payday, the main goal and where the month goes. From 1024 px the goal takes the left column. */}
-        <div className="rise relative overflow-hidden rounded-hero bg-hero-bg p-4 text-hero-ink min-[400px]:p-5 lg:p-8">
+        <div className="rise relative overflow-hidden rounded-hero bg-hero-bg p-5 text-hero-ink lg:p-8">
           <div aria-hidden className="contour pointer-events-none absolute -top-10 -right-10 size-72" />
-          <div className="relative grid gap-5 lg:grid-cols-2 lg:gap-x-10">
+          <div className="relative grid gap-4 lg:grid-cols-2 lg:gap-x-10 lg:gap-y-5">
             <header className="flex flex-col gap-0.5 lg:col-span-2">
               <h1 className="font-display text-3xl font-bold">{name ? `Hoi ${name}` : "Hoi"}</h1>
               <p className="text-hero-muted first-letter:uppercase">{longDateNl(today)}</p>
@@ -55,7 +55,7 @@ export default async function OverviewPage() {
         </div>
         <PushCard />
         <PotsList goals={d.goals} horizonYears={horizonYears} />
-        <div className="grid items-start gap-6 lg:grid-cols-[3fr_2fr]">
+        <div className="grid items-start gap-4 lg:grid-cols-[3fr_2fr] lg:gap-6">
           <Simulator key={`${data.plan.monthlySavingsCents}-${data.plan.incomeMode}`} base={data} today={today} savingsCents={d.savingsCents} horizonYears={horizonYears} />
           <NextSteps steps={steps} />
         </div>

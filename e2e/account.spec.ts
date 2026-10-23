@@ -38,7 +38,7 @@ test("the export is one JSON download with only the own rows and no push keys", 
 
   await test.step("the link on Meer downloads spaarplanner-export.json", async () => {
     await page.goto("/meer");
-    await expect(page.getByRole("heading", { level: 1, name: "Meer", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Profiel", exact: true })).toBeVisible();
     const [download] = await Promise.all([
       page.waitForEvent("download"),
       page.getByRole("link", { name: "Gegevens downloaden", exact: true }).click(),

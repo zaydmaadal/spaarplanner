@@ -75,19 +75,20 @@ describe("the plan page (spec 8.6)", () => {
     expect(list.indexOf("Zoek de echte prijs van Reis op")).toBeLessThan(list.indexOf("Rijbewijs plannen"));
   });
 
-  test("gives every step a tick and a dismiss button that name the step", async () => {
+  test("gives every step a tick, and every rule step an info icon, that name the step", async () => {
     m.steps = [{ id: "own-1", title: "Stage vinden", urgency: "week" }];
     const out = await render(haider);
     const rules = buildDashboard(haider, TODAY).rules.length;
     expect(out.match(/aria-label="Afvinken: /g)).toHaveLength(rules + 1);
-    expect(out.match(/aria-label="Wegklikken: /g)).toHaveLength(rules); // behind "Meer uitleg", and only for rule steps
+    expect(out.match(/aria-label="Uitleg: /g)).toHaveLength(rules); // the explanation and "Verberg" sit in its popover, only for rule steps
+    expect(out).not.toContain("Meer uitleg");
     expect(out).toContain('aria-label="Afvinken: Stage vinden"');
-    expect(out).toContain('aria-label="Wegklikken: Zet € 430,00 opzij op 29 oktober"');
+    expect(out).toContain('aria-label="Uitleg: Zet € 430,00 opzij op 29 oktober"');
   });
 
   test("leaves out the rule steps that were closed", async () => {
-    expect(await render(haider)).toContain("Zet een automatische overschrijving klaar");
-    expect(await render({ ...haider, closedRuleKeys: ["standing_order"] })).not.toContain("Zet een automatische overschrijving klaar");
+    expect(await render(haider)).toContain("Overschrijving klaarzetten");
+    expect(await render({ ...haider, closedRuleKeys: ["standing_order"] })).not.toContain("Overschrijving klaarzetten");
   });
 
   test("without steps it says so, and still offers a step of your own", async () => {

@@ -23,8 +23,8 @@ export function SalarySplit({ lines, budget, savingsCents, savingsCertainty, war
   ].filter((p) => p.cents > 0);
 
   return (
-    <section aria-label="Verdeling van je loon" className={cn("flex flex-col gap-3 text-hero-ink", className)}>
-      <h2 className="text-xs font-semibold tracking-widest text-hero-muted uppercase">Verdeling van je loon</h2>
+    <section aria-label="Verdeling van je loon" className={cn("flex flex-col gap-2.5 text-hero-ink", className)}>
+      <h2 className="font-display text-lg font-semibold">Verdeling van je loon</h2>
       {parts.length === 0 ? (
         <>
           <p className="text-hero-muted">Je hebt nog geen inkomen of uitgaven ingevuld.</p>

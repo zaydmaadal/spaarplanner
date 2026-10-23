@@ -8,29 +8,16 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { savePlanAction } from "@/data/actions/plan";
 import type { UserData } from "@/domain/dashboard";
-import { monthIndex } from "@/domain/dates";
 import { formatEUR, toEuroInput } from "@/domain/money";
-import type { Cents, ISODate, YearMonth } from "@/domain/types";
-import { cn } from "@/lib/utils";
-import { fillText } from "./labels";
+import type { Cents, ISODate } from "@/domain/types";
+import { potColor } from "./labels";
+import { shift, SimRow } from "./sim-row";
 import { simulate } from "./simulate";
 
 // Spec 5.5. Ranges in cents: savings 0 to max(2.000, twice the current amount) in steps of 25; the extras 0 to 1.000 in steps of 50.
 const SAVINGS_STEP = 2500;
 const EXTRA_MAX = 100_000;
 const EXTRA_STEP = 5000;
-
-type Fill = YearMonth | "full" | null;
-
-// "Reis: 2 maanden vroeger". Only a move to or from a month is a sentence; "full" stays full.
-function shiftText(name: string, before: Fill, after: Fill, horizonYears: number): string | null {
-  if (before === after || before === "full" || after === "full") return null;
-  if (before && after) {
-    const n = monthIndex(after) - monthIndex(before);
-    return n === 0 ? null : `${name}: ${Math.abs(n)} ${Math.abs(n) === 1 ? "maand" : "maanden"} ${n < 0 ? "vroeger" : "later"}`;
-  }
-  return after ? `${name}: nu wel binnen ${horizonYears} jaar vol` : `${name}: niet meer binnen ${horizonYears} jaar vol`;
-}
 
 function SliderField({ label, cents, max, step, hint, onChange }: { label: string; cents: Cents; max: number; step: number; hint?: string; onChange: (cents: Cents) => void }) {
   const labelId = useId();
@@ -80,7 +67,6 @@ export function Simulator({ base, today, savingsCents, horizonYears }: { base: U
       }),
     [base, today, plan.incomeMode],
   );
-  const shifts = goals.map((g) => shiftText(g.name, start.fills[g.id], result.fills[g.id], horizonYears)).filter((t): t is string => t !== null);
   const hasVariableIncome = base.incomes.some((i) => i.active && i.variability === "variable");
   // Only what the user picked is stored; the extras are a trial and a proposal is never stored (spec 5.5).
   const canApply = (savings !== null && savings !== plan.monthlySavingsCents) || mode !== plan.incomeMode;
@@ -121,7 +107,7 @@ export function Simulator({ base, today, savingsCents, horizonYears }: { base: U
         <h2 id={titleId} className="font-display text-xl font-semibold">
           Wat als?
         </h2>
-        <p className="text-sm text-ink-2">Schuif en zie wanneer je potten vol zijn. Extra inkomen en uitgaven zijn een proef: je echte bedragen pas je aan bij Meer.</p>
+        <p className="text-sm text-ink-2">Schuif en zie wanneer je potten vol zijn. Extra inkomen en uitgaven zijn een proef: je echte bedragen pas je aan bij Profiel.</p>
       </div>
       <div className="flex flex-col gap-2">
         <SliderField label="Sparen per maand" cents={result.savingsCents} max={Math.max(200_000, 2 * savingsCents)} step={SAVINGS_STEP} hint={savingsHint} onChange={setSavings} />
@@ -146,24 +132,10 @@ export function Simulator({ base, today, savingsCents, horizonYears }: { base: U
         <div className="flex flex-col gap-2 border-t pt-3 lg:border-t-0 lg:pt-0">
           <h3 className="text-sm font-semibold">Zo ziet je plan eruit</h3>
           <ul aria-live="polite" className="flex flex-col gap-1.5">
-            {goals.map((g) => {
-              const text = fillText(result.fills[g.id], horizonYears);
-              return (
-                <li key={g.id} className="flex items-baseline justify-between gap-3 rounded-strip bg-tint px-3 py-2">
-                  <span className="font-semibold">{g.name}</span>
-                  {/* A new key replays the entrance, so a date that shifts visibly arrives. */}
-                  <span key={text} className={cn("text-right", touched && "rise")}>
-                    {text}
-                  </span>
-                </li>
-              );
-            })}
+            {goals.map((g) => (
+              <SimRow key={g.id} name={g.name} color={potColor(g)} fill={result.fills[g.id]} change={shift(start.fills[g.id], result.fills[g.id])} horizonYears={horizonYears} animate={touched} />
+            ))}
           </ul>
-          {shifts.length > 0 && (
-            <p role="status" className="rise text-sm font-semibold text-accent-ink">
-              {shifts.join(". ")}
-            </p>
-          )}
         </div>
         <div className="flex flex-col gap-2">
           <Button size="lg" onClick={apply} disabled={!canApply || pending} aria-describedby={canApply ? undefined : hintId}>

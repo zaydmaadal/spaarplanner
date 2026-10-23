@@ -254,13 +254,13 @@ describe("the forms on the pages of Meer (mode edit)", () => {
     expect(follows).toContain("Dit is wat er overblijft. Pas het aan");
   });
 
-  it("a stored income or expense that is not a row of a list has its own Verwijderen button on a Meer page, and not while onboarding", () => {
+  it("a stored income or expense that is not a row of a list has its own trash button on a Profiel page, and not while onboarding", () => {
     const eten = { ...line("living", 20000), id: "eten", name: "Eten" };
     expect(html(h(Step2, { mode: "edit", incomes: [haider] }))).toContain('aria-label="Netto bedrag verwijderen"');
     expect(html(h(Step2, { mode: "edit", incomes: [] }))).not.toContain("Netto bedrag verwijderen"); // nothing stored
     expect(html(h(Step2, { mode: "onboarding", incomes: [haider] }))).not.toContain("Netto bedrag verwijderen");
     expect(html(h(Step5, { mode: "edit", incomes: [haider], lines: [eten], plan: plan() }))).toMatch(/aria-label="Eten verwijderen"/);
-    expect(html(h(Step5, { mode: "edit", incomes: [haider], lines: [eten], plan: plan() })).match(/ verwijderen"/g)).toHaveLength(1); // only the stored one
+    expect(html(h(Step5, { mode: "edit", incomes: [haider], lines: [eten], plan: plan() })).match(/aria-label="[^"]* verwijderen"/g)).toHaveLength(1); // only the stored one
     expect(html(h(Step5, { mode: "onboarding", incomes: [haider], lines: [eten], plan: plan() }))).not.toContain(" verwijderen");
   });
 });

@@ -12,7 +12,7 @@ export default async function ProfilePage() {
   return (
     <>
       <div className="flex flex-col gap-4">
-        <BackLink href="/meer" parent="Meer" />
+        <BackLink href="/meer" parent="Profiel" />
         <Step1 mode="edit" displayName={data.profile.displayName} />
       </div>
       <BottomNav active="meer" />
