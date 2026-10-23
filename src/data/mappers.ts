@@ -49,6 +49,7 @@ export function toGoal(row: Tables<"goals">, balanceCents: Cents): Goal {
     isMain: row.is_main,
     archived: row.status === "archived",
     createdAt: row.created_at,
+    colorToken: row.color_token,
   };
 }
 

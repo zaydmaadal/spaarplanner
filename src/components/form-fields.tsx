@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Plus } from "lucide-react";
+import { CalendarDays, Check, Plus, Trash2 } from "lucide-react";
 import { useId, type ComponentProps, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -43,6 +43,33 @@ export function TextField({ label, hint, error, value, onChange, ...input }: Bas
   return (
     <Frame label={label} hint={hint} error={error}>
       {(aria) => <Input {...input} {...aria} value={value} onChange={(e) => onChange(e.target.value)} />}
+    </Frame>
+  );
+}
+
+// A month ("2027-03") as <input type="month">, made to look like a date field on every browser: calendar icon in front and
+// a placeholder (the native ones show none when empty). Native month inputs overflow narrow cards on iOS without min-w-0.
+export function MonthField({ label, hint, error, value, onChange, ...input }: Base & Controlled & Extra<"input">) {
+  return (
+    <Frame label={label} hint={hint} error={error}>
+      {(aria) => (
+        <div className="relative">
+          <CalendarDays aria-hidden className="pointer-events-none absolute inset-y-0 left-3 my-auto size-5 text-ink-2" />
+          {!value && (
+            <span aria-hidden className="pointer-events-none absolute inset-y-0 left-11 flex items-center text-ink-2">
+              Kies een maand
+            </span>
+          )}
+          <Input
+            {...input}
+            {...aria}
+            type="month"
+            className={cn("block min-w-0 max-w-full appearance-none pl-11", !value && "not-focus:text-transparent")}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+          />
+        </div>
+      )}
     </Frame>
   );
 }
@@ -207,8 +234,9 @@ export function Item({ title, onRemove, children }: { title: string; onRemove: (
     <div role="group" aria-label={title} className="flex flex-col gap-4 border-t border-hairline pt-4">
       <div className="flex items-center justify-between gap-2">
         <p className="font-semibold">{title}</p>
-        <Button type="button" variant="ghost" onClick={onRemove} aria-label={`${title} verwijderen`}>
-          Verwijderen
+        <Button type="button" variant="outline" onClick={onRemove} aria-label={`${title} verwijderen`}>
+          <Trash2 aria-hidden />
+          Verwijder
         </Button>
       </div>
       {children}

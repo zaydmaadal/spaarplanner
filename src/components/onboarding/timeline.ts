@@ -25,6 +25,7 @@ export function previewTimeline(input: {
     isMain: false,
     archived: false,
     createdAt: String(i).padStart(4, "0"), // keeps the order the goals were added in
+    colorToken: null,
     ...extra,
   });
   const fund = goal({ id: "fund", name: "Noodfonds", targetCents: input.fund.targetCents, deadline: null }, -1, {

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { BackLink } from "@/components/back-link";
 import { BottomNav } from "@/components/bottom-nav";
 import { GoalForm } from "@/components/goals/goal-form";
 import { loadScreenData } from "@/data/load";
@@ -15,6 +16,7 @@ export default async function EditGoalPage({ params }: PageProps<"/doelen/[id]/a
   return (
     <>
       <div className="flex flex-col gap-4">
+        <BackLink href={`/doelen/${goal.id}`} parent="het doel" />
         <h1 className="font-display text-2xl font-semibold">Doel aanpassen</h1>
         <GoalForm key={goal.id} data={data} today={today} goal={goal} />
       </div>

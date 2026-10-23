@@ -22,7 +22,7 @@ export function draftGoals(goals: Goal[], draft: Draft, existing: Goal | null): 
   if (existing) return goals.map((g) => (g.id === existing.id ? { ...g, ...edited } : g));
   const priority = Math.max(0, ...goals.map((g) => g.priority)) + 1;
   // createdAt sorts last, so the new goal loses every tie in the allocation, as it will after saving.
-  return [...goals, { id: "nieuw", kind: "other", ...edited, targetIsEstimate: false, balanceCents: 0, priority, weight: 1, isMain: false, archived: false, createdAt: "9999-12-31T00:00:00Z" }];
+  return [...goals, { id: "nieuw", kind: "other", ...edited, targetIsEstimate: false, balanceCents: 0, priority, weight: 1, isMain: false, archived: false, createdAt: "9999-12-31T00:00:00Z", colorToken: null }];
 }
 
 // Projections only compare when they cover the same months, so both run on the longer of the two horizons, and the

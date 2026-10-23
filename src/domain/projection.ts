@@ -57,7 +57,7 @@ export function fillMonth(fill: Fill, startMonth: YearMonth): YearMonth | "full"
 }
 
 // Full at the latest in the deadline month (a goal that is already full counts).
-function fullByDeadline(input: ProjectionInput, goal: Goal & { deadline: YearMonth }): boolean {
+export function fullByDeadline(input: ProjectionInput, goal: Goal & { deadline: YearMonth }): boolean {
   const f = project(input).fill[goal.id];
   return f === "full" || (typeof f === "number" && f <= monthIndex(goal.deadline) - monthIndex(input.startMonth));
 }

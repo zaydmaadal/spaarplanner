@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BackLink } from "@/components/back-link";
 import { BottomNav } from "@/components/bottom-nav";
 import { DepositForm } from "@/components/deposit/deposit-form";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ export default async function DepositPage({ searchParams }: PageProps<"/storten"
   return (
     <>
       <div className="flex flex-col gap-4">
+        <BackLink href="/overzicht" parent="je overzicht" />
         <h1 className="font-display text-2xl font-semibold">Storten</h1>
         {pots.length === 0 ? (
           <>

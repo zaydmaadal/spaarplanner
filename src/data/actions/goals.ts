@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { goalSchema, idSchema, type ActionResult } from "@/data/schemas";
 import { createServerSupabase, requireUserId } from "@/data/supabase/server";
+import { potToken } from "@/lib/pot-token";
 import { dbFailure, done, fail, invalid, SOMETHING_WRONG } from "./shared";
 
 // Returns the id so the caller can chain setMainGoalAction for the first goal of a user.
@@ -31,9 +32,12 @@ export async function saveGoalAction(input: z.input<typeof goalSchema>): Promise
     .limit(1)
     .maybeSingle();
   if (lastError) return dbFailure(lastError);
+  // The colour is the next of the four pot colours by the number of goals the user has (archived ones count).
+  const { count, error: countError } = await supabase.from("goals").select("id", { count: "exact", head: true }).eq("user_id", userId);
+  if (countError) return dbFailure(countError);
   const { data, error } = await supabase
     .from("goals")
-    .insert({ ...row, kind, user_id: userId, priority: (last?.priority ?? 0) + 1 })
+    .insert({ ...row, kind, user_id: userId, priority: (last?.priority ?? 0) + 1, color_token: potToken(count ?? 0) })
     .select("id")
     .single();
   return error ? dbFailure(error) : done({ id: data.id });

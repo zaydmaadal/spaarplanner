@@ -1,7 +1,7 @@
-import { ChevronLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BackLink } from "@/components/back-link";
 import { BottomNav } from "@/components/bottom-nav";
 import { CertaintyMeter } from "@/components/certainty-meter";
 import { GoalActions } from "@/components/goals/goal-actions";
@@ -44,10 +44,7 @@ export default async function GoalPage({ params }: PageProps<"/doelen/[id]">) {
   return (
     <>
       <div className="flex flex-col gap-4">
-        <Link href="/doelen" className="inline-flex h-11 items-center gap-1 self-start rounded-md pr-2 text-sm font-semibold underline underline-offset-4">
-          <ChevronLeft aria-hidden className="size-4" />
-          Terug naar je doelen
-        </Link>
+        <BackLink href="/doelen" parent="je doelen" />
         <header className="flex flex-col gap-1">
           <h1 tabIndex={-1} className="font-display text-2xl font-semibold break-words outline-none">{goal.name}</h1>
           {(goal.isMain || isEmergency) && <p className="text-sm font-semibold text-ink-2">{[goal.isMain && "Hoofddoel", isEmergency && "Noodfonds"].filter(Boolean).join(" · ")}</p>}

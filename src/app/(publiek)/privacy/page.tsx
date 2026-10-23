@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BackLink } from "@/components/back-link";
 
 export const metadata: Metadata = { title: "Privacy" };
 
@@ -11,6 +12,7 @@ const link = "inline-flex min-h-11 items-center font-medium underline underline-
 export default function PrivacyPage() {
   return (
     <>
+      <BackLink href="/" parent="de app" />
       <h1 className="font-display text-2xl font-semibold">Privacy</h1>
       <p>Spaarplanner is een kleine app van één persoon. Hier staat wat de app van je bewaart, waarom en bij wie.</p>
 
@@ -78,9 +80,6 @@ export default function PrivacyPage() {
         </ul>
       </section>
 
-      <Link href="/" className={link}>
-        Terug naar de app
-      </Link>
     </>
   );
 }
