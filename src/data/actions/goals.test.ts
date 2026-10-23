@@ -73,7 +73,7 @@ describe("saveGoalAction", () => {
     const calls = setup({ top: 3, write: { data: { id: ID } } });
     expect(await saveGoalAction({ ...goal, user_id: "someone-else" } as typeof goal)).toEqual({ ok: true, data: { id: ID } });
     expect(args(calls.find((c) => has(c, "insert"))!, "insert")).toEqual([
-      { user_id: "user-1", kind: "purchase", name: "Laptop", target_cents: 100000, target_is_estimate: false, deadline: "2027-07-01", weight: 2, priority: 4 },
+      { user_id: "user-1", kind: "purchase", name: "Laptop", target_cents: 100000, target_is_estimate: false, deadline: "2027-07-01", weight: 2, priority: 4, color_token: "pot-1" },
     ]);
   });
 

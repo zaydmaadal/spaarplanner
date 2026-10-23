@@ -6,6 +6,7 @@ import { fakeDb } from "@/data/test-helpers";
 
 const m = vi.hoisted(() => ({ data: undefined as unknown, db: undefined as unknown }));
 vi.mock("@/data/actions/goals", () => ({ reorderGoalsAction: vi.fn(), archiveGoalAction: vi.fn(), setMainGoalAction: vi.fn(), unarchiveGoalAction: vi.fn(), saveGoalAction: vi.fn() }));
+vi.mock("@/data/actions/plan", () => ({ savePlanAction: vi.fn() }));
 vi.mock("@/data/actions/transactions", () => ({ addTransactionsAction: vi.fn() }));
 vi.mock("@/data/load", () => ({ loadScreenData: async () => ({ today: "2026-10-20", data: m.data }) }));
 vi.mock("@/data/supabase/server", () => ({ createServerSupabase: async () => m.db }));
@@ -83,7 +84,8 @@ describe("a goal", () => {
     m.data = data({ goals: data().goals.map((g) => (g.id === TRIP ? { ...g, deadline: { year: 2026, month: 1 } } : g)) });
     const out = await goalPage(TRIP);
     expect(out).toContain("Niet haalbaar");
-    expect(out).toContain("Verschuif de deadline van Reis");
+    expect(out).toContain("Zo haal je het toch");
+    expect(out).toContain(`href="/doelen/${TRIP}/aanpassen?deadline=`);
   });
 
   test("an unknown, archived or malformed id is a 404", async () => {
@@ -98,25 +100,33 @@ describe("new and edit", () => {
   test("a new goal has its own h1 and the form with a deadline field", async () => {
     const out = await render(NewGoalPage());
     expect(headings(out, 1)).toEqual(["Nieuw doel"]);
-    for (const part of ["Naam", "Doelbedrag", "Klaar tegen (optioneel)", "Doel opslaan", "Vul een naam en een bedrag in"]) expect(out).toContain(part);
+    for (const part of ["Naam", "Doelbedrag", "Klaar tegen (optioneel)", "Doel opslaan"]) expect(out).toContain(part);
+    expect(out).not.toContain("Wat dit verandert"); // the preview waits for a change
   });
 
   test("editing starts from the stored goal and shows what it would change", async () => {
-    const out = await render(EditGoalPage({ params: Promise.resolve({ id: TRIP }) } as never) as never);
+    const out = await render(EditGoalPage({ params: Promise.resolve({ id: TRIP }), searchParams: Promise.resolve({}) } as never) as never);
     expect(headings(out, 1)).toEqual(["Doel aanpassen"]);
     expect(out).toContain('value="Reis"');
     expect(out).toContain('value="2500"');
     expect(out).toContain('value="2027-08"');
-    expect(out).toContain("Je hebt nog niets aangepast.");
+    expect(out).not.toContain("Wat dit verandert"); // nothing changed yet
+  });
+
+  test("a way out from the goal screen fills in the field and shows what it does", async () => {
+    const out = await render(EditGoalPage({ params: Promise.resolve({ id: TRIP }), searchParams: Promise.resolve({ doelbedrag: "2000", deadline: "nonsense" }) } as never) as never);
+    expect(out).toContain('value="2000"');
+    expect(out).toContain('value="2027-08"'); // an invalid month is ignored
+    expect(out).toContain("Wat dit verandert");
   });
 
   test("the emergency fund has no deadline field", async () => {
-    const out = await render(EditGoalPage({ params: Promise.resolve({ id: FUND }) } as never) as never);
+    const out = await render(EditGoalPage({ params: Promise.resolve({ id: FUND }), searchParams: Promise.resolve({}) } as never) as never);
     expect(out).not.toContain("Klaar tegen");
   });
 
   test("editing an unknown goal is a 404", async () => {
-    await expect(render(EditGoalPage({ params: Promise.resolve({ id: "reis" }) } as never) as never)).rejects.toMatchObject(notFound);
+    await expect(render(EditGoalPage({ params: Promise.resolve({ id: "reis" }), searchParams: Promise.resolve({}) } as never) as never)).rejects.toMatchObject(notFound);
   });
 });
 

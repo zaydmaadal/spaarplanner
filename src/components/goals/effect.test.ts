@@ -49,7 +49,7 @@ describe("draftGoals", () => {
 describe("effectOf (spec 5.4)", () => {
   test("a new goal without deadline: when it is full and which goal slips, in words", () => {
     const e = run();
-    expect(e.subject).toMatchObject({ name: "Laptop", headline: "Klaar rond jun 2027", status: null, advice: null });
+    expect(e.subject).toMatchObject({ name: "Laptop", headline: "Klaar rond jun 2027", status: null, ways: [] });
     // After the fund, the trip only gets what it needs per month (€ 250); the rest goes to the laptop.
     expect(e.shifts).toEqual(["Reis schuift 2 maanden op, van mei 2027 naar jul 2027"]);
   });
@@ -74,21 +74,21 @@ describe("effectOf (spec 5.4)", () => {
     expect(e.shifts).toEqual(["Reis schuift 1 maand op, van mei 2027 naar jun 2027"]);
   });
 
-  test("a deadline already passed cannot be met: shift the deadline", () => {
+  test("a deadline already passed cannot be met: only moving the deadline is left", () => {
     const e = run({ deadline: "2026-01" });
     expect(e.subject?.status).toBe("niet_haalbaar");
-    expect(e.subject?.advice).toBe("Verschuif de deadline van Laptop: met sparen alleen lukt het niet meer");
+    expect(e.subject?.ways).toEqual([{ kind: "move_deadline", month: { year: 2027, month: 2 } }]);
   });
 
-  test("a deadline in the current month still names the extra amount per month", () => {
+  test("a deadline in the current month still names the extra amount per month among the ways out", () => {
     const e = run({ deadline: "2026-09" });
     expect(e.subject?.status).toBe("niet_haalbaar");
-    expect(e.subject?.advice).toBe("Spaar € 1.770,00 meer per maand of verschuif de deadline van Laptop");
+    expect(e.subject?.ways).toEqual([{ kind: "save_more", extraCents: 177_000 }, { kind: "move_deadline", month: { year: 2027, month: 2 } }]);
   });
 
-  test("a goal that is on schedule has a status and no advice", () => {
+  test("a goal that is on schedule has a status and no ways out", () => {
     const e = run({ deadline: "2028-12" });
-    expect(e.subject).toMatchObject({ status: "op_schema", advice: null });
+    expect(e.subject).toMatchObject({ status: "op_schema", ways: [] });
   });
 
   test("editing the trip: its own line shows the old month, it is not repeated among the others", () => {
