@@ -10,7 +10,9 @@ alter table public.income_sources add constraint income_sources_payday_rule_chec
     when 'day_of_month' then jsonb_typeof(payday_rule -> 'day') = 'number'
       and payday_rule ->> 'day' ~ '^([1-9]|[12][0-9]|3[01])$'
       and payday_rule ->> 'weekend' in ('before', 'after')
-    when 'weekday', 'last_weekday' then jsonb_typeof(payday_rule -> 'weekday') = 'number'
+    when 'weekday' then jsonb_typeof(payday_rule -> 'weekday') = 'number'
+      and payday_rule ->> 'weekday' ~ '^[1-7]$'
+    when 'last_weekday' then jsonb_typeof(payday_rule -> 'weekday') = 'number'
       and payday_rule ->> 'weekday' ~ '^[1-7]$'
     else true
   end, false)
