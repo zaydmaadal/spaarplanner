@@ -55,7 +55,7 @@ test("the screens of the app", async ({ page }) => {
       ["Overzicht", /\/overzicht$/, "Hoi Haider"],
       ["Doelen", /\/doelen$/, "Doelen"],
       ["Plan", /\/plan$/, "Plan"],
-      ["Meer", /\/meer$/, "Profiel"],
+      ["Profiel", /\/meer$/, "Profiel"],
     ] as const) {
       await tab(name).click();
       await expect(page).toHaveURL(path);

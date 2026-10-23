@@ -3,7 +3,6 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 import OnboardingError from "@/app/onboarding/error";
 import AppError from "./error";
-import AppLoading from "./loading";
 
 describe("the error state of the app screens (spec 8.8)", () => {
   const html = renderToStaticMarkup(createElement(AppError, { retry: () => {}, error: new Error("geheime details"), reset: () => {} } as never));
@@ -19,16 +18,5 @@ describe("the error state of the app screens (spec 8.8)", () => {
 
   test("the onboarding, outside the app group, shows the same card", () => {
     expect(OnboardingError).toBe(AppError);
-  });
-});
-
-describe("the loading state of the app screens (spec 8.8)", () => {
-  const html = renderToStaticMarkup(createElement(AppLoading));
-
-  test("is a thin bar that is announced as loading, without a skeleton", () => {
-    expect(html).toContain('role="status"');
-    expect(html).toContain("Even laden");
-    expect(html).toContain("load-bar");
-    expect(html).not.toContain("bg-tint");
   });
 });

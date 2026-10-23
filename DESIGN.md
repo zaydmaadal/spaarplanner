@@ -174,7 +174,7 @@ Money is integer cents. Show it only through `formatEUR` (`src/domain/money.ts`)
 | `Appearance`, `PlanSettingsForm` | `src/components/settings`: Meer. `Appearance` is the `PalettePicker` plus the theme switch (licht, donker, systeem), shown on `<html>` at once and saved with both values. `PlanSettingsForm` holds the plan settings the onboarding has no form for (wisselend inkomen, eenmalig inkomen meetellen, noodfonds-aandeel), each shown only where it applies |
 | `src/components/ui/*` | shadcn (new-york, Radix) with the tokens mapped; buttons and inputs are 44 px high, close buttons are 44 px. `Slider` hands `aria-labelledby` (or `aria-label`) and `aria-valuetext` to its thumb: label it, show its value next to it and give the value in words |
 
-`src/app/(app)` holds the screens that need a finished onboarding (`requireOnboarded()`). Onboarding and `/wachtwoord-wijzigen` stay outside it, or the proxy's must-change redirect would loop. Its `loading.tsx` (grey blocks, no shimmer) and `error.tsx` (a card with "Opnieuw proberen", which calls `retry()` and never shows the error) are the loading and error state of every screen in it (spec 8.8).
+`src/app/(app)` holds the screens that need a finished onboarding (`requireOnboarded()`). Onboarding and `/wachtwoord-wijzigen` stay outside it, or the proxy's must-change redirect would loop. It has no `loading.tsx`: a fallback commit made every tab switch wait about 300 ms. Instead `nav-progress.tsx` shows a thin bar when a link click takes longer than 200 ms, and the old screen stays until the new one is ready. Its `error.tsx` (a card with "Opnieuw proberen", which calls `retry()` and never shows the error) is the error state of every screen in it (spec 8.8).
 
 ## Logo
 
