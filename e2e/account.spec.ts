@@ -13,7 +13,7 @@ test("/privacy opens without a session, and the export does not", async ({ page,
   await expect(page.getByRole("heading", { level: 1, name: "Privacy", exact: true })).toBeVisible();
   await expect(page.getByText("Zayd Maadal")).toBeVisible();
   // It tells you where to download (Meer), and does not link to the export itself.
-  await expect(page.getByRole("link", { name: "Gegevens downloaden via Meer", exact: true })).toHaveAttribute("href", "/meer");
+  await expect(page.getByRole("link", { name: "Gegevens downloaden via Profiel", exact: true })).toHaveAttribute("href", "/meer");
   await expect(page.locator('a[href="/api/export"]')).toHaveCount(0);
 
   // The proxy sends a visitor without a session to the login page, the same as for every other private path.

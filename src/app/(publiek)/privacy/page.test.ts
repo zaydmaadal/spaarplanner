@@ -20,7 +20,7 @@ describe("the privacy page (spec 12)", () => {
 
   test("sends you to Meer to download, not to the export itself (a visitor without a session would save the login page), and links to account deletion", () => {
     expect(html).not.toContain("/api/export");
-    expect(html).toMatch(/<a[^>]*href="\/meer"[^>]*>Gegevens downloaden via Meer<\/a>/);
+    expect(html).toMatch(/<a[^>]*href="\/meer"[^>]*>Gegevens downloaden via Profiel<\/a>/);
     expect(html).toMatch(/<a[^>]*href="\/meer\/account"/);
   });
 
