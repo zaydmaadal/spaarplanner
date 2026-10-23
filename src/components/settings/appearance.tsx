@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Choice } from "@/components/form-fields";
 import { PalettePicker } from "@/components/palette-picker";
+import { rememberLook } from "@/components/theme-sync";
 import { saveProfileAction } from "@/data/actions/profile";
 import type { Palette, Theme } from "@/lib/prefs";
 
@@ -22,7 +23,7 @@ export function Appearance({ palette: storedPalette, theme: storedTheme }: { pal
 
   async function save(prefs: { palette: Palette; theme: Theme }, undo: () => void) {
     const result = await saveProfileAction({ prefs }).catch(() => null); // a dropped connection throws
-    if (result?.ok) return;
+    if (result?.ok) return rememberLook(prefs);
     undo();
     toast.error(result ? result.error : "Opslaan lukte niet. Probeer het opnieuw.");
   }

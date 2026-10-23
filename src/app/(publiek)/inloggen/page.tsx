@@ -7,8 +7,11 @@ export const metadata: Metadata = { title: "Inloggen" };
 
 export default function InloggenPage() {
   return (
-    <AuthShell>
-      <h1 className="font-display text-3xl font-bold">Inloggen</h1>
+    <AuthShell tagline="Welkom terug. Zo staan je spaardoelen ervoor.">
+      <div>
+        <h1 className="font-display text-3xl font-bold">Inloggen</h1>
+        <p className="mt-1 text-ink-2">Fijn dat je er weer bent.</p>
+      </div>
       <LoginForm />
       <p>
         Nog geen account?{" "}

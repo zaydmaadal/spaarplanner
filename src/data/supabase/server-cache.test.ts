@@ -22,7 +22,7 @@ const m = vi.hoisted(() => ({
   redirect: vi.fn(),
 }));
 vi.mock("server-only", () => ({}));
-vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => [], set: vi.fn() }) }));
+vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => [], set: vi.fn(), get: () => undefined }) }));
 vi.mock("@supabase/ssr", () => ({
   createServerClient: () => ({
     auth: { getClaims: m.getClaims.mockImplementation(async () => ({ data: m.sub ? { claims: { sub: m.sub } } : null })) },
@@ -69,7 +69,7 @@ describe("one read per request", () => {
 
   it("keeps readPrefs from redirecting or querying without a session", async () => {
     m.sub = undefined;
-    expect(await readPrefs()).toEqual({ palette: "zonsopgang", theme: "system" });
+    expect(await readPrefs()).toEqual({ palette: "nachtblauw", theme: "system" });
     expect(m.redirect).not.toHaveBeenCalled();
     expect(m.select).not.toHaveBeenCalled();
     await expect(requireOnboarded()).rejects.toThrow("NEXT_REDIRECT");

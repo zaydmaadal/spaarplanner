@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const m = vi.hoisted(() => ({
   sub: undefined as string | undefined,
   prefs: undefined as unknown,
+  look: undefined as string | undefined,
   select: vi.fn(),
   connection: vi.fn(),
   notFound: vi.fn(),
@@ -10,7 +11,7 @@ const m = vi.hoisted(() => ({
 }));
 
 vi.mock("server-only", () => ({}));
-vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => [], set: vi.fn() }) }));
+vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => [], set: vi.fn(), get: () => (m.look ? { value: m.look } : undefined) }) }));
 vi.mock("@supabase/ssr", () => ({
   createServerClient: () => ({
     auth: { getClaims: async () => ({ data: m.sub ? { claims: { sub: m.sub } } : null }) },
@@ -77,9 +78,24 @@ describe("createServerSupabase", () => {
 describe("readPrefs", () => {
   it("returns the defaults without a session and does not redirect or query", async () => {
     m.sub = undefined;
-    expect(await readPrefs()).toEqual({ palette: "zonsopgang", theme: "system" });
+    expect(await readPrefs()).toEqual({ palette: "nachtblauw", theme: "system" });
     expect(m.redirect).not.toHaveBeenCalled();
     expect(m.select).not.toHaveBeenCalled();
+  });
+
+  it("takes the look cookie without a session", async () => {
+    m.sub = undefined;
+    m.look = "zand.dark";
+    expect(await readPrefs()).toEqual({ palette: "zand", theme: "dark" });
+    m.look = undefined;
+  });
+
+  it("ignores the look cookie when there is a session", async () => {
+    m.sub = "user-1";
+    m.look = "zand.dark";
+    m.prefs = { palette: "smaragd", theme: "light" };
+    expect(await readPrefs()).toEqual({ palette: "smaragd", theme: "light" });
+    m.look = undefined;
   });
 
   it("returns the stored palette and theme of the signed-in user", async () => {
@@ -91,8 +107,8 @@ describe("readPrefs", () => {
   it("falls back to the defaults for invalid values or a missing profile", async () => {
     m.sub = "user-1";
     m.prefs = { palette: "neon", theme: 3 };
-    expect(await readPrefs()).toEqual({ palette: "zonsopgang", theme: "system" });
+    expect(await readPrefs()).toEqual({ palette: "nachtblauw", theme: "system" });
     m.prefs = undefined;
-    expect(await readPrefs()).toEqual({ palette: "zonsopgang", theme: "system" });
+    expect(await readPrefs()).toEqual({ palette: "nachtblauw", theme: "system" });
   });
 });
