@@ -6,6 +6,9 @@ import { expectNoncedScripts, loginAs, register, seedHaider } from "./helpers";
 // allows about 30 per 5 minutes per IP), so each test signs in at most once and visits several pages.
 // The page is checked once its h1 shows: before that it is loading.tsx or the previous screen, not the page under test.
 
+// Reduced motion: the cards fade in (.rise), and axe measuring halfway through would see faded text.
+test.use({ reducedMotion: "reduce" });
+
 const rand = () => Math.random().toString(36).slice(2, 8);
 
 async function check(page: Page, path: string, h1: string) {
