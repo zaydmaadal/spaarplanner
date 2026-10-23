@@ -29,7 +29,7 @@ export default async function OverviewPage() {
   const d = buildDashboard(data, today);
   const horizonYears = Math.floor(d.horizon / 12);
   // The most urgent of both (spec 8.3); the sort is stable, so within an urgency the rule steps come first.
-  const steps = [...d.rules, ...own.map(({ id, title, urgency }) => ({ key: id, title, urgency }))]
+  const steps = [...d.rules, ...own.map(({ id, title, urgency }) => ({ key: id, title, urgency, own: true }))]
     .sort((a, b) => URGENCY_RANK[a.urgency] - URGENCY_RANK[b.urgency])
     .slice(0, MAX_STEPS);
   const name = data.profile.displayName.trim();

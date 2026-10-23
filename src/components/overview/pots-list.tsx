@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Money } from "@/components/money";
 import { ProgressBar } from "@/components/progress-bar";
-import { CERTAINTY_LABEL } from "@/domain/certainty";
+import { CertaintyLabel } from "@/components/certainty-label";
 import type { GoalView } from "@/domain/dashboard";
 import { fillText, PeriodSaved, potColor, StatusBadge } from "./labels";
 
@@ -29,7 +29,7 @@ export function PotsList({ goals, horizonYears }: { goals: GoalView[]; horizonYe
               <ProgressBar value={g.isFull ? 1 : g.balanceCents / g.targetCents} label={`Voortgang ${g.name}`} color={potColor(g)} />
               <div className="flex items-baseline justify-between gap-3 text-sm text-ink-2">
                 <p>
-                  {fillText(g.fill, horizonYears)} · {CERTAINTY_LABEL[g.fillCertainty.level]}
+                  {fillText(g.fill, horizonYears)} · <CertaintyLabel level={g.fillCertainty.level} reason={g.fillCertainty.reason} />
                 </p>
                 <p className="text-right">
                   van <Money cents={g.targetCents} className="font-semibold text-ink" />
