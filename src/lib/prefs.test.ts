@@ -19,17 +19,16 @@ describe("parsePrefs", () => {
 });
 
 describe("parseStep8Prefs", () => {
-  it("reads the three answers of step 8 from their stored keys", () => {
-    expect(parseStep8Prefs({ no_interest_savings: true, show_basmala: true, context_note: "Ik heb 20 vakantiedagen." })).toEqual({
+  it("reads the two answers of step 8 from their stored keys", () => {
+    expect(parseStep8Prefs({ no_interest_savings: true, context_note: "Ik heb 20 vakantiedagen." })).toEqual({
       noInterestSavings: true,
-      showBasmala: true,
       contextNote: "Ik heb 20 vakantiedagen.",
     });
   });
 
   it("is off and empty when the keys are missing, of the wrong type, or the prefs are not an object", () => {
-    const none = { noInterestSavings: false, showBasmala: false, contextNote: "" };
-    for (const raw of [{}, null, undefined, "x", 3, [], { no_interest_savings: "true", show_basmala: 1, context_note: 5 }]) {
+    const none = { noInterestSavings: false, contextNote: "" };
+    for (const raw of [{}, null, undefined, "x", 3, [], { no_interest_savings: "true", context_note: 5 }]) {
       expect(parseStep8Prefs(raw)).toEqual(none);
     }
   });

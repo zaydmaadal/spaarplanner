@@ -61,6 +61,7 @@ export function toPlan(row: Tables<"plans">): PlanSettings {
   };
 }
 
+const ZIEKENFONDS = ["ja", "nee", "weet_niet"] as const;
 const flag = (v: unknown) => (typeof v === "boolean" ? v : undefined);
 
 export function toProfile(row: Tables<"profiles">): UserData["profile"] {
@@ -68,6 +69,6 @@ export function toProfile(row: Tables<"profiles">): UserData["profile"] {
   return {
     displayName: row.display_name ?? "",
     timeZone: row.timezone,
-    prefs: { firstJob: flag(prefs.first_job), noInterestSavings: flag(prefs.no_interest_savings) },
+    prefs: { ziekenfonds: ZIEKENFONDS.find((z) => z === prefs.ziekenfonds), noInterestSavings: flag(prefs.no_interest_savings) },
   };
 }

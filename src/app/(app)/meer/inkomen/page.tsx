@@ -12,7 +12,7 @@ export default async function IncomePage() {
   return (
     <>
       <div className="flex flex-col gap-8">
-        <Step2 mode="edit" incomes={data.incomes} firstJob={data.profile.prefs.firstJob === true} />
+        <Step2 mode="edit" incomes={data.incomes} ziekenfonds={data.profile.prefs.ziekenfonds} />
         <Step3 mode="edit" incomes={data.incomes} level={2} />
       </div>
       <BottomNav active="meer" />

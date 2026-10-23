@@ -20,7 +20,7 @@ const profile: Tables<"profiles"> = {
   timezone: "Europe/Brussels",
   onboarding_step: 8,
   onboarding_completed_at: "2026-10-02T10:00:00Z",
-  prefs: { first_job: true },
+  prefs: { ziekenfonds: "nee" },
   created_at: "2026-10-01T10:00:00Z",
 };
 const plan: Tables<"plans"> = {
@@ -108,7 +108,7 @@ describe("loadUserData", () => {
   it("maps every table to the domain shape and books the deposits of the current period per goal", async () => {
     setup();
     const data = await loadUserData("2026-10-21"); // payday Fri 23 oct (25th is a Sunday), so the period is 25 sep to 22 oct
-    expect(data.profile).toEqual({ displayName: "Haider", timeZone: "Europe/Brussels", prefs: { firstJob: true } });
+    expect(data.profile).toEqual({ displayName: "Haider", timeZone: "Europe/Brussels", prefs: { ziekenfonds: "nee" } });
     expect(data.plan).toEqual({ monthlySavingsCents: null, emergencySharePct: 100, incomeMode: "careful", includeOneOffIncome: false });
     expect(data.incomes).toHaveLength(1);
     expect(data.lines).toEqual([{ id: "b1", kind: "fixed", category: "Wonen", name: "Huur", amountCents: 50000, isEstimate: false }]);

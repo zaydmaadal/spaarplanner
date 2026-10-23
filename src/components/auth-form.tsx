@@ -1,4 +1,5 @@
 import { useId, type InputHTMLAttributes, type ReactNode } from "react";
+import { PasswordToggle } from "@/components/password-toggle";
 
 const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
 
@@ -7,11 +8,21 @@ export function Field({
   hint,
   error,
   name,
+  type,
   ...input
 }: { label: string; hint?: string; error?: string; name: string } & InputHTMLAttributes<HTMLInputElement>) {
   // Next keeps the previous page mounted but hidden, so ids derived from `name` would collide across pages.
   const id = useId();
   const describedBy = [hint && `${id}-hint`, error && `${id}-error`].filter(Boolean).join(" ");
+  const props = {
+    id,
+    name,
+    required: true,
+    "aria-invalid": error ? true : undefined,
+    "aria-describedby": describedBy || undefined,
+    ...input,
+  };
+  const inputClass = `h-11 w-full rounded-md border border-foreground/60 bg-background px-3 ${focusRing}`;
   return (
     <div className="flex flex-col gap-1">
       <label htmlFor={id} className="font-medium">
@@ -22,15 +33,11 @@ export function Field({
           {hint}
         </p>
       )}
-      <input
-        id={id}
-        name={name}
-        required
-        aria-invalid={error ? true : undefined}
-        aria-describedby={describedBy || undefined}
-        className={`h-11 rounded-md border border-foreground/60 bg-background px-3 ${focusRing}`}
-        {...input}
-      />
+      {type === "password" ? (
+        <PasswordToggle>{(t) => <input {...props} type={t} className={`${inputClass} pr-12`} />}</PasswordToggle>
+      ) : (
+        <input {...props} type={type} className={inputClass} />
+      )}
       {error && (
         <p id={`${id}-error`} role="alert" className="text-sm text-error">
           {error}

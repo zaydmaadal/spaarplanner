@@ -48,7 +48,7 @@ export function RegisterForm({ askInviteCode }: { askInviteCode: boolean }) {
         label="Wachtwoord"
         name="password"
         type="password"
-        hint="Minstens 10 tekens."
+        hint="Minstens 8 tekens."
         autoComplete="new-password"
         error={fieldErrors?.password}
       />

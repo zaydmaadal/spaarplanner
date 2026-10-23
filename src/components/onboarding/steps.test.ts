@@ -46,7 +46,7 @@ describe("shell", () => {
 
   it("has no 'Vorige' on the first step and finishes on the last", () => {
     expect(html(h(Step1, { mode: "onboarding", displayName: "" }))).not.toContain("Vorige");
-    const last = html(h(Step8, { mode: "onboarding", palette: "oceaan", noInterestSavings: false, showBasmala: false, contextNote: "", startBalanceCents: null, emergencyTargetCents: null, emergencySharePct: 100 }));
+    const last = html(h(Step8, { mode: "onboarding", palette: "oceaan", noInterestSavings: false, contextNote: "", startBalanceCents: null, emergencyTargetCents: null, emergencySharePct: 100 }));
     expect(last).toContain("Naar mijn overzicht");
     expect(last).toContain("Je logt één keer opnieuw in in de geïnstalleerde app.");
     expect(last).toContain("Zet op beginscherm");
@@ -67,18 +67,33 @@ describe("step 1 and 2", () => {
   });
 
   it("asks for the net amount and a payday for a monthly income, a weekday for a weekly one", () => {
-    const monthly = html(h(Step2, { mode: "onboarding", incomes: [haider], firstJob: true }));
+    const monthly = html(h(Step2, { mode: "onboarding", incomes: [haider] }));
     expect(value(monthly, "Netto bedrag")).toBe("2150");
     expect(value(monthly, "Dag van de maand")).toBe("29");
-    expect(monthly).toContain("Dit is mijn eerste job");
-    const weekly = html(h(Step2, { mode: "onboarding", incomes: [income({ frequency: "weekly", paydayRule: { type: "weekday", weekday: 5 } })], firstJob: false }));
+    expect(monthly).toContain("Ben je al aangesloten bij een ziekenfonds?");
+    expect(monthly).not.toContain("eerste job");
+    const weekly = html(h(Step2, { mode: "onboarding", incomes: [income({ frequency: "weekly", paydayRule: { type: "weekday", weekday: 5 } })] }));
     expect(weekly).toContain("Op welke dag krijg je het?");
     expect(weekly).not.toContain("Dag van de maand");
   });
 
+  it("starts a new income with nothing picked: no radio checked, no option selected", () => {
+    const page = html(h(Step2, { mode: "onboarding", incomes: [] }));
+    expect(page).not.toContain("checked");
+    expect(page).not.toContain("selected");
+  });
+
+  it("offers the last weekday of the month as a payday and shows its weekday", () => {
+    const thursday = income({ paydayRule: { type: "last_weekday", weekday: 4 } });
+    const page = html(h(Step2, { mode: "onboarding", incomes: [thursday] }));
+    expect(page).toContain("Laatste weekdag van de maand");
+    expect(page).toContain('<option value="4" selected="">Donderdag</option>');
+    expect(page).not.toContain("Dag van de maand</label>");
+  });
+
   it("asks for the lowest amount only for a variable income, and lists the other incomes as extra", () => {
     const variable = income({ variability: "variable", amountLowCents: 150000 });
-    const page = html(h(Step2, { mode: "onboarding", incomes: [variable, income({ id: "zakgeld", name: "Zakgeld", kind: "allowance", amountCents: 5000 })], firstJob: false }));
+    const page = html(h(Step2, { mode: "onboarding", incomes: [variable, income({ id: "zakgeld", name: "Zakgeld", kind: "allowance", amountCents: 5000 })] }));
     expect(value(page, "Laagste bedrag dat je verwacht")).toBe("1500");
     expect(page).toContain('aria-label="Zakgeld"');
   });
@@ -127,13 +142,13 @@ describe("step 2 extra incomes", () => {
 
   it("cannot be made salary, so the main income keeps its role after a reload", () => {
     const zakgeld = income({ id: "zakgeld", name: "Zakgeld", kind: "allowance", amountCents: 5000 });
-    const page = html(h(Step2, { mode: "onboarding", incomes: [haider, zakgeld], firstJob: false }));
-    expect(kinds(page)).toEqual(["Bijberoep of flexi-job", "Studentenjob", "Zakgeld", "Uitkering", "Iets anders"]);
+    const page = html(h(Step2, { mode: "onboarding", incomes: [haider, zakgeld] }));
+    expect(kinds(page)).toEqual(["Kies een soort", "Bijberoep of flexi-job", "Studentenjob", "Zakgeld", "Uitkering", "Iets anders"]);
   });
 
   it("still shows a second salary that was made elsewhere", () => {
     const partner = income({ id: "partner", name: "Partner", amountCents: 100000 });
-    expect(kinds(html(h(Step2, { mode: "onboarding", incomes: [partner, { ...haider, id: "a" }].sort((a, b) => (a.id < b.id ? 1 : -1)), firstJob: false })))).toContain("Loon");
+    expect(kinds(html(h(Step2, { mode: "onboarding", incomes: [partner, { ...haider, id: "a" }].sort((a, b) => (a.id < b.id ? 1 : -1)) })))).toContain("Loon");
   });
 });
 
@@ -196,7 +211,7 @@ describe("step 7", () => {
 
 describe("the forms on the pages of Meer (mode edit)", () => {
   it("can be the second form of a page: an h2, so the page keeps one h1", () => {
-    const first = html(h(Step2, { mode: "edit", incomes: [haider], firstJob: false }));
+    const first = html(h(Step2, { mode: "edit", incomes: [haider] }));
     const second = html(h(Step3, { mode: "edit", incomes: [], level: 2 }));
     expect(first.match(/<h1/g)).toHaveLength(1);
     expect(second).not.toContain("<h1");
@@ -205,7 +220,7 @@ describe("the forms on the pages of Meer (mode edit)", () => {
   });
 
   it("step 8 leaves the palette to Uiterlijk and keeps the other answers and the note", () => {
-    const props = { palette: "oceaan" as const, noInterestSavings: true, showBasmala: false, contextNote: "Ik heb 20 vakantiedagen.", startBalanceCents: null, emergencyTargetCents: null, emergencySharePct: 100 };
+    const props = { palette: "oceaan" as const, noInterestSavings: true, contextNote: "Ik heb 20 vakantiedagen.", startBalanceCents: null, emergencyTargetCents: null, emergencySharePct: 100 };
     const edit = html(h(Step8, { mode: "edit", ...props }));
     expect(edit).toMatch(/<h1[^>]*>Wat de app over je weet<\/h1>/);
     expect(edit).not.toContain("Kleurenpalet");
@@ -224,9 +239,9 @@ describe("the forms on the pages of Meer (mode edit)", () => {
 
   it("a stored income or expense that is not a row of a list has its own Verwijderen button on a Meer page, and not while onboarding", () => {
     const eten = { ...line("living", 20000), id: "eten", name: "Eten" };
-    expect(html(h(Step2, { mode: "edit", incomes: [haider], firstJob: false }))).toContain('aria-label="Netto bedrag verwijderen"');
-    expect(html(h(Step2, { mode: "edit", incomes: [], firstJob: false }))).not.toContain("Netto bedrag verwijderen"); // nothing stored
-    expect(html(h(Step2, { mode: "onboarding", incomes: [haider], firstJob: false }))).not.toContain("Netto bedrag verwijderen");
+    expect(html(h(Step2, { mode: "edit", incomes: [haider] }))).toContain('aria-label="Netto bedrag verwijderen"');
+    expect(html(h(Step2, { mode: "edit", incomes: [] }))).not.toContain("Netto bedrag verwijderen"); // nothing stored
+    expect(html(h(Step2, { mode: "onboarding", incomes: [haider] }))).not.toContain("Netto bedrag verwijderen");
     expect(html(h(Step5, { mode: "edit", incomes: [haider], lines: [eten], plan: plan() }))).toMatch(/aria-label="Eten verwijderen"/);
     expect(html(h(Step5, { mode: "edit", incomes: [haider], lines: [eten], plan: plan() })).match(/ verwijderen"/g)).toHaveLength(1); // only the stored one
     expect(html(h(Step5, { mode: "onboarding", incomes: [haider], lines: [eten], plan: plan() }))).not.toContain(" verwijderen");

@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
-import { Choice, Item, MoneyField, TextField, Toggles } from "@/components/form-fields";
+import { Choice, Item, MoneyField, MonthField, TextField, Toggles } from "@/components/form-fields";
 import { addChecklistItemAction } from "@/data/actions/checklist";
 import { archiveGoalAction, saveGoalAction, setMainGoalAction } from "@/data/actions/goals";
 import { savePlanAction } from "@/data/actions/plan";
@@ -58,7 +58,8 @@ export function Step7(props: {
       isMain: g.isMain,
     })),
   );
-  const [share, setShare] = useState(plan.emergencySharePct === 50 ? "50" : "100");
+  // While onboarding nothing is pre-selected: the user picks before moving on.
+  const [share, setShare] = useState(mode === "edit" ? (plan.emergencySharePct === 50 ? "50" : "100") : "");
   const [stage, setStage] = useState(stageAdded);
   const [stageSaved, setStageSaved] = useState(false);
   const [errors, setErrors] = useState<Record<string, Errors>>({});
@@ -68,6 +69,7 @@ export function Step7(props: {
   const sharePct = anyDeadline && share === "50" ? 50 : 100;
 
   async function save() {
+    if (anyDeadline && !share) return "Kies of je eerst je noodfonds vult of tegelijk met je doelen.";
     const ids: Record<string, string> = {};
     const saved = await saveRows(
       pots.rows,
@@ -142,12 +144,10 @@ export function Step7(props: {
             onChange={(amount) => pots.patch(row.key, { amount, estimate: false })}
             error={errors[row.key]?.target}
           />
-          <TextField
+          <MonthField
             label="Klaar tegen (optioneel)"
             hint="Kies een maand en een jaar als je een deadline hebt."
-            type="month"
             min={today.slice(0, 7)}
-            placeholder="jjjj-mm"
             value={row.deadline}
             onChange={(deadline) => pots.patch(row.key, { deadline })}
             error={errors[row.key]?.deadline}

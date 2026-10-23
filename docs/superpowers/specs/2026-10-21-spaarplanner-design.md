@@ -268,7 +268,7 @@ Algemeen:
 
 - **Registreren** gebeurt in een server action:
   1. `SIGNUP_MODE` controleren (`closed` blokkeert, `invite` vraagt `INVITE_CODE`).
-  2. Gebruikersnaam valideren: 3-20 tekens, `a-z 0-9 . _ -`, begint en eindigt met een letter of cijfer, geen twee punten na elkaar, wordt lowercase. Wachtwoord minimaal 10 tekens.
+  2. Gebruikersnaam valideren: 3-20 tekens, `a-z 0-9 . _ -`, begint en eindigt met een letter of cijfer, geen twee punten na elkaar, wordt lowercase. Wachtwoord minimaal 8 tekens.
   3. Maximaal `SIGNUP_HOURLY_CAP` (standaard 5) nieuwe accounts per uur voor de hele app (geteld in `profiles`).
   4. `auth.admin.createUser({ email: <gebruikersnaam>@<NEXT_PUBLIC_AUTH_EMAIL_DOMAIN>, password, email_confirm: true })` met de secret key.
   5. De browser logt daarna in.
@@ -391,7 +391,7 @@ Bekende risico's:
 - Geen analytics of tracking in fase 1.
 - De app vraagt nooit naar geloof of gezondheid. Persoonlijke elementen zijn optioneel en worden alleen bewaard als je ze aanzet.
 - **Privacypagina** (`/privacy`, publiek): wie verantwoordelijk is (Zayd), welke gegevens, welke verwerkers, bewaartermijn (backups 90 dagen), en hoe je je gegevens downloadt of wist.
-- Wachtwoorden: minimaal 10 tekens. Leaked-password-bescherming vraagt Supabase Pro; aanzetten bij de overstap.
+- Wachtwoorden: minimaal 8 tekens. Leaked-password-bescherming vraagt Supabase Pro; aanzetten bij de overstap.
 
 ## 13. Testen
 

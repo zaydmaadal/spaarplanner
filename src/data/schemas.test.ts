@@ -26,9 +26,9 @@ describe("usernameSchema", () => {
 });
 
 describe("passwordSchema", () => {
-  it("rejects 9 characters and accepts 10", () => {
-    expect(passwordSchema.safeParse("a".repeat(9)).success).toBe(false);
-    expect(passwordSchema.safeParse("a".repeat(10)).success).toBe(true);
+  it("rejects 7 characters and accepts 8", () => {
+    expect(passwordSchema.safeParse("a".repeat(7)).success).toBe(false);
+    expect(passwordSchema.safeParse("a".repeat(8)).success).toBe(true);
   });
 
   it("rejects more than 72 bytes, the limit Supabase Auth enforces", () => {
@@ -114,6 +114,8 @@ describe("incomeSchema", () => {
     expect(rule({ type: "day_of_month", day: 5 })).toBe(false);
     expect(rule({ type: "weekday", weekday: 8 })).toBe(false);
     expect(rule({ type: "weekday", weekday: 5 })).toBe(true);
+    expect(rule({ type: "last_weekday", weekday: 4 })).toBe(true);
+    expect(rule({ type: "last_weekday" })).toBe(false);
     expect(rule({ type: "last_working_day" })).toBe(true);
     expect(rule({ type: "irregular" })).toBe(true);
     expect(rule({ type: "monthly" })).toBe(false);

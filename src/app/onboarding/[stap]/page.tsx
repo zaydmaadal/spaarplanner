@@ -40,7 +40,7 @@ export default async function OnboardingPage({ params }: PageProps<"/onboarding/
 
   let content;
   if (step === 1) content = <Step1 mode={mode} displayName={data.profile.displayName} />;
-  else if (step === 2) content = <Step2 mode={mode} incomes={data.incomes} firstJob={data.profile.prefs.firstJob === true} />;
+  else if (step === 2) content = <Step2 mode={mode} incomes={data.incomes} ziekenfonds={data.profile.prefs.ziekenfonds} />;
   else if (step === 3) content = <Step3 mode={mode} incomes={data.incomes} />;
   else if (step === 4) content = <Step4 mode={mode} lines={data.lines} />;
   else if (step === 5) content = <Step5 mode={mode} incomes={data.incomes} lines={data.lines} plan={data.plan} />;

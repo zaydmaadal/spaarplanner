@@ -87,7 +87,7 @@ describe("the forms are filled with what is stored", () => {
     const out = await render(ContextPage);
     expect(out).toContain("Ik heb 20 vakantiedagen.</textarea>");
     expect(out).not.toContain("Kleurenpalet");
-    expect(out.match(/aria-checked="true"/g)).toHaveLength(1); // the no-interest box is on, the basmala box is off
+    expect(out.match(/aria-checked="true"/g)).toHaveLength(1); // the no-interest box is on
   });
 });
 

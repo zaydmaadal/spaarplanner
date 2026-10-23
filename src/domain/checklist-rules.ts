@@ -2,7 +2,7 @@ import type { Budget, BudgetWarning } from "./budget";
 import type { Certainty, Level } from "./certainty";
 import { formatEUR } from "./money";
 import { EXTRA_NEEDED_CAP, type GoalStatus } from "./projection";
-import type { Cents, Income, ISODate } from "./types";
+import type { Cents, Income, ISODate, Ziekenfonds } from "./types";
 
 export type RuleGoal = { id: string; name: string; status: GoalStatus | null; extraNeededCents: Cents; targetIsEstimate: boolean; isEmergency: boolean };
 export type RuleContext = {
@@ -14,7 +14,7 @@ export type RuleContext = {
   warnings: BudgetWarning[];
   goals: RuleGoal[];
   incomes: Income[];
-  prefs: { firstJob?: boolean; noInterestSavings?: boolean };
+  prefs: { ziekenfonds?: Ziekenfonds; noInterestSavings?: boolean };
 };
 export type Urgency = "week" | "month" | "later";
 export type RuleItem = { key: string; title: string; urgency: Urgency; certainty: Certainty };
@@ -58,7 +58,8 @@ export function evaluateRules(ctx: RuleContext): RuleItem[] {
       add(`estimate:${g.id}`, title, "later", 2, "Het doelbedrag is een schatting");
     }
   }
-  if (prefs.firstJob) add("ziekenfonds", "Sluit aan bij een ziekenfonds als titularis", "month", 3, "Een regel die kan veranderen");
+  if (prefs.ziekenfonds === "nee") add("ziekenfonds", "Sluit aan bij een ziekenfonds", "month", 3, "Een regel die kan veranderen");
+  if (prefs.ziekenfonds === "weet_niet") add("ziekenfonds", "Check of je bij een ziekenfonds zit", "month", 3, "Een regel die kan veranderen");
   if (hasIncome("student")) add("student_hours", "Hou je studentenuren bij: studentenarbeid heeft een jaarlimiet", "month", 3, "Een regel die kan veranderen");
   if (hasIncome("side")) add("side_income_tax", "Zet een deel van je bijverdienste opzij voor belasting", "month", 3, "Een regel die kan veranderen");
   if (prefs.noInterestSavings) add("no_interest", "Kies een spaarpot zonder rente bij je bank", "month", 3, "Een regel die kan veranderen");

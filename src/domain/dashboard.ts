@@ -5,10 +5,10 @@ import { evaluateRules, type RuleItem } from "./checklist-rules";
 import { daysBetween } from "./dates";
 import { currentPeriod, nextPayday, periodProgress, primaryPaydayRule, type Period } from "./payday";
 import { extraNeededCents, fillMonth, goalStatus, horizonFor, oneOffIn, periodZeroAvailable, project, type GoalStatus, type ProjectionInput } from "./projection";
-import type { BudgetLine, Cents, Goal, Income, ISODate, PlanSettings, YearMonth } from "./types";
+import type { BudgetLine, Cents, Goal, Income, ISODate, PlanSettings, YearMonth, Ziekenfonds } from "./types";
 
 export type UserData = {
-  profile: { displayName: string; timeZone: string; prefs: { firstJob?: boolean; noInterestSavings?: boolean } };
+  profile: { displayName: string; timeZone: string; prefs: { ziekenfonds?: Ziekenfonds; noInterestSavings?: boolean } };
   plan: PlanSettings;
   incomes: Income[];
   lines: BudgetLine[];

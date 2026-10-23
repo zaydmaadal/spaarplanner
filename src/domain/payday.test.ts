@@ -58,6 +58,15 @@ describe("paydayInMonth", () => {
       }
     }
   });
+  test("last_weekday is the last such weekday of the month, also when the month ends on it", () => {
+    const thursday = { type: "last_weekday", weekday: 4 } as const;
+    expect(paydayInMonth(thursday, { year: 2026, month: 10 })).toBe("2026-10-29"); // 31 oct is saturday
+    expect(paydayInMonth(thursday, { year: 2026, month: 12 })).toBe("2026-12-31"); // 31 dec is thursday
+    expect(paydayInMonth({ type: "last_weekday", weekday: 7 }, { year: 2027, month: 2 })).toBe("2027-02-28"); // sunday
+    expect(paydayInMonth({ type: "last_weekday", weekday: 1 }, { year: 2028, month: 2 })).toBe("2028-02-28"); // leap year
+    expect(nextPayday(thursday, "2026-10-30")).toBe("2026-11-26");
+    expect(currentPeriod(thursday, "2026-10-30")).toEqual({ start: "2026-10-29", end: "2026-11-25", month: { year: 2026, month: 10 } });
+  });
   test("irregular and weekday rules have no monthly payday", () => {
     expect(paydayInMonth({ type: "irregular" }, { year: 2026, month: 10 })).toBeNull();
     expect(paydayInMonth({ type: "weekday", weekday: 5 }, { year: 2026, month: 10 })).toBeNull();

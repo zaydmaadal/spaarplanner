@@ -1,5 +1,5 @@
 begin;
-select plan(81);
+select plan(84);
 
 -- Two users; the trigger creates their profile and plan.
 insert into auth.users (id, email) values
@@ -56,6 +56,13 @@ select throws_ok($$insert into income_sources (user_id, name, kind, frequency, a
   '23514', null, 'a weekday rule with weekday 8 is rejected');
 select throws_ok($$insert into income_sources (user_id, name, kind, frequency, amount_cents, payday_rule) values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'x', 'salary', 'weekly', 1, '{"type": "weekday"}')$$,
   '23514', null, 'a weekday rule without weekday is rejected');
+-- last_weekday (migration 20261023000001): a weekday 1 to 7 is required.
+select lives_ok($$insert into income_sources (user_id, name, kind, frequency, amount_cents, payday_rule) values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'x', 'salary', 'monthly', 1, '{"type": "last_weekday", "weekday": 4}')$$,
+  'a last_weekday rule with weekday 4 is accepted');
+select throws_ok($$insert into income_sources (user_id, name, kind, frequency, amount_cents, payday_rule) values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'x', 'salary', 'monthly', 1, '{"type": "last_weekday", "weekday": 8}')$$,
+  '23514', null, 'a last_weekday rule with weekday 8 is rejected');
+select throws_ok($$insert into income_sources (user_id, name, kind, frequency, amount_cents, payday_rule) values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'x', 'salary', 'monthly', 1, '{"type": "last_weekday"}')$$,
+  '23514', null, 'a last_weekday rule without weekday is rejected');
 select throws_ok($$insert into income_sources (user_id, name, kind, frequency, amount_cents, payday_rule) values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'x', 'salary', 'yearly', 1, '{"type": "irregular"}')$$,
   '23514', null, 'a yearly income without month is rejected');
 select throws_ok($$insert into income_sources (user_id, name, kind, frequency, amount_cents, payday_rule) values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'x', 'salary', 'once', 1, '{"type": "irregular"}')$$,

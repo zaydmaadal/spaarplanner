@@ -10,7 +10,7 @@ vi.mock("@/data/supabase/server", () => ({
 
 import { saveProfileAction } from "./profile";
 
-const stored = { palette: "oceaan", context_note: "Ik heb stage in maart", first_job: true, future_key: 1 };
+const stored = { palette: "oceaan", context_note: "Ik heb stage in maart", ziekenfonds: "nee", future_key: 1 };
 
 function setup(error: { code?: string; message?: string } | null = null) {
   const db = fakeDb((call: Call) => (has(call, "select") ? { data: { prefs: stored } } : { error }));
@@ -26,7 +26,7 @@ describe("saveProfileAction", () => {
     const calls = setup();
     expect(await saveProfileAction({ prefs: { palette: "grafiet", theme: "dark" } })).toEqual({ ok: true, data: undefined });
     expect(args(update(calls), "update")).toEqual([
-      { prefs: { palette: "grafiet", theme: "dark", context_note: "Ik heb stage in maart", first_job: true, future_key: 1 } },
+      { prefs: { palette: "grafiet", theme: "dark", context_note: "Ik heb stage in maart", ziekenfonds: "nee", future_key: 1 } },
     ]);
     expect(update(calls).ops).toContainEqual(["eq", ["id", "user-1"]]);
     expect(m.revalidatePath).toHaveBeenCalledWith("/", "layout");
@@ -34,9 +34,9 @@ describe("saveProfileAction", () => {
 
   it("writes camelCase input to the snake_case keys", async () => {
     const calls = setup();
-    await saveProfileAction({ prefs: { firstJob: false, noInterestSavings: true, showBasmala: true, contextNote: "nieuw" } });
+    await saveProfileAction({ prefs: { ziekenfonds: "ja", noInterestSavings: true, contextNote: "nieuw" } });
     expect(args(update(calls), "update")![0]).toEqual({
-      prefs: { ...stored, first_job: false, no_interest_savings: true, show_basmala: true, context_note: "nieuw" },
+      prefs: { ...stored, ziekenfonds: "ja", no_interest_savings: true, context_note: "nieuw" },
     });
   });
 
