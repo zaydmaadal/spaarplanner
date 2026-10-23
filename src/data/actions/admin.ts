@@ -1,9 +1,10 @@
 "use server";
 
 import { randomBytes } from "node:crypto";
+import { revalidatePath } from "next/cache";
 import { createAdminSupabase } from "@/data/supabase/admin";
 import { requireAdmin } from "@/data/supabase/server";
-import { usernameSchema, type ActionResult } from "@/data/schemas";
+import { idSchema, usernameSchema, type ActionResult } from "@/data/schemas";
 
 const SOMETHING_WRONG = "Er ging iets mis. Probeer het opnieuw.";
 
@@ -44,4 +45,19 @@ export async function resetPasswordAction(input: { username: string }): Promise<
   if (auditError) return { ok: false, error: SOMETHING_WRONG };
 
   return { ok: true, data: { tempPassword } };
+}
+
+// Marks a feedback row as handled, or open again. Admin only, through the service role: users cannot update the table.
+export async function setFeedbackHandledAction(input: { id: string; handled: boolean }): Promise<ActionResult> {
+  await requireAdmin();
+  const id = idSchema.safeParse(input?.id);
+  if (!id.success) return { ok: false, error: SOMETHING_WRONG };
+
+  const { error } = await createAdminSupabase()
+    .from("feedback")
+    .update({ handled_at: input.handled ? new Date().toISOString() : null })
+    .eq("id", id.data);
+  if (error) return { ok: false, error: SOMETHING_WRONG };
+  revalidatePath("/beheer");
+  return { ok: true, data: undefined };
 }
