@@ -5,7 +5,7 @@ export type StepCopy = { title: string; Icon: LucideIcon; detail: string | null;
 const SOON = { label: "Bekijk", href: "/plan" };
 
 // The short face of a step: an icon, a title of a few words and the screen where it gets done. The long sentence of the
-// rule stays as the explanation behind "Meer uitleg". Own steps (empty key) and unknown rules show their title as it is.
+// rule stays as the explanation behind the info icon. Own steps (empty key) and unknown rules show their title as it is.
 export function stepCopy(key: string, title: string): StepCopy {
   const [kind, id] = key.split(":");
   const short = (shortTitle: string, Icon: LucideIcon, action = SOON): StepCopy => ({ title: shortTitle, Icon, detail: title, action });

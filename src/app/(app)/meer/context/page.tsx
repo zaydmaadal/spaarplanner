@@ -14,7 +14,7 @@ export default async function ContextPage() {
   return (
     <>
       <div className="flex flex-col gap-4">
-        <BackLink href="/meer" parent="Meer" />
+        <BackLink href="/meer" parent="Profiel" />
         <Step8 mode="edit" palette={parsePrefs(prefs).palette} {...parseStep8Prefs(prefs)} startBalanceCents={null} emergencyTargetCents={null} emergencySharePct={100} />
       </div>
       <BottomNav active="meer" />

@@ -67,7 +67,7 @@ describe.each([
 
 describe("the forms are filled with what is stored", () => {
   test("profiel: the name", async () => {
-    expect(value(await render(ProfilePage), "Je naam")).toBe("Haider");
+    expect(value(await render(ProfilePage), "Voornaam of bijnaam")).toBe("Haider");
   });
 
   test("inkomen: step 2 and, below it, step 3 as a second form with an h2", async () => {

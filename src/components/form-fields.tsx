@@ -81,7 +81,16 @@ export function MonthField({ label, hint, error, value, onChange, ...input }: Ba
   );
 }
 
-// A fixed euro sign in front; comma and dot are both fine (parseEuroInput). `onRemove` adds a "Verwijderen" button, for a
+// The remove control of a stored amount or a list row: a trash icon (44 px target) named by its aria-label.
+function RemoveButton({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <Button type="button" variant="ghost" size="icon" onClick={onClick} aria-label={label} title={label} className="text-ink-2 hover:text-error">
+      <Trash2 aria-hidden />
+    </Button>
+  );
+}
+
+// A fixed euro sign in front; comma and dot are both fine (parseEuroInput). `onRemove` adds a trash button, for a
 // stored amount that is not a row of a list (those have their own, see Item).
 export function MoneyField({ label, hint, error, value, onChange, onRemove, ...input }: Base & Controlled & Extra<"input"> & { onRemove?: () => void }) {
   return (
@@ -95,9 +104,7 @@ export function MoneyField({ label, hint, error, value, onChange, onRemove, ...i
             <Input {...input} {...aria} inputMode="decimal" autoComplete="off" className="pl-8 tabular-nums" value={value} onChange={(e) => onChange(e.target.value)} />
           </div>
           {onRemove && (
-            <Button type="button" variant="ghost" onClick={onRemove} aria-label={`${label} verwijderen`}>
-              Verwijderen
-            </Button>
+            <RemoveButton label={`${label} verwijderen`} onClick={onRemove} />
           )}
         </div>
       )}
@@ -241,10 +248,7 @@ export function Item({ title, onRemove, children }: { title: string; onRemove: (
     <div role="group" aria-label={title} className="flex flex-col gap-4 border-t border-hairline pt-4">
       <div className="flex items-center justify-between gap-2">
         <p className="font-semibold">{title}</p>
-        <Button type="button" variant="outline" onClick={onRemove} aria-label={`${title} verwijderen`}>
-          <Trash2 aria-hidden />
-          Verwijder
-        </Button>
+        <RemoveButton label={`${title} verwijderen`} onClick={onRemove} />
       </div>
       {children}
     </div>

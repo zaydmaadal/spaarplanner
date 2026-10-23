@@ -10,7 +10,7 @@ export default function AccountPage() {
   return (
     <>
       <div className="flex flex-col gap-4">
-        <BackLink href="/meer" parent="Meer" />
+        <BackLink href="/meer" parent="Profiel" />
         <h1 className="font-display text-2xl font-semibold">Account wissen</h1>
         <p>Je account en al je gegevens worden gewist. Dit kan niet ongedaan worden gemaakt.</p>
         <p>

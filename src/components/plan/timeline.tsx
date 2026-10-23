@@ -8,7 +8,7 @@ import { formatMonthNl } from "@/domain/dates";
 import { stagger } from "@/lib/utils";
 import { byFill } from "./helpers";
 
-// Spec 8.6: the pots in the order they fill, as a route. One line runs through the dots; a dot has the colour of its pot
+// Spec 8.6: the pots in the order they fill, as a route. One line runs from dot to dot and stops at the last one; a dot has the colour of its pot
 // and is filled once the pot is full. The month is the milestone; "vol" and "niet binnen 10 jaar" take its place for a
 // pot that is full or does not fill within the horizon.
 export function Timeline({ goals, horizonYears }: { goals: GoalView[]; horizonYears: number }) {
@@ -23,9 +23,9 @@ export function Timeline({ goals, horizonYears }: { goals: GoalView[]; horizonYe
           </Link>
         </>
       ) : (
-        <ol className="relative flex flex-col before:absolute before:top-3 before:bottom-3 before:left-[9px] before:w-0.5 before:bg-hairline">
+        <ol className="flex flex-col">
           {byFill(goals).map((g, i) => (
-            <li key={g.id} className="rise relative flex flex-col gap-1 pb-4 pl-9 last:pb-0" style={stagger(i + 1)}>
+            <li key={g.id} className="rise relative flex flex-col gap-1 pb-4 pl-9 not-last:before:absolute not-last:before:top-3.5 not-last:before:-bottom-3.5 not-last:before:left-[9px] not-last:before:w-0.5 not-last:before:bg-hairline last:pb-0" style={stagger(i + 1)}>
               <span
                 aria-hidden
                 className="absolute top-1 left-0 size-5 rounded-full border-4 bg-surface"

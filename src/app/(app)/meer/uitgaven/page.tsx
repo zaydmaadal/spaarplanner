@@ -12,7 +12,7 @@ export default async function ExpensesPage() {
   return (
     <>
       <div className="flex flex-col gap-4">
-        <BackLink href="/meer" parent="Meer" />
+        <BackLink href="/meer" parent="Profiel" />
         <Step4 mode="edit" lines={data.lines} />
       </div>
       <BottomNav active="meer" />

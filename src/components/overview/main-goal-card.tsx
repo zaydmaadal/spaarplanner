@@ -10,13 +10,13 @@ import { fillText, StatusBadge } from "./labels";
 // The one big figure of the screen is what is saved for the main goal, in the display serif on the dark hero.
 export function MainGoalCard({ goal, waitsFor, horizonYears, className }: { goal: GoalView; waitsFor: Dashboard["mainGoalWaitsFor"]; horizonYears: number; className?: string }) {
   return (
-    <section aria-label={goal.name} className={cn("flex flex-col gap-3 text-hero-ink", className)}>
+    <section aria-label={goal.name} className={cn("flex flex-col gap-2.5 text-hero-ink", className)}>
       <div className="flex flex-col">
-        <p className="text-xs font-semibold tracking-widest text-hero-accent uppercase">Hoofddoel</p>
+        <p className="text-sm font-semibold text-hero-accent">Hoofddoel</p>
         <h2 className="font-display text-2xl font-bold break-words">{goal.name}</h2>
       </div>
       <div className="flex flex-wrap items-baseline gap-x-3">
-        <CountUp cents={goal.balanceCents} className="text-5xl leading-none font-bold lg:text-6xl" />
+        <CountUp cents={goal.balanceCents} className="text-4xl leading-none font-bold min-[400px]:text-5xl lg:text-6xl" />
         <p className="text-hero-muted">
           van <Money cents={goal.targetCents} className="text-hero-ink" />
         </p>

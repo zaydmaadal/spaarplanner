@@ -10,7 +10,7 @@ import { Appearance } from "@/components/settings/appearance";
 import { Button } from "@/components/ui/button";
 import { readPrefs } from "@/data/supabase/server";
 
-export const metadata: Metadata = { title: "Meer" };
+export const metadata: Metadata = { title: "Profiel" };
 
 const row = "press flex min-h-12 items-center justify-between gap-3 rounded-strip px-2 py-1.5 font-semibold hover:bg-tint";
 const chevron = <ChevronRight aria-hidden className="size-5 shrink-0 text-ink-2" />;
@@ -42,11 +42,12 @@ export default async function MorePage() {
   return (
     <>
       <div className="flex flex-col gap-3 lg:gap-6">
-        <h1 className="font-display text-3xl font-bold">Meer</h1>
-        <div className="grid items-start gap-3 lg:grid-cols-2 lg:gap-4">
+        <h1 className="font-display text-3xl font-bold">Profiel</h1>
+        {/* CSS columns, not a grid: the cards flow down two columns without holes, and the order on the phone stays the order here. */}
+        <div className="[&>*]:mb-3 [&>*]:break-inside-avoid lg:columns-2 lg:gap-4 lg:[&>*]:mb-4">
         <Card title="Je gegevens">
           <List>
-            <Item href="/meer/profiel">Profiel</Item>
+            <Item href="/meer/profiel">Je naam</Item>
             <Item href="/meer/inkomen">Inkomen</Item>
             <Item href="/meer/uitgaven">Uitgaven</Item>
             <Item href="/meer/plan">Spaarplan</Item>
@@ -60,6 +61,12 @@ export default async function MorePage() {
         <div className="rise rounded-card bg-surface p-4 shadow-card">
           <InstallGuide />
         </div>
+        <Card title="Feedback">
+          <p className="px-2 text-ink-2">Iets onduidelijk, of werkt er iets niet? Laat het ons weten.</p>
+          <List>
+            <Item href="/meer/feedback">Feedback geven</Item>
+          </List>
+        </Card>
         <Card title="Privacy en account">
           <List>
             <Item href="/privacy">Privacy</Item>
