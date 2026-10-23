@@ -246,8 +246,6 @@
     font-family: var(--font-body);
     font-size: 15px;
     line-height: 1.5;
-    /* Lining figures: Playfair defaults to old-style ones, which make amounts and dates bounce. Inherited everywhere. */
-    font-feature-settings: "lnum";
   }
   :focus-visible {
     outline: 2px solid var(--color-ink);
@@ -257,6 +255,12 @@
   button:not(:disabled):active {
     transform: scale(0.97);
   }
+}
+
+/* Playfair defaults to old-style figures, which make amounts and dates bounce. Only here, not on body: in WebKit any
+   font-feature-settings moves text off the fast path, and Plus Jakarta Sans has lining figures already. */
+.font-display {
+  font-feature-settings: "lnum";
 }
 
 /*
