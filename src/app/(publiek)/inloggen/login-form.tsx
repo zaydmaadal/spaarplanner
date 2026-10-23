@@ -18,6 +18,7 @@ export function LoginForm() {
     });
     if (!error) {
       router.replace("/");
+      router.refresh(); // the root layout renders again, so the stored theme and palette reach <html> without a reload
       return null;
     }
     // 400 is a wrong username or password; anything else (rate limit, network) is not the user's typo.

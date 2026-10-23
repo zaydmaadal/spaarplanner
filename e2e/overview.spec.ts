@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { adminClient, at, next, register, skip } from "./helpers";
+import { adminClient, at, fillMainIncome, next, register, skip } from "./helpers";
 
 const rand = () => Math.random().toString(36).slice(2, 8);
 const MONTHS = ["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"];
@@ -19,8 +19,7 @@ async function onboardHaider(page: Page, username: string) {
   await form.getByLabel("Je naam", { exact: true }).fill("Haider");
   await next(page, 1);
   form = await at(page, 2);
-  await form.getByLabel("Netto bedrag", { exact: true }).fill("2150");
-  await form.getByLabel("Dag van de maand", { exact: true }).fill("29");
+  await fillMainIncome(form);
   await next(page, 2);
   await skip(page, 3);
   await skip(page, 4);

@@ -53,7 +53,7 @@ export default async function MorePage() {
           </List>
         </Card>
         <Card title="Uiterlijk">
-          <Appearance palette={palette} theme={theme} />
+          <Appearance key={`${palette}/${theme}`} palette={palette} theme={theme} />
         </Card>
         <PushSettings />
         <div className="rounded-card bg-surface p-5">

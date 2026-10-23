@@ -10,15 +10,18 @@ import { pushStatus, subscribeToPush, unsubscribeFromPush } from "@/lib/push-cli
 function usePush() {
   const [status, setStatus] = useState<Awaited<ReturnType<typeof pushStatus>> | "loading">("loading");
   const [busy, setBusy] = useState(false);
+  const [wanted, setWanted] = useState<boolean | null>(null); // what the tap asked for, shown at once while the prompt and the save run
   useEffect(() => {
     void pushStatus().then(setStatus);
   }, []);
 
-  async function change(run: () => Promise<void>) {
+  async function change(run: () => Promise<void>, on: boolean) {
     if (busy) return;
     setBusy(true);
+    setWanted(on);
     await run().catch((e: unknown) => toast.error(e instanceof Error ? e.message : "Er ging iets mis. Probeer het opnieuw."));
     setStatus(await pushStatus());
+    setWanted(null);
     setBusy(false);
   }
   // Both start synchronously in the click: the permission prompt must be asked inside the tap.
@@ -27,13 +30,13 @@ function usePush() {
       const result = await subscribeToPush();
       if (result === "ok") toast.success("Meldingen staan aan.");
       else toast.error(result === "denied" ? "Je gaf geen toestemming voor meldingen." : "Dit toestel kan geen meldingen tonen.");
-    });
+    }, true);
   const turnOff = () =>
     change(async () => {
       await unsubscribeFromPush();
       toast.success("Meldingen staan uit op dit toestel.");
-    });
-  return { status, busy, turnOn, turnOff };
+    }, false);
+  return { status, busy, wanted, turnOn, turnOff };
 }
 
 // Spec 9: only in the installed app, before permission was asked, on a device without a subscription.
@@ -53,7 +56,7 @@ export function PushCard() {
 
 // The Meldingen card of Meer, per device. It is left out when this browser cannot do push.
 export function PushSettings() {
-  const { status, turnOn, turnOff } = usePush();
+  const { status, wanted, turnOn, turnOff } = usePush();
   if (status === "loading" || status === "unsupported") return null;
   return (
     <section aria-label="Meldingen" className="flex flex-col gap-2 rounded-card bg-surface p-5">
@@ -64,7 +67,7 @@ export function PushSettings() {
         <CheckField
           label="Melding op loondag"
           hint="Alleen op dit toestel."
-          checked={status === "on"}
+          checked={wanted ?? status === "on"}
           onChange={(on) => void (on ? turnOn() : turnOff())}
         />
       )}

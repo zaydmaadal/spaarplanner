@@ -96,7 +96,7 @@ describe("/meer/plan (spec 8.7)", () => {
     const out = await render(PlanPage);
     expect(value(out, "Dit wil ik sparen")).toBe("430"); // the proposal is only shown
     expect(headings(out, 2).slice(-1)).toEqual(["Zo rekenen we"]);
-    expect(out).toContain("Eenmalig inkomen meetellen");
+    expect(out).toContain("Tel je vakantiegeld en 13de maand mee in je plan?");
     expect(saveButtons(out)).toHaveLength(2);
   });
 

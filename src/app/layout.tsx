@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Figtree, Gabarito } from "next/font/google";
+import { ThemeSync } from "@/components/theme-sync";
 import { Toaster } from "@/components/ui/sonner";
 import { readPrefs } from "@/data/supabase/server";
 import "./globals.css";
@@ -28,6 +29,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       className={`${gabarito.variable} ${figtree.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <ThemeSync palette={palette} theme={theme} />
         {children}
         <Toaster />
       </body>

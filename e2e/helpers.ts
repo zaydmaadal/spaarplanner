@@ -1,4 +1,4 @@
-import { expect, type APIRequestContext, type Page } from "@playwright/test";
+import { expect, type APIRequestContext, type Locator, type Page } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 
 export const password = "een-lang-wachtwoord";
@@ -34,6 +34,16 @@ export async function at(page: Page, step: number) {
   await expect(page).toHaveURL(new RegExp(`/onboarding/${step}$`));
   await hydrated(page);
   return page.locator("form").filter({ visible: true });
+}
+// Nothing is pre-selected in the onboarding, so step 2 needs every answer: 2.150 euro per month, fixed, on the 29th.
+export async function fillMainIncome(form: Locator) {
+  await form.getByLabel("Netto bedrag", { exact: true }).fill("2150");
+  await form.getByText("Per maand", { exact: true }).click();
+  await form.getByText("Vast bedrag", { exact: true }).click();
+  await form.getByLabel("Wanneer krijg je het?", { exact: true }).selectOption("day");
+  await form.getByLabel("Dag van de maand", { exact: true }).fill("29");
+  await form.getByText("Betaal op de werkdag ervoor", { exact: true }).click();
+  await form.getByText("Nee", { exact: true }).click(); // "Ben je al aangesloten bij een ziekenfonds?"
 }
 export const next = async (page: Page, step: number) => (await at(page, step)).getByRole("button", { name: "Volgende" }).click();
 export const skip = async (page: Page, step: number) => (await at(page, step)).getByRole("button", { name: "Overslaan" }).click();
