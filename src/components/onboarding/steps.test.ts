@@ -28,7 +28,7 @@ const html = (el: Parameters<typeof renderToStaticMarkup>[0]) => renderToStaticM
 const value = (page: string, label: string) => new RegExp(`${label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}</label>[\\s\\S]*?value="([^"]*)"`).exec(page)?.[1];
 // Haider: € 2.150 a month, nothing else filled in yet.
 const haider = income({ amountCents: 215000, paydayRule: { type: "day_of_month", day: 29, weekend: "before" } });
-const base7: ComponentProps<typeof Step7> = { mode: "onboarding", today: "2026-10-21", incomes: [haider], lines: [], plan: plan(), goals: [], startBalanceCents: null, emergencyTargetCents: null, stageAdded: false };
+const base7: ComponentProps<typeof Step7> = { mode: "onboarding", today: "2026-10-21", incomes: [haider], lines: [], plan: plan(), goals: [], startBalanceCents: null, emergencyTargetCents: null, stageAdded: false, shareChosen: false };
 
 describe("shell", () => {
   it("shows progress, 'Overslaan' and 'Vorige' while onboarding, and only 'Opslaan' when editing", () => {
@@ -121,6 +121,14 @@ describe("step 3 and 4", () => {
   });
 });
 
+describe("step 3 one-off income presets", () => {
+  it("leaves the month for the user to choose", () => {
+    const page = html(h(Step3, { mode: "onboarding", incomes: [income({ id: "v", name: "Vakantiegeld", frequency: "yearly", month: null, amountCents: 150000, kind: "other" })] }));
+    expect(page).toContain("Kies een maand");
+    expect(page).not.toMatch(/<option[^>]*selected=""[^>]*>(januari|juni|augustus|december)</);
+  });
+});
+
 describe("accessibility details", () => {
   it("ties a Choice error to its fieldset", () => {
     const page = html(h(Choice, { legend: "Wanneer?", value: "a", options: [{ value: "a", label: "A" }], onChange: () => {}, error: "Kies een dag." }));
@@ -207,6 +215,14 @@ describe("step 7", () => {
     expect(page).toContain("Noodfonds");
     expect(page).toMatch(/vol rond \w{3} 20\d\d/);
     expect(value(page, "Klaar tegen (optioneel)")).toBe("2027-07");
+    expect(page).not.toMatch(/<input[^>]*type="radio"[^>]*checked/); // nothing is picked for the user
+  });
+
+  it("shows the stored emergency share only when the user picked it before", () => {
+    const trip = { ...goal("reis", 250000, { deadline: { year: 2027, month: 7 } }), name: "Reis", kind: "trip" as const };
+    const props = { ...base7, goals: [trip], plan: plan({ emergencySharePct: 50 }) };
+    expect(html(h(Step7, props))).not.toMatch(/<input[^>]*type="radio"[^>]*checked/);
+    expect(html(h(Step7, { ...props, shareChosen: true }))).toMatch(/checked=""[^>]*value="50"/);
   });
 });
 

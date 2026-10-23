@@ -113,12 +113,13 @@ describe("completeOnboardingAction", () => {
     expect(m.revalidatePath).not.toHaveBeenCalled();
   });
 
-  it("clears the two step 6 answers from the prefs when it finishes, and keeps the other prefs", async () => {
-    const calls = setup({ prefs: { palette: "smaragd", context_note: "Stage in maart", start_balance_cents: 600000, emergency_target_cents: 400000 } });
+  it("clears the step 6 answers and the step 7 choice from the prefs when it finishes, and keeps the other prefs", async () => {
+    const calls = setup({ prefs: { palette: "smaragd", context_note: "Stage in maart", start_balance_cents: 600000, emergency_target_cents: 400000, emergency_share_chosen: true } });
     await completeOnboardingAction(finish);
     expect(args(calls.at(-1)!, "update")![0]).toMatchObject({ prefs: { palette: "smaragd", context_note: "Stage in maart" } });
     expect(args(calls.at(-1)!, "update")![0]).not.toHaveProperty("prefs.start_balance_cents");
     expect(args(calls.at(-1)!, "update")![0]).not.toHaveProperty("prefs.emergency_target_cents");
+    expect(args(calls.at(-1)!, "update")![0]).not.toHaveProperty("prefs.emergency_share_chosen");
   });
 
   describe("a start balance above the emergency target", () => {

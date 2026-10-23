@@ -10,9 +10,8 @@ import { Step5 } from "@/components/onboarding/step-5";
 import { Step6 } from "@/components/onboarding/step-6";
 import { Step7 } from "@/components/onboarding/step-7";
 import { Step8 } from "@/components/onboarding/step-8";
-import { loadUserData } from "@/data/load";
+import { loadScreenData } from "@/data/load";
 import { createServerSupabase, readProfile, requireUserId } from "@/data/supabase/server";
-import { todayInTimeZone } from "@/domain/dates";
 import { parsePrefs, parseStep8Prefs } from "@/lib/prefs";
 
 // The route announcer reads the title, so each step names itself.
@@ -26,15 +25,13 @@ const cents = (v: unknown) => (typeof v === "number" ? v : null);
 // Outside the (app) group on purpose: its layout sends users who have not finished here, so it would loop.
 export default async function OnboardingPage({ params }: PageProps<"/onboarding/[stap]">) {
   const userId = await requireUserId();
-  const profile = await readProfile(userId);
+  const [profile, { today, data }] = await Promise.all([readProfile(userId), loadScreenData()]);
   if (!profile) throw new Error("Missing profile");
   if (profile.onboarding_completed_at) redirect("/");
   const { stap } = await params;
   if (!/^[1-8]$/.test(stap)) redirect(`/onboarding/${Math.max(1, profile.onboarding_step)}`);
   const step = Number(stap);
 
-  const today = todayInTimeZone(profile.timezone, new Date());
-  const data = await loadUserData(today);
   const raw = typeof profile.prefs === "object" && profile.prefs !== null && !Array.isArray(profile.prefs) ? profile.prefs : {};
   const answers = { startBalanceCents: cents(raw.start_balance_cents), emergencyTargetCents: cents(raw.emergency_target_cents) };
   const mode = "onboarding";
@@ -60,6 +57,7 @@ export default async function OnboardingPage({ params }: PageProps<"/onboarding/
         goals={data.goals.filter((g) => g.kind !== "emergency" && !g.archived)}
         {...answers}
         stageAdded={(stage?.length ?? 0) > 0}
+        shareChosen={raw.emergency_share_chosen === true}
       />
     );
   } else {
