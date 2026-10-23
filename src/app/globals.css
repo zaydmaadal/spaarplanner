@@ -294,6 +294,16 @@
   animation: bar-fill 700ms var(--ease-standard) both;
   animation-delay: calc(var(--i, 0) * 50ms + 120ms);
 }
+/* A check that draws itself (pathLength="1" on the path). */
+@keyframes draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+.draw {
+  stroke-dasharray: 1;
+  animation: draw 500ms var(--ease-standard) 150ms both;
+}
 .press {
   transition: transform var(--duration-1) var(--ease-standard);
 }

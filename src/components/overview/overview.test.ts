@@ -99,7 +99,7 @@ describe("PaydayStrip and NextSteps", () => {
     const out = html(h(PaydayStrip, { nextPayday: "2026-10-29", daysToPayday: 9, progress: 0.5 }));
     expect(out).toContain("Volgende loondag");
     expect(out).toContain("donderdag 29 oktober");
-    expect(out).toContain("Nog 9 dagen");
+    expect(out.replace(/<[^>]+>/g, "")).toContain("Nog 9 dagen"); // the number is a loud element of its own
     expect(html(h(PaydayStrip, { nextPayday: "2026-10-21", daysToPayday: 1, progress: 0.9 }))).toContain("Morgen");
   });
 
