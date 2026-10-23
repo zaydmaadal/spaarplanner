@@ -146,8 +146,8 @@ describe("transactionSchema", () => {
 
 describe("profileSchema", () => {
   it("keeps only the whitelisted prefs and drops other keys", () => {
-    const parsed = profileSchema.parse({ prefs: { palette: "salie", theme: "dark", is_admin: true }, role: "admin" });
-    expect(parsed).toEqual({ prefs: { palette: "salie", theme: "dark" } });
+    const parsed = profileSchema.parse({ prefs: { palette: "smaragd", theme: "dark", is_admin: true }, role: "admin" });
+    expect(parsed).toEqual({ prefs: { palette: "smaragd", theme: "dark" } });
   });
 
   it("rejects an unknown palette or theme and a context note of 2001 characters", () => {

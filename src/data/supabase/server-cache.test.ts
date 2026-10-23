@@ -28,7 +28,7 @@ vi.mock("@supabase/ssr", () => ({
     auth: { getClaims: m.getClaims.mockImplementation(async () => ({ data: m.sub ? { claims: { sub: m.sub } } : null })) },
     from: () => ({
       select: m.select.mockReturnValue({
-        eq: () => ({ single: async () => ({ data: { id: "user-1", prefs: { palette: "salie" }, onboarding_completed_at: "2026-10-02T10:00:00Z" } }) }),
+        eq: () => ({ single: async () => ({ data: { id: "user-1", prefs: { palette: "smaragd" }, onboarding_completed_at: "2026-10-02T10:00:00Z" } }) }),
       }),
     }),
   }),
@@ -60,7 +60,7 @@ describe("one read per request", () => {
       requireOnboarded(),
       requireUserId().then((id) => readProfile(id)), // what loadUserData does
     ]);
-    expect(prefs).toEqual({ palette: "salie", theme: "system" });
+    expect(prefs).toEqual({ palette: "smaragd", theme: "system" });
     expect(userId).toBe("user-1");
     expect(profile).toMatchObject({ id: "user-1" });
     expect(m.getClaims).toHaveBeenCalledTimes(1);
@@ -69,7 +69,7 @@ describe("one read per request", () => {
 
   it("keeps readPrefs from redirecting or querying without a session", async () => {
     m.sub = undefined;
-    expect(await readPrefs()).toEqual({ palette: "oceaan", theme: "system" });
+    expect(await readPrefs()).toEqual({ palette: "zonsopgang", theme: "system" });
     expect(m.redirect).not.toHaveBeenCalled();
     expect(m.select).not.toHaveBeenCalled();
     await expect(requireOnboarded()).rejects.toThrow("NEXT_REDIRECT");

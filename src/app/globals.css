@@ -4,81 +4,157 @@
 /*
  * Design tokens, see DESIGN.md. One block per palette; the palette is chosen with data-palette on <html>.
  * Every colour is light-dark(<light>, <dark>), switched by color-scheme (data-theme, or the system setting).
- * A palette block only lists what differs from oceaan, because the swatches in the palette picker
- * set data-palette on a card and inherit the rest. src/styles/contrast.test.ts checks every pair.
+ * Every palette block lists all tokens, because the swatches in the palette picker set data-palette on a card.
+ * src/styles/contrast.test.ts checks every pair. "spark" is the warm highlight (the savings tile, the hero bar);
+ * hero-* is the dark card on top of the overview and the auth pages, in light and in dark.
  */
 :root,
-[data-palette="oceaan"] {
-  --color-ground: light-dark(#EDF1F7, #0f0f10);
-  --color-surface: light-dark(#FFFFFF, #161618);
-  --color-tint: light-dark(#E2E8F1, #222225);
-  --color-tint-accent: light-dark(#DAE3F8, #222225);
-  --color-hairline: light-dark(#DCE3ED, #2e2e33);
-  --color-ink: light-dark(#0F1A2E, #ededee);
-  --color-ink-2: light-dark(#4A586E, #b4b4b4);
-  --color-muted: light-dark(var(--color-ink-2), #9a9a9a);
-  --color-action: light-dark(#2E46B8, #8EA2FF);
-  --color-on-action: light-dark(#FFFFFF, #0f0f10);
-  --color-progress: light-dark(#2E46B8, #8EA2FF);
-  --color-active-bg: light-dark(#DAE3F8, #222225);
-  --color-active-ink: light-dark(#2E46B8, #8EA2FF);
-  --color-accent-ink: light-dark(#1F3392, #8EA2FF);
-  --color-pot-1: light-dark(#16244F, #C9D3EE);
+[data-palette="zonsopgang"] {
+  --color-ground: light-dark(#F8F3EE, #150D1C);
+  --color-surface: light-dark(#FFFFFF, #1F1529);
+  --color-tint: light-dark(#EFE7E1, #2B1E38);
+  --color-tint-accent: light-dark(#F0E5F8, #2B1E38);
+  --color-hairline: light-dark(#E6DCD3, #3A2B49);
+  --color-ink: light-dark(#24132F, #F3EBF8);
+  --color-ink-2: light-dark(#5B4A66, #C2B4CF);
+  --color-muted: light-dark(var(--color-ink-2), #A798B6);
+  --color-action: light-dark(#5B2A8C, #C6A5F2);
+  --color-on-action: light-dark(#FFFFFF, #1A0F24);
+  --color-progress: light-dark(#6A35A8, #C6A5F2);
+  --color-active-bg: light-dark(#F0E5F8, #2B1E38);
+  --color-active-ink: light-dark(#5B2A8C, #D3B8F5);
+  --color-accent-ink: light-dark(#4A2178, #D3B8F5);
+  --color-pot-1: light-dark(#3B1F5C, #CDB6EB);
   --color-pot-2: var(--color-progress);
-  --color-pot-3: #C95A38;
-  --color-pot-4: #7D93B6;
-  --color-seg-fixed: light-dark(#16244F, #C9D3EE);
-  --color-seg-living: #7D93B6;
+  --color-pot-3: #D9622B;
+  --color-pot-4: #E0A23A;
+  --color-pot-5: #2E8B83;
+  --color-seg-fixed: light-dark(#3B1F5C, #CDB6EB);
+  --color-seg-living: #A68BC9;
   --color-seg-savings: var(--color-progress);
-  --color-seg-free: #F3BBA4;
+  --color-seg-free: #F4C9A0;
+  --color-spark: #F4A261;
+  --color-hero-accent: #F4A261;
+  --color-on-spark: #2A1405;
+  --color-hero-bg: light-dark(#2B1744, #22123A);
+  --color-hero-ink: #F6EEFA;
+  --color-hero-muted: #BCA7D3;
   --color-warn-bg: #FEEDC9;
   --color-warn-ink: #81520A;
   --color-error: light-dark(#C4242A, #F2777C);
 }
 
-[data-palette="salie"] {
-  --color-ground: light-dark(#EDF1EE, #0f0f10);
-  --color-tint: light-dark(#E4EAE6, #222225);
-  --color-tint-accent: light-dark(#DCEAE3, #222225);
-  --color-hairline: light-dark(#D9E1DC, #2e2e33);
-  --color-ink: light-dark(#17201D, #ededee);
-  --color-ink-2: light-dark(#56625C, #b4b4b4);
-  --color-action: light-dark(#22655B, #6FC2B0);
-  --color-progress: light-dark(#22655B, #6FC2B0);
-  --color-active-bg: light-dark(#DCEAE3, #222225);
-  --color-active-ink: light-dark(#22655B, #6FC2B0);
-  --color-accent-ink: light-dark(#174A43, #6FC2B0);
-  --color-pot-1: light-dark(#3F5976, #6F8FB5);
-  --color-pot-2: #6A8876;
-  --color-pot-3: #C59B52;
-  --color-pot-4: #93A79B;
-  --color-seg-fixed: light-dark(#1F2B33, #C5D3DC);
-  --color-seg-living: #93A79B;
-  --color-seg-free: #DEC690;
+[data-palette="smaragd"] {
+  --color-ground: light-dark(#F2F6F2, #0C1512);
+  --color-surface: light-dark(#FFFFFF, #13201B);
+  --color-tint: light-dark(#E8F0EA, #1A2A24);
+  --color-tint-accent: light-dark(#D5EADF, #1D3B30);
+  --color-hairline: light-dark(#D3E0D7, #26382F);
+  --color-ink: light-dark(#102620, #E3EDE7);
+  --color-ink-2: light-dark(#52665D, #AFC3B9);
+  --color-muted: light-dark(var(--color-ink-2), #9AB0A6);
+  --color-action: light-dark(#0B5D45, #45C08F);
+  --color-on-action: light-dark(#FFFFFF, #06140F);
+  --color-progress: light-dark(#0B5D45, #45C08F);
+  --color-active-bg: light-dark(#D5EADF, #1D3B30);
+  --color-active-ink: light-dark(#0B5D45, #45C08F);
+  --color-accent-ink: light-dark(#0B5D45, #45C08F);
+  --color-pot-1: light-dark(#5B6F66, #93A89F);
+  --color-pot-2: light-dark(#17707C, #5BBBC7);
+  --color-pot-3: light-dark(#9E3B5C, #E48AA8);
+  --color-pot-4: light-dark(#D8A93F, #E2B659);
+  --color-pot-5: light-dark(#0B5D45, #45C08F);
+  --color-seg-fixed: light-dark(#1F3A30, #BFD3C8);
+  --color-seg-living: #8FB0A0;
+  --color-seg-savings: var(--color-progress);
+  --color-seg-free: #E9D08F;
+  --color-spark: #D8A93F;
+  --color-hero-accent: #D8A93F;
+  --color-on-spark: #1B1405;
+  --color-hero-bg: light-dark(#0B3A2D, #0A241C);
+  --color-hero-ink: #EFF6F1;
+  --color-hero-muted: #A7C6B7;
+  --color-warn-bg: #FEEDC9;
+  --color-warn-ink: #81520A;
+  --color-error: light-dark(#C4242A, #F2777C);
 }
 
-[data-palette="grafiet"] {
-  --color-ground: light-dark(#EEEFF2, #0f0f10);
-  --color-tint: light-dark(#E4E6EA, #222225);
-  --color-tint-accent: light-dark(#E2E4E9, #222225);
-  --color-hairline: light-dark(#E2E4E8, #2e2e33);
-  --color-ink: light-dark(#15161A, #ededee);
-  --color-ink-2: light-dark(#555A62, #b4b4b4);
-  --color-action: light-dark(#15161A, #ededee);
-  --color-progress: light-dark(#8F6BFF, #A88BFF);
-  --color-active-bg: light-dark(#8F6BFF, #222225);
-  --color-active-ink: light-dark(#15161A, #A88BFF);
-  --color-accent-ink: light-dark(#555A62, #A88BFF);
-  --color-pot-1: light-dark(#25272C, #D5D8DE);
-  --color-pot-3: #6A6F78;
-  --color-pot-4: #B7BBC2;
-  --color-seg-fixed: light-dark(#25272C, #D5D8DE);
-  --color-seg-living: light-dark(#50555D, #8C919A);
-  --color-seg-free: #B7BBC2;
+[data-palette="lagune"] {
+  --color-ground: light-dark(#EDF4F5, #0A1417);
+  --color-surface: light-dark(#FFFFFF, #112126);
+  --color-tint: light-dark(#E0ECEE, #182C32);
+  --color-tint-accent: light-dark(#D3EAEE, #182C32);
+  --color-hairline: light-dark(#D2E1E4, #24393F);
+  --color-ink: light-dark(#0C262E, #E4F0F2);
+  --color-ink-2: light-dark(#4B6168, #AFC5CB);
+  --color-muted: light-dark(var(--color-ink-2), #96B0B7);
+  --color-action: light-dark(#0E6479, #5CC6DC);
+  --color-on-action: light-dark(#FFFFFF, #04141A);
+  --color-progress: light-dark(#0E6479, #5CC6DC);
+  --color-active-bg: light-dark(#D3EAEE, #182C32);
+  --color-active-ink: light-dark(#0B5668, #7BD3E5);
+  --color-accent-ink: light-dark(#0B5668, #7BD3E5);
+  --color-pot-1: light-dark(#0C3947, #B5D6DE);
+  --color-pot-2: var(--color-progress);
+  --color-pot-3: light-dark(#E0614A, #F08A76);
+  --color-pot-4: #E7B65C;
+  --color-pot-5: light-dark(#6F65B5, #A096E0);
+  --color-seg-fixed: light-dark(#0C3947, #B5D6DE);
+  --color-seg-living: #86B3BF;
+  --color-seg-savings: var(--color-progress);
+  --color-seg-free: #F6C9BE;
+  --color-spark: #5ED3C3;
+  --color-hero-accent: #5ED3C3;
+  --color-on-spark: #052420;
+  --color-hero-bg: light-dark(#0B3C4C, #082A35);
+  --color-hero-ink: #ECF6F8;
+  --color-hero-muted: #A6C8D0;
+  --color-warn-bg: #FEEDC9;
+  --color-warn-ink: #81520A;
+  --color-error: light-dark(#C4242A, #F2777C);
+}
+
+[data-palette="kersen"] {
+  --color-ground: light-dark(#FAF1F2, #170B0F);
+  --color-surface: light-dark(#FFFFFF, #211217);
+  --color-tint: light-dark(#F3E4E6, #2D1B21);
+  --color-tint-accent: light-dark(#F8DDE4, #2D1B21);
+  --color-hairline: light-dark(#EBD7DA, #3D272E);
+  --color-ink: light-dark(#2A101A, #F7EAED);
+  --color-ink-2: light-dark(#6A4A55, #CBB1B9);
+  --color-muted: light-dark(var(--color-ink-2), #B398A1);
+  --color-action: light-dark(#A3234F, #F08CA8);
+  --color-on-action: light-dark(#FFFFFF, #2A0A14);
+  --color-progress: light-dark(#A3234F, #F08CA8);
+  --color-active-bg: light-dark(#F8DDE4, #2D1B21);
+  --color-active-ink: light-dark(#8E1C44, #F6A6BC);
+  --color-accent-ink: light-dark(#8E1C44, #F6A6BC);
+  --color-pot-1: light-dark(#4A1426, #E8BCC8);
+  --color-pot-2: var(--color-progress);
+  --color-pot-3: light-dark(#2F7D6D, #4FB5A0);
+  --color-pot-4: light-dark(#E09A3A, #E9AE5A);
+  --color-pot-5: light-dark(#7C5BA8, #B596DC);
+  --color-seg-fixed: light-dark(#4A1426, #E8BCC8);
+  --color-seg-living: #C99AA9;
+  --color-seg-savings: var(--color-progress);
+  --color-seg-free: #F3CFA0;
+  --color-spark: #F29BB2;
+  --color-hero-accent: #F29BB2;
+  --color-on-spark: #2D0814;
+  --color-hero-bg: light-dark(#4A1426, #36101D);
+  --color-hero-ink: #FBEEF1;
+  --color-hero-muted: #D5A9B6;
+  --color-warn-bg: #FEEDC9;
+  --color-warn-ink: #81520A;
+  --color-error: light-dark(#C4242A, #F2777C);
 }
 
 :root {
   color-scheme: light dark;
+  --color-shadow: light-dark(rgb(30 20 40 / 0.07), rgb(0 0 0 / 0.4));
+  --color-hero-tile: rgb(255 255 255 / 0.08);
+  --color-hero-line: rgb(255 255 255 / 0.16);
+  --color-hero-track: rgb(255 255 255 / 0.14);
 }
 :root[data-theme="light"] {
   color-scheme: light;
@@ -87,7 +163,7 @@
   color-scheme: dark;
 }
 
-/* Registers the tokens above as Tailwind utilities (bg-ground, text-ink, ...) without copying their values. */
+/* Registers the tokens above as Tailwind utilities (bg-ground, text-ink, bg-hero-bg, ...) without copying their values. */
 @theme inline {
   --color-ground: var(--color-ground);
   --color-surface: var(--color-surface);
@@ -107,13 +183,24 @@
   --color-pot-2: var(--color-pot-2);
   --color-pot-3: var(--color-pot-3);
   --color-pot-4: var(--color-pot-4);
+  --color-pot-5: var(--color-pot-5);
   --color-seg-fixed: var(--color-seg-fixed);
   --color-seg-living: var(--color-seg-living);
   --color-seg-savings: var(--color-seg-savings);
   --color-seg-free: var(--color-seg-free);
+  --color-spark: var(--color-spark);
+  --color-on-spark: var(--color-on-spark);
+  --color-hero-bg: var(--color-hero-bg);
+  --color-hero-ink: var(--color-hero-ink);
+  --color-hero-muted: var(--color-hero-muted);
   --color-warn-bg: var(--color-warn-bg);
   --color-warn-ink: var(--color-warn-ink);
   --color-error: var(--color-error);
+  --color-hero-accent: var(--color-hero-accent);
+  --color-hero-tile: var(--color-hero-tile);
+  --color-hero-line: var(--color-hero-line);
+  --color-hero-track: var(--color-hero-track);
+  --color-shadow: var(--color-shadow);
 
   /* Names the existing forms and the shadcn components use. */
   --color-background: var(--color-ground);
@@ -136,11 +223,13 @@
 }
 
 @theme static {
-  --radius-strip: 20px;
-  --radius-card: 24px;
+  --radius-strip: 14px;
+  --radius-card: 20px;
   --radius-hero: 28px;
-  --font-display: var(--font-gabarito), ui-sans-serif, system-ui, sans-serif;
-  --font-body: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-playfair), Georgia, "Times New Roman", serif;
+  --font-body: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --shadow-card: 0 1px 2px var(--color-shadow), 0 6px 18px var(--color-shadow);
+  --shadow-nav: 0 2px 4px var(--color-shadow), 0 10px 30px var(--color-shadow);
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --duration-1: 120ms;
   --duration-2: 200ms;
@@ -155,11 +244,78 @@
     background: var(--color-ground);
     color: var(--color-ink);
     font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.5;
   }
   :focus-visible {
     outline: 2px solid var(--color-ink);
     outline-offset: 2px;
   }
+  /* Pressed state for every button: a small, fast dip. */
+  button:not(:disabled):active {
+    transform: scale(0.97);
+  }
+}
+
+/*
+ * Motion (DESIGN.md). Subtle and fast; the reduced-motion rule at the bottom switches all of it off.
+ * .rise      cards fade and slide in; stagger with style={{ "--i": n }}
+ * .bar-fill  a progress bar grows from the left on mount
+ * .press     a link or card that dips when pressed
+ */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@keyframes bar-fill {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@keyframes page-out {
+  to {
+    opacity: 0;
+  }
+}
+.rise {
+  animation: rise var(--duration-3) var(--ease-standard) both;
+  animation-delay: calc(var(--i, 0) * 50ms);
+}
+.bar-fill {
+  transform-origin: left;
+  animation: bar-fill 700ms var(--ease-standard) both;
+  animation-delay: calc(var(--i, 0) * 50ms + 120ms);
+}
+.press {
+  transition: transform var(--duration-1) var(--ease-standard);
+}
+.press:active {
+  transform: scale(0.98);
+}
+
+/* React ViewTransition (app layout): the page fades in, the nav pill slides to the new tab. */
+::view-transition-old(.page-out) {
+  animation: page-out var(--duration-1) var(--ease-standard) both;
+}
+::view-transition-new(.page-in) {
+  animation: page-in var(--duration-3) var(--ease-standard) both;
+}
+::view-transition-group(nav-pill) {
+  animation-duration: var(--duration-3);
+  animation-timing-function: var(--ease-standard);
+}
+/* The dark hero's soft contour lines. */
+.contour {
+  background: repeating-radial-gradient(circle at 100% 0, transparent 0 22px, var(--color-hero-line) 22px 23px);
+  mask-image: radial-gradient(circle at 100% 0, #000 0, transparent 70%);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -167,8 +323,14 @@
   ::before,
   ::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }

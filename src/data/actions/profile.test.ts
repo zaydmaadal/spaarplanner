@@ -10,7 +10,7 @@ vi.mock("@/data/supabase/server", () => ({
 
 import { saveProfileAction } from "./profile";
 
-const stored = { palette: "oceaan", context_note: "Ik heb stage in maart", first_job: true, future_key: 1 };
+const stored = { palette: "zonsopgang", context_note: "Ik heb stage in maart", first_job: true, future_key: 1 };
 
 function setup(error: { code?: string; message?: string } | null = null) {
   const db = fakeDb((call: Call) => (has(call, "select") ? { data: { prefs: stored } } : { error }));
@@ -24,9 +24,9 @@ beforeEach(() => vi.resetAllMocks());
 describe("saveProfileAction", () => {
   it("merges the new prefs into the stored jsonb: context_note and other keys survive a palette change", async () => {
     const calls = setup();
-    expect(await saveProfileAction({ prefs: { palette: "grafiet", theme: "dark" } })).toEqual({ ok: true, data: undefined });
+    expect(await saveProfileAction({ prefs: { palette: "lagune", theme: "dark" } })).toEqual({ ok: true, data: undefined });
     expect(args(update(calls), "update")).toEqual([
-      { prefs: { palette: "grafiet", theme: "dark", context_note: "Ik heb stage in maart", first_job: true, future_key: 1 } },
+      { prefs: { palette: "lagune", theme: "dark", context_note: "Ik heb stage in maart", first_job: true, future_key: 1 } },
     ]);
     expect(update(calls).ops).toContainEqual(["eq", ["id", "user-1"]]);
     expect(m.revalidatePath).toHaveBeenCalledWith("/", "layout");

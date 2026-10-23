@@ -2,19 +2,23 @@ import { describe, expect, it } from "vitest";
 import { parsePrefs, parseStep8Prefs } from "./prefs";
 
 describe("parsePrefs", () => {
-  it("defaults to oceaan and system when prefs are empty, missing or not an object", () => {
+  it("defaults to zonsopgang and system when prefs are empty, missing or not an object", () => {
     for (const raw of [{}, null, undefined, "x", 3, []]) {
-      expect(parsePrefs(raw)).toEqual({ palette: "oceaan", theme: "system" });
+      expect(parsePrefs(raw)).toEqual({ palette: "zonsopgang", theme: "system" });
     }
   });
 
   it("keeps valid values", () => {
-    expect(parsePrefs({ palette: "grafiet", theme: "dark" })).toEqual({ palette: "grafiet", theme: "dark" });
+    expect(parsePrefs({ palette: "lagune", theme: "dark" })).toEqual({ palette: "lagune", theme: "dark" });
+  });
+
+  it("maps the palettes of phase 1 to their successors", () => {
+    expect(["oceaan", "salie", "grafiet"].map((palette) => parsePrefs({ palette }).palette)).toEqual(["lagune", "smaragd", "zonsopgang"]);
   });
 
   it("falls back per field and ignores other keys", () => {
-    expect(parsePrefs({ palette: "salie", theme: "blue", other: 1 })).toEqual({ palette: "salie", theme: "system" });
-    expect(parsePrefs({ palette: "neon", theme: "light" })).toEqual({ palette: "oceaan", theme: "light" });
+    expect(parsePrefs({ palette: "smaragd", theme: "blue", other: 1 })).toEqual({ palette: "smaragd", theme: "system" });
+    expect(parsePrefs({ palette: "neon", theme: "light" })).toEqual({ palette: "zonsopgang", theme: "light" });
   });
 });
 
