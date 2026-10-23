@@ -1,11 +1,13 @@
 import { useId } from "react";
 import { StatusBadge } from "@/components/overview/labels";
+import type { Cents } from "@/domain/types";
 import type { ProjectionInput } from "@/domain/projection";
 import { effectOf } from "./effect";
+import { WayOuts } from "./way-outs";
 
 // Spec 5.4: what saving this goal does, before it is saved. `before` and `after` come from previewInputs, so both
 // cover the same months.
-export function EffectPreview({ before, after }: { before: ProjectionInput; after: ProjectionInput }) {
+export function EffectPreview({ before, after, savingsCents, onDeadline, onTarget }: { before: ProjectionInput; after: ProjectionInput; savingsCents: Cents; onDeadline: (month: string) => void; onTarget: (euros: string) => void }) {
   const titleId = useId();
   const { subject, shifts } = effectOf(before, after);
   return (
@@ -21,7 +23,12 @@ export function EffectPreview({ before, after }: { before: ProjectionInput; afte
               <p className="font-display text-xl font-semibold">{subject.headline}</p>
               <StatusBadge status={subject.status} />
             </div>
-            {subject.advice && <p>{subject.advice}</p>}
+            {subject.ways.length > 0 && (
+              <>
+                <p>Zo haal je het toch:</p>
+                <WayOuts ways={subject.ways} savingsCents={savingsCents} onDeadline={onDeadline} onTarget={onTarget} />
+              </>
+            )}
           </div>
           {shifts.length > 0 ? (
             <ul className="flex flex-col gap-2 border-t border-hairline pt-3">

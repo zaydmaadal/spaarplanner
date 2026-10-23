@@ -7,12 +7,19 @@ import { Choice, MoneyField } from "@/components/form-fields";
 import { Money } from "@/components/money";
 import { Button } from "@/components/ui/button";
 import { addTransactionsAction } from "@/data/actions/transactions";
-import { formatEUR, toEuroInput } from "@/domain/money";
+import { formatEUR, parseEuroInput, toEuroInput } from "@/domain/money";
 import type { Cents, ISODate } from "@/domain/types";
 import { depositItems, totalCents } from "./items";
 
 export type Pot = { id: string; name: string; balanceCents: Cents; prefillCents: Cents };
 type Direction = "in" | "out";
+
+// "In de pot: € 100,00", and once an amount is typed, what the pot holds after it ("Na storten: € 150,00").
+function potHint(pot: Pot, direction: Direction, cents: Cents | null): string {
+  const now = `In de pot: ${formatEUR(pot.balanceCents)}`;
+  if (!cents) return now;
+  return direction === "in" ? `${now} · Na storten: ${formatEUR(pot.balanceCents + cents)}` : `${now} · Na opnemen: ${formatEUR(Math.max(0, pot.balanceCents - cents))}`;
+}
 
 // Spec 8.5: every pot with what is still to be put aside this period, one tap on "Opslaan" books all of it. A loose
 // deposit or a withdrawal is the same form with other amounts. `only` is set when the form is for one pot.
@@ -85,14 +92,14 @@ export function DepositForm({ pots, today, initial, only }: { pots: Pot[]; today
           <MoneyField
             key={p.id}
             label={p.name}
-            hint={`In de pot: ${formatEUR(p.balanceCents)}`}
+            hint={potHint(p, direction, parseEuroInput(amounts[p.id] ?? ""))}
             value={amounts[p.id] ?? ""}
             onChange={(text) => setAmounts((all) => ({ ...all, [p.id]: text }))}
             error={errors[p.id]}
           />
         ))}
         <div className="flex items-center justify-between gap-3 border-t pt-3 font-semibold">
-          <span>Totaal</span>
+          <span>{direction === "in" ? "Totaal van deze storting" : "Totaal van deze opname"}</span>
           <Money cents={totalCents(rows)} />
         </div>
       </div>

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Money } from "@/components/money";
 import { fillText, StatusBadge } from "@/components/overview/labels";
-import { CERTAINTY_LABEL } from "@/domain/certainty";
+import { CertaintyLabel } from "@/components/certainty-label";
 import type { GoalView } from "@/domain/dashboard";
 import { formatMonthNl } from "@/domain/dates";
 import { byFill } from "./helpers";
@@ -29,7 +29,7 @@ export function Timeline({ goals, horizonYears }: { goals: GoalView[]; horizonYe
               <p className="font-display text-lg font-semibold first-letter:uppercase">{g.fill && g.fill !== "full" ? formatMonthNl(g.fill) : fillText(g.fill, horizonYears)}</p>
               <h3 className="font-semibold">{g.name}</h3>
               <p className="text-sm text-ink-2">
-                <Money cents={g.balanceCents} className="font-semibold text-ink" /> van <Money cents={g.targetCents} className="font-semibold text-ink" /> · {CERTAINTY_LABEL[g.fillCertainty.level]}
+                <Money cents={g.balanceCents} className="font-semibold text-ink" /> van <Money cents={g.targetCents} className="font-semibold text-ink" /> · <CertaintyLabel level={g.fillCertainty.level} reason={g.fillCertainty.reason} />
               </p>
               {g.status && (
                 <div>

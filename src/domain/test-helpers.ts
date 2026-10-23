@@ -16,6 +16,7 @@ export function goal(id: string, target: Cents, opts: Opts = {}): Goal {
     isMain: false,
     archived: opts.archived ?? false,
     createdAt: opts.createdAt ?? "2026-01-01T00:00:00Z",
+    colorToken: null,
   };
 }
 

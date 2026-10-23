@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BackLink } from "@/components/back-link";
 import { BottomNav } from "@/components/bottom-nav";
 import { Step5 } from "@/components/onboarding/step-5";
 import { PlanSettingsForm } from "@/components/settings/plan-settings";
@@ -15,6 +16,7 @@ export default async function SavingsPlanPage() {
   return (
     <>
       <div className="flex flex-col gap-8">
+        <BackLink href="/meer" parent="Meer" />
         <Step5 key={String(data.plan.monthlySavingsCents)} mode="edit" incomes={data.incomes} lines={data.lines} plan={data.plan} />
         <PlanSettingsForm
           key={`${data.plan.incomeMode}-${data.plan.includeOneOffIncome}-${data.plan.emergencySharePct}`}

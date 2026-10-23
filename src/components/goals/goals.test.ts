@@ -8,14 +8,15 @@ import { EffectPreview } from "./effect-preview";
 import { GoalCard } from "./goal-card";
 import { History } from "./history";
 
-// The card has the arrows, which call a server action.
-vi.mock("@/data/actions/goals", () => ({ reorderGoalsAction: vi.fn() }));
+// The ways out call a server action and refresh the router.
+vi.mock("@/data/actions/plan", () => ({ savePlanAction: vi.fn() }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 const html = (el: Parameters<typeof renderToStaticMarkup>[0]) => renderToStaticMarkup(el).replace(/<!-- -->/g, "");
 const base = buildDashboard(haider, "2026-10-20");
 const preview = (name: string, target: string, deadline = "") => {
   const { before, after } = previewInputs(base.projectionInput, draftGoals(base.projectionInput.goals, { name, target, deadline }, null)!, null);
-  return html(h(EffectPreview, { before, after }));
+  return html(h(EffectPreview, { before, after, savingsCents: base.savingsCents, onDeadline: vi.fn(), onTarget: vi.fn() }));
 };
 
 describe("EffectPreview", () => {
@@ -34,12 +35,13 @@ describe("EffectPreview", () => {
   test("a deadline in the past names the status in words and the way out", () => {
     const out = preview("Rijbewijs", "1500", "2020-01");
     expect(out).toContain("Niet haalbaar");
-    expect(out).toContain("Verschuif de deadline van Rijbewijs");
+    expect(out).toContain("Schuif de deadline naar");
+    expect(out).not.toContain("Verlaag het doel"); // no target is full before a deadline that has passed
   });
 
   test("an unchanged form has nothing to show", () => {
     const { before, after } = previewInputs(base.projectionInput, base.projectionInput.goals, null);
-    expect(html(h(EffectPreview, { before, after }))).toContain("Je hebt nog niets aangepast.");
+    expect(html(h(EffectPreview, { before, after, savingsCents: 0, onDeadline: vi.fn(), onTarget: vi.fn() }))).toContain("Je hebt nog niets aangepast.");
   });
 });
 
@@ -70,20 +72,27 @@ describe("History", () => {
 });
 
 describe("GoalCard", () => {
-  const ids = base.goals.map((g) => g.id);
-  const card = (i: number) => html(h("ul", null, h(GoalCard, { goal: base.goals[i], index: i, ids, horizonYears: 10 })));
+  const card = (i: number) => html(h("ul", null, h(GoalCard, { goal: base.goals[i], horizonYears: 10, handle: h("button", null, "greep") })));
 
-  test("links the name to the goal, shows the main goal and the fill month", () => {
+  test("the whole card is the link: the name's link covers it, the handle sits next to it", () => {
     const out = card(1);
     expect(out).toContain('href="/doelen/reis"');
+    expect(out).toContain("after:absolute after:inset-0");
+    expect(out).toContain("greep");
+  });
+
+  test("shows the main goal, the fill month and the colour of the goal", () => {
+    const out = card(1);
     expect(out).toContain("Hoofddoel");
     expect(out).toContain("vol rond mei 2027");
     expect(out).toContain("Voortgang Reis");
+    expect(out).toContain("var(--color-pot-1)"); // a goal without a stored colour takes the first
+    expect(html(h(GoalCard, { goal: { ...base.goals[1], colorToken: "pot-3" }, horizonYears: 10, handle: null }))).toContain("var(--color-pot-3)");
   });
 
-  test("the first goal cannot go up, the last cannot go down", () => {
-    expect(card(0)).toMatch(/aria-label="Zet Noodfonds hoger"[^>]*disabled/);
-    expect(card(0)).not.toMatch(/aria-label="Zet Noodfonds lager"[^>]*disabled/);
-    expect(card(1)).toMatch(/aria-label="Zet Reis lager"[^>]*disabled/);
+  test("says what this month's amount is: already put aside of what the plan asks", () => {
+    const goal = { ...base.goals[1], allocatedCents: 25_000, bookedCents: 10_000 };
+    expect(html(h(GoalCard, { goal, horizonYears: 10, handle: null }))).toContain("Deze maand al opzij:");
+    expect(html(h(GoalCard, { goal, horizonYears: 10, handle: null }))).toContain("€\u00a0100,00");
   });
 });

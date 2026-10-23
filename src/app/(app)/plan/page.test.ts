@@ -78,9 +78,9 @@ describe("the plan page (spec 8.6)", () => {
   test("gives every step a tick and a dismiss button that name the step", async () => {
     m.steps = [{ id: "own-1", title: "Stage vinden", urgency: "week" }];
     const out = await render(haider);
-    const steps = buildDashboard(haider, TODAY).rules.length + 1;
-    expect(out.match(/aria-label="Afvinken: /g)).toHaveLength(steps);
-    expect(out.match(/aria-label="Wegklikken: /g)).toHaveLength(steps);
+    const rules = buildDashboard(haider, TODAY).rules.length;
+    expect(out.match(/aria-label="Afvinken: /g)).toHaveLength(rules + 1);
+    expect(out.match(/aria-label="Wegklikken: /g)).toHaveLength(rules); // behind "Meer uitleg", and only for rule steps
     expect(out).toContain('aria-label="Afvinken: Stage vinden"');
     expect(out).toContain('aria-label="Wegklikken: Zet € 430,00 opzij op 29 oktober"');
   });
@@ -93,7 +93,7 @@ describe("the plan page (spec 8.6)", () => {
   test("without steps it says so, and still offers a step of your own", async () => {
     const closed = buildDashboard(haider, TODAY).rules.map((r) => r.key);
     const out = await render({ ...haider, closedRuleKeys: closed });
-    expect(out).toContain("Je hebt geen open stappen.");
+    expect(out).toContain("Alles gedaan.");
     expect(headings(out.slice(out.indexOf("Checklist")), 3)).toEqual([]);
     expect(out).toMatch(/<label[^>]*>Wat wil je nog doen\?<\/label>/);
     expect(out).toMatch(/<button[^>]*type="submit"[^>]*>Eigen stap toevoegen<\/button>/);

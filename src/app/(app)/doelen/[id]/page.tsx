@@ -1,11 +1,12 @@
-import { ChevronLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BackLink } from "@/components/back-link";
 import { BottomNav } from "@/components/bottom-nav";
 import { CertaintyMeter } from "@/components/certainty-meter";
 import { GoalActions } from "@/components/goals/goal-actions";
 import { History } from "@/components/goals/history";
+import { WayOuts } from "@/components/goals/way-outs";
 import { Money } from "@/components/money";
 import { fillText, StatusBadge } from "@/components/overview/labels";
 import { ProgressBar } from "@/components/progress-bar";
@@ -13,9 +14,9 @@ import { Button } from "@/components/ui/button";
 import { loadScreenData } from "@/data/load";
 import { idSchema } from "@/data/schemas";
 import { createServerSupabase } from "@/data/supabase/server";
-import { goalUnreachableTitle } from "@/domain/checklist-rules";
 import { buildDashboard } from "@/domain/dashboard";
 import { formatMonthNl } from "@/domain/dates";
+import { wayOuts } from "@/domain/way-outs";
 
 export const metadata: Metadata = { title: "Doel" };
 
@@ -44,10 +45,7 @@ export default async function GoalPage({ params }: PageProps<"/doelen/[id]">) {
   return (
     <>
       <div className="flex flex-col gap-4">
-        <Link href="/doelen" className="inline-flex h-11 items-center gap-1 self-start rounded-md pr-2 text-sm font-semibold underline underline-offset-4">
-          <ChevronLeft aria-hidden className="size-4" />
-          Terug naar je doelen
-        </Link>
+        <BackLink href="/doelen" parent="je doelen" />
         <header className="flex flex-col gap-1">
           <h1 tabIndex={-1} className="font-display text-2xl font-semibold break-words outline-none">{goal.name}</h1>
           {(goal.isMain || isEmergency) && <p className="text-sm font-semibold text-ink-2">{[goal.isMain && "Hoofddoel", isEmergency && "Noodfonds"].filter(Boolean).join(" · ")}</p>}
@@ -65,16 +63,21 @@ export default async function GoalPage({ params }: PageProps<"/doelen/[id]">) {
             <p className="font-semibold first-letter:uppercase">{fillText(goal.fill, Math.floor(d.horizon / 12))}</p>
             <StatusBadge status={goal.status} />
           </div>
-          {goal.status === "niet_haalbaar" && <p className="rounded-strip bg-tint p-3">{goalUnreachableTitle(goal.name, goal.extraNeededCents)}</p>}
+          {goal.status === "niet_haalbaar" && (
+            <div className="flex flex-col gap-2 rounded-strip bg-tint p-3">
+              <p className="font-semibold">Zo haal je het toch</p>
+              <WayOuts ways={wayOuts(d.projectionInput, goal.id)} savingsCents={d.savingsCents} goalId={goal.id} />
+            </div>
+          )}
           <dl className="flex flex-col gap-2 text-sm">
             <div className="flex justify-between gap-3">
               <dt className="text-ink-2">Deadline</dt>
               <dd className="font-semibold">{goal.deadline ? formatMonthNl(goal.deadline) : "Geen"}</dd>
             </div>
             <div className="flex justify-between gap-3">
-              <dt className="text-ink-2">Deze periode</dt>
+              <dt className="text-ink-2">Deze maand al opzij</dt>
               <dd>
-                <Money cents={goal.allocatedCents} />
+                <Money cents={goal.bookedCents} /> van <Money cents={goal.allocatedCents} />
               </dd>
             </div>
           </dl>

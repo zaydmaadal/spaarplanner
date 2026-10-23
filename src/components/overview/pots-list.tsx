@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { Money } from "@/components/money";
 import { ProgressBar } from "@/components/progress-bar";
-import { CERTAINTY_LABEL } from "@/domain/certainty";
+import { CertaintyLabel } from "@/components/certainty-label";
 import type { GoalView } from "@/domain/dashboard";
-import { fillText, potColor, StatusBadge } from "./labels";
+import { fillText, PeriodSaved, potColor, StatusBadge } from "./labels";
 
 export function PotsList({ goals, horizonYears }: { goals: GoalView[]; horizonYears: number }) {
   return (
@@ -20,16 +20,16 @@ export function PotsList({ goals, horizonYears }: { goals: GoalView[]; horizonYe
         </>
       ) : (
         <ul className="flex flex-col gap-5">
-          {goals.map((g, i) => (
+          {goals.map((g) => (
             <li key={g.id} className="flex flex-col gap-2">
               <div className="flex items-baseline justify-between gap-3">
                 <h3 className="font-semibold">{g.name}</h3>
                 <Money cents={g.balanceCents} className="text-right" />
               </div>
-              <ProgressBar value={g.isFull ? 1 : g.balanceCents / g.targetCents} label={`Voortgang ${g.name}`} color={potColor(i)} />
+              <ProgressBar value={g.isFull ? 1 : g.balanceCents / g.targetCents} label={`Voortgang ${g.name}`} color={potColor(g)} />
               <div className="flex items-baseline justify-between gap-3 text-sm text-ink-2">
                 <p>
-                  {fillText(g.fill, horizonYears)} · {CERTAINTY_LABEL[g.fillCertainty.level]}
+                  {fillText(g.fill, horizonYears)} · <CertaintyLabel level={g.fillCertainty.level} reason={g.fillCertainty.reason} />
                 </p>
                 <p className="text-right">
                   van <Money cents={g.targetCents} className="font-semibold text-ink" />
@@ -38,11 +38,7 @@ export function PotsList({ goals, horizonYears }: { goals: GoalView[]; horizonYe
               {(g.status || g.allocatedCents > 0) && (
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-2">
                   <StatusBadge status={g.status} />
-                  {g.allocatedCents > 0 && (
-                    <p>
-                      Deze periode: <Money cents={g.allocatedCents} className="font-semibold text-ink" />
-                    </p>
-                  )}
+                  {g.allocatedCents > 0 && <PeriodSaved goal={g} />}
                 </div>
               )}
             </li>

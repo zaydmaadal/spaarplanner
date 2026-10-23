@@ -46,6 +46,7 @@ export type Goal = {
   isMain: boolean;
   archived: boolean;
   createdAt: string;
+  colorToken: string | null; // "pot-1" to "pot-4", set once on creation so a goal keeps its colour
 };
 export type PlanSettings = {
   monthlySavingsCents: Cents | null;

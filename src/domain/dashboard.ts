@@ -22,7 +22,8 @@ export type GoalView = Goal & {
   fillCertainty: Certainty;
   status: GoalStatus | null;
   extraNeededCents: Cents;
-  allocatedCents: Cents;
+  allocatedCents: Cents; // the share of this period, with what is already put aside
+  bookedCents: Cents; // of that share, already put aside this period
 };
 export type Dashboard = {
   today: ISODate;
@@ -100,6 +101,7 @@ export function buildDashboard(data: UserData, today: ISODate): Dashboard {
       status,
       extraNeededCents: status === "niet_haalbaar" ? extraNeededCents(projectionInput, g.id) : 0,
       allocatedCents: allocated[g.id] + booked(g),
+      bookedCents: booked(g),
     };
   });
   const depositPrefill = Object.fromEntries(views.map((g) => [g.id, Math.max(0, g.allocatedCents - booked(g))]));

@@ -58,7 +58,7 @@ describe("completeOnboardingAction", () => {
     const calls = setup({ lines: [60000, 55000, 50000] }); // € 1.650
     expect(await completeOnboardingAction(finish)).toMatchObject({ ok: true });
     expect(args(on(calls, "goals", "insert")[0], "insert")).toEqual([
-      { user_id: "user-1", kind: "emergency", name: "Noodfonds", target_cents: 495000, target_is_estimate: true, priority: 1 },
+      { user_id: "user-1", kind: "emergency", name: "Noodfonds", target_cents: 495000, target_is_estimate: true, priority: 1, color_token: "pot-1" },
     ]);
   });
 
