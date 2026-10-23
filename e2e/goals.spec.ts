@@ -42,7 +42,7 @@ test("new goals show their effect before they are saved: a laptop moves the trip
     const form = await fillGoal(page, "Rijbewijs", "1500", "2020-01");
     const preview = page.getByRole("region", { name: "Wat dit verandert", exact: true });
     await expect(preview).toContainText("Niet haalbaar");
-    await expect(preview).toContainText("Verschuif de deadline van Rijbewijs");
+    await expect(preview.getByRole("button", { name: /Schuif de deadline naar/ })).toBeVisible();
 
     await form.getByRole("button", { name: "Doel opslaan", exact: true }).click();
     await expect(page).toHaveURL(/\/doelen$/);
@@ -50,7 +50,7 @@ test("new goals show their effect before they are saved: a laptop moves the trip
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Rijbewijs");
     // The form is still mounted but hidden, so only look at what is visible.
     await expect(page.getByText("Niet haalbaar", { exact: true }).filter({ visible: true })).toBeVisible();
-    await expect(page.getByText(/Verschuif de deadline van Rijbewijs/).filter({ visible: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Schuif de deadline naar/ }).filter({ visible: true })).toBeVisible();
   });
 });
 
