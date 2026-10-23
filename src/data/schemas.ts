@@ -133,6 +133,8 @@ export const profileSchema = z.object({
       // The target must be above 0 here, or finishing in step 8 would fail on a field the user cannot see.
       startBalance: moneySchema.nullable().optional(),
       emergencyTarget: positiveMoney.nullable().optional(),
+      // Step 7: set once the user has picked the emergency share, so a reload does not pick one for them.
+      emergencyShareChosen: z.boolean().optional(),
     })
     .optional(),
 });

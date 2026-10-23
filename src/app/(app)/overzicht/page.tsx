@@ -8,11 +8,9 @@ import { PotsList } from "@/components/overview/pots-list";
 import { SalarySplit } from "@/components/overview/salary-split";
 import { Simulator } from "@/components/overview/simulator";
 import { PushCard } from "@/components/push-card";
-import { loadOpenUserSteps, loadUserData } from "@/data/load";
-import { readProfile, requireUserId } from "@/data/supabase/server";
+import { loadOpenUserSteps, loadScreenData } from "@/data/load";
 import { URGENCY_RANK } from "@/domain/checklist-rules";
 import { buildDashboard } from "@/domain/dashboard";
-import { todayInTimeZone } from "@/domain/dates";
 
 export const metadata: Metadata = { title: "Overzicht" };
 
@@ -20,11 +18,7 @@ const MAX_STEPS = 3; // the rest is in Plan
 
 // Spec 8.3, top to bottom. The data is read here; only the simulator needs the browser.
 export default async function OverviewPage() {
-  const profile = await readProfile(await requireUserId());
-  if (!profile) throw new Error("Missing profile");
-  const today = todayInTimeZone(profile.timezone, new Date());
-
-  const [data, own] = await Promise.all([loadUserData(today), loadOpenUserSteps()]);
+  const [{ today, data }, own] = await Promise.all([loadScreenData(), loadOpenUserSteps()]);
 
   const d = buildDashboard(data, today);
   const horizonYears = Math.floor(d.horizon / 12);

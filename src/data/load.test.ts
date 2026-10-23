@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Tables } from "@/data/database.types";
 import { args, fakeDb, has, type Call } from "@/data/test-helpers";
 
@@ -9,7 +9,7 @@ vi.mock("@/data/supabase/server", () => ({
   readProfile: async () => profile,
 }));
 
-import { loadOpenUserSteps, loadScreenData, loadUserData } from "./load";
+import { loadOpenUserSteps, loadScreenData } from "./load";
 
 const profile: Tables<"profiles"> = {
   id: "user-1",
@@ -89,25 +89,19 @@ function setup(overrides: Record<string, object> = {}) {
 beforeEach(() => vi.resetAllMocks());
 
 describe("loadScreenData", () => {
-  it("reads today in the time zone of the profile and loads the data of that day", async () => {
-    const calls = setup();
-    vi.useFakeTimers({ toFake: ["Date"] });
-    vi.setSystemTime(new Date("2026-10-20T23:30:00Z")); // already the 21st in Brussels
-    try {
-      const { today, data } = await loadScreenData();
-      expect(today).toBe("2026-10-21");
-      expect(data.goals).toHaveLength(1);
-      expect(calls.find((c) => c.table === "transactions")!.ops).toContainEqual(["gte", ["occurred_on", "2026-08-20"]]);
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-});
+  const at = (iso: string) => vi.useFakeTimers({ toFake: ["Date"], now: new Date(iso) });
+  afterEach(() => vi.useRealTimers());
 
-describe("loadUserData", () => {
+  it("reads today in the time zone of the profile", async () => {
+    setup();
+    at("2026-10-20T23:30:00Z"); // already the 21st in Brussels
+    expect((await loadScreenData()).today).toBe("2026-10-21");
+  });
+
   it("maps every table to the domain shape and books the deposits of the current period per goal", async () => {
     setup();
-    const data = await loadUserData("2026-10-21"); // payday Fri 23 oct (25th is a Sunday), so the period is 25 sep to 22 oct
+    at("2026-10-21T10:00:00Z");
+    const { data } = await loadScreenData(); // payday Fri 23 oct (25th is a Sunday), so the period is 25 sep to 22 oct
     expect(data.profile).toEqual({ displayName: "Haider", timeZone: "Europe/Brussels", prefs: { ziekenfonds: "nee" } });
     expect(data.plan).toEqual({ monthlySavingsCents: null, emergencySharePct: 100, incomeMode: "careful", includeOneOffIncome: false });
     expect(data.incomes).toHaveLength(1);
@@ -117,17 +111,17 @@ describe("loadUserData", () => {
     expect(data.closedRuleKeys).toEqual(["ziekenfonds"]);
   });
 
-  it("fetches in one go and only asks for the transactions of the last 62 days", async () => {
+  it("fetches in one go, without waiting for the profile, and asks for the transactions from a wide UTC window", async () => {
     const calls = setup();
-    await loadUserData("2026-10-21");
+    at("2026-10-21T10:00:00Z");
+    await loadScreenData();
     expect(calls.map((c) => c.table).sort()).toEqual(["budget_lines", "checklist_items", "goal_balances", "goals", "income_sources", "plans", "transactions"]);
-    const txCall = calls.find((c) => c.table === "transactions")!;
-    expect(txCall.ops).toContainEqual(["gte", ["occurred_on", "2026-08-20"]]);
+    expect(calls.find((c) => c.table === "transactions")!.ops).toContainEqual(["gte", ["occurred_on", "2026-08-19"]]);
   });
 
   it("asks for the closed rule keys with the not-null and done-or-dismissed filters", async () => {
     const calls = setup();
-    await loadUserData("2026-10-21");
+    await loadScreenData();
     const ops = calls.find((c) => c.table === "checklist_items")!.ops;
     expect(ops).toContainEqual(["not", ["rule_key", "is", null]]);
     expect(ops).toContainEqual(["or", ["done_at.not.is.null,dismissed_at.not.is.null"]]);
@@ -135,14 +129,14 @@ describe("loadUserData", () => {
 
   it("counts a goal without a balance row as empty", async () => {
     setup({ goal_balances: { data: [] } });
-    expect((await loadUserData("2026-10-21")).goals[0].balanceCents).toBe(0);
+    expect((await loadScreenData()).data.goals[0].balanceCents).toBe(0);
   });
 
   it("throws when a query fails, so the error boundary shows the retry card", async () => {
     setup({ plans: { error: { code: "XX000", message: "down" } } });
-    await expect(loadUserData("2026-10-21")).rejects.toBeTruthy();
+    await expect(loadScreenData()).rejects.toBeTruthy();
     setup({ goals: { error: { code: "XX000", message: "down" } } });
-    await expect(loadUserData("2026-10-21")).rejects.toBeTruthy();
+    await expect(loadScreenData()).rejects.toBeTruthy();
   });
 });
 

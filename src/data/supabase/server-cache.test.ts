@@ -58,7 +58,7 @@ describe("one read per request", () => {
     const [prefs, userId, profile] = await Promise.all([
       readPrefs(),
       requireOnboarded(),
-      requireUserId().then((id) => readProfile(id)), // what loadUserData does
+      requireUserId().then((id) => readProfile(id)), // what loadScreenData does
     ]);
     expect(prefs).toEqual({ palette: "smaragd", theme: "system" });
     expect(userId).toBe("user-1");

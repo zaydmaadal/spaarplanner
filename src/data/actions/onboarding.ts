@@ -94,6 +94,7 @@ export async function completeOnboardingAction(input: z.input<typeof completeSch
   const prefs = typeof profile.data.prefs === "object" && profile.data.prefs !== null && !Array.isArray(profile.data.prefs) ? { ...profile.data.prefs } : {};
   delete prefs.start_balance_cents;
   delete prefs.emergency_target_cents;
+  delete prefs.emergency_share_chosen;
   const { error } = await supabase.from("profiles").update({ onboarding_step: 8, onboarding_completed_at: new Date().toISOString(), prefs }).eq("id", userId);
   return error ? dbFailure(error) : FINISHED;
 }

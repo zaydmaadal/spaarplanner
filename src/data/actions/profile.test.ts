@@ -47,6 +47,12 @@ describe("saveProfileAction", () => {
     expect((await saveProfileAction({ prefs: { startBalance: "veel" } })).ok).toBe(false);
   });
 
+  it("remembers that the user picked the emergency share in step 7", async () => {
+    const calls = setup();
+    await saveProfileAction({ prefs: { emergencyShareChosen: true } });
+    expect(args(update(calls), "update")![0]).toEqual({ prefs: { ...stored, emergency_share_chosen: true } });
+  });
+
   it("refuses a step 6 target of 0 on step 6 (the fund needs more than 0) but accepts a start balance of 0", async () => {
     const calls = setup();
     expect(await saveProfileAction({ prefs: { emergencyTarget: "0" } })).toMatchObject({ ok: false, fieldErrors: { emergencyTarget: "Vul een bedrag in dat groter is dan 0." } });
