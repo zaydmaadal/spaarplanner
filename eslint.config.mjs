@@ -33,6 +33,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendored agent skills (see .claude/skills/*/ORIGIN.md) and agent worktrees.
+    ".claude/**",
   ]),
 ]);
 

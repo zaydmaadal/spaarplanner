@@ -36,6 +36,8 @@ test("an onboarding step", async ({ page }) => {
 });
 
 test("the screens of the app", async ({ page }) => {
+  // A sign-in and nine axe scans: on WebKit in CI this has run just over 30 seconds since the redesign.
+  test.slow();
   const username = `a11y-${rand()}`;
   await seedHaider(username);
   await loginAs(page, username);
