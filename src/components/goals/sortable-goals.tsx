@@ -1,7 +1,7 @@
 "use client";
 
 import { closestCenter, DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { arrayMove, rectSortingStrategy, SortableContext, sortableKeyboardCoordinates, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
 import { useId, useState, useTransition } from "react";
@@ -72,8 +72,8 @@ export function SortableGoals({ goals, horizonYears }: { goals: GoalView[]; hori
 
   return (
     <DndContext id={dndId} sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd} accessibility={DUTCH}>
-      <SortableContext items={order} strategy={verticalListSortingStrategy}>
-        <ul className="flex flex-col gap-4">
+      <SortableContext items={order} strategy={rectSortingStrategy}>
+        <ul className="grid gap-3 lg:grid-cols-2">
           {order.map((id) => (
             <Item key={id} goal={byId.get(id)!} horizonYears={horizonYears} />
           ))}

@@ -15,9 +15,9 @@ export default async function GoalsPage() {
   const ids = d.goals.map((g) => g.id);
   return (
     <>
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 lg:gap-6">
         <header className="flex items-center justify-between gap-3">
-          <h1 className="font-display text-2xl font-semibold">Doelen</h1>
+          <h1 className="font-display text-3xl font-bold">Doelen</h1>
           <Button asChild>
             <Link href="/doelen/nieuw">Nieuw doel</Link>
           </Button>
