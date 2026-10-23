@@ -4,9 +4,9 @@ import { adminClient, at, fillMainIncome, next, register, skip } from "./helpers
 const rand = () => Math.random().toString(36).slice(2, 8);
 const MONTHS = ["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"];
 
-// "Reisvol rond mei 2027" -> a number that grows with the month
+// "Reis mei 2027" (the row of a pot in the simulator) -> a number that grows with the month
 function monthOf(text: string) {
-  const found = /vol rond (\w+) (\d{4})/.exec(text);
+  const found = /(\w+) (\d{4})/.exec(text);
   if (!found) throw new Error(`No fill month in "${text}"`);
   return Number(found[2]) * 12 + MONTHS.indexOf(found[1]);
 }

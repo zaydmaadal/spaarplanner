@@ -35,7 +35,7 @@ export default async function GoalPage({ params }: PageProps<"/doelen/[id]">) {
   const supabase = await createServerSupabase();
   const { data: rows, error } = await supabase
     .from("transactions")
-    .select("id, amount_cents, occurred_on, note")
+    .select("id, amount_cents, occurred_on, note, source")
     .eq("goal_id", id)
     .order("occurred_on", { ascending: false })
     .order("created_at", { ascending: false })
@@ -98,15 +98,10 @@ export default async function GoalPage({ params }: PageProps<"/doelen/[id]">) {
                 <Link href={`/storten?pot=${goal.id}&soort=opname`}>Opnemen</Link>
               </Button>
             </div>
-            <div className="flex flex-col gap-2">
-              <Button asChild variant="outline">
-                <Link href={`/doelen/${goal.id}/aanpassen`}>Aanpassen</Link>
-              </Button>
-              <GoalActions id={goal.id} isMain={goal.isMain} isEmergency={isEmergency} />
-            </div>
+            <GoalActions id={goal.id} name={goal.name} balanceCents={goal.balanceCents} isMain={goal.isMain} isEmergency={isEmergency} />
           </div>
           <History
-            bookings={(rows ?? []).map((r) => ({ id: r.id, amountCents: r.amount_cents, occurredOn: r.occurred_on, note: r.note }))}
+            bookings={(rows ?? []).map((r) => ({ id: r.id, amountCents: r.amount_cents, occurredOn: r.occurred_on, note: r.note, source: r.source }))}
             balanceCents={goal.balanceCents}
           />
         </div>

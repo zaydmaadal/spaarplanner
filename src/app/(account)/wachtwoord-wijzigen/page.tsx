@@ -11,7 +11,7 @@ export default async function WachtwoordWijzigenPage() {
   const forced = !!claims.app_metadata?.must_change_password;
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center gap-6 px-4 py-8">
-      {!forced && <BackLink href="/meer" parent="Meer" />}
+      {!forced && <BackLink href="/meer" parent="Profiel" />}
       <h1 className="text-2xl font-semibold">Wachtwoord wijzigen</h1>
       <ChangePasswordForm forced={forced} />
       <LogoutForm>

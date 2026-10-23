@@ -47,6 +47,26 @@ export type Database = {
                   Relationships: [
                     
                   ]
+                },"feedback": {
+                  Row: {
+                    "created_at": string,"handled_at": string | null,"id": string,"kind": string,"message": string,"page": string | null,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"handled_at"?: string | null,"id"?: string,"kind": string,"message": string,"page"?: string | null,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"handled_at"?: string | null,"id"?: string,"kind"?: string,"message"?: string,"page"?: string | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "feedback_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"goals": {
                   Row: {
                     "color_token": string | null,"created_at": string,"deadline": string | null,"id": string,"is_main": boolean,"kind": string,"name": string,"priority": number,"status": string,"target_cents": number,"target_is_estimate": boolean,"user_id": string,"weight": number

@@ -16,7 +16,7 @@ export default async function SavingsPlanPage() {
   return (
     <>
       <div className="flex flex-col gap-8">
-        <BackLink href="/meer" parent="Meer" />
+        <BackLink href="/meer" parent="Profiel" />
         <Step5 key={String(data.plan.monthlySavingsCents)} mode="edit" incomes={data.incomes} lines={data.lines} plan={data.plan} />
         <PlanSettingsForm
           key={`${data.plan.incomeMode}-${data.plan.includeOneOffIncome}-${data.plan.emergencySharePct}`}

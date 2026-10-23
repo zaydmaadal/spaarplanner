@@ -16,7 +16,7 @@ export function Step1({ mode, displayName }: { mode: Mode; displayName: string }
       intro={mode === "edit" ? undefined : "Spaarplanner laat zien wat je per maand kan sparen en wanneer je doelen klaar zijn. Dit duurt een paar minuten en je mag elke stap overslaan."}
       save={async () => outcome(await saveProfileAction({ displayName: name }), setErrors)}
     >
-      <TextField label="Je naam" hint="Zo spreken we je aan in de app." value={name} onChange={setName} error={errors.displayName} autoComplete="given-name" maxLength={80} />
+      <TextField label={mode === "edit" ? "Voornaam of bijnaam" : "Je naam"} hint="Zo spreken we je aan in de app." value={name} onChange={setName} error={errors.displayName} autoComplete="given-name" maxLength={80} />
     </StepShell>
   );
 }

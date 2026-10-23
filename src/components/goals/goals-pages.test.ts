@@ -5,7 +5,7 @@ import { haider } from "@/domain/fixtures/personas";
 import { fakeDb } from "@/data/test-helpers";
 
 const m = vi.hoisted(() => ({ data: undefined as unknown, db: undefined as unknown }));
-vi.mock("@/data/actions/goals", () => ({ reorderGoalsAction: vi.fn(), archiveGoalAction: vi.fn(), setMainGoalAction: vi.fn(), unarchiveGoalAction: vi.fn(), saveGoalAction: vi.fn() }));
+vi.mock("@/data/actions/goals", () => ({ reorderGoalsAction: vi.fn(), archiveGoalAction: vi.fn(), setMainGoalAction: vi.fn(), unarchiveGoalAction: vi.fn(), deleteGoalAction: vi.fn(), saveGoalAction: vi.fn() }));
 vi.mock("@/data/actions/plan", () => ({ savePlanAction: vi.fn() }));
 vi.mock("@/data/actions/transactions", () => ({ addTransactionsAction: vi.fn() }));
 vi.mock("@/data/load", () => ({ loadScreenData: async () => ({ today: "2026-10-20", data: m.data }) }));
@@ -49,9 +49,16 @@ describe("the goals list", () => {
     expect(out.match(/aria-current="page"/g)).toHaveLength(1);
   });
 
-  test("archived goals are not listed", async () => {
+  test("archived goals are not cards: they are listed under Afgerond, each with a way back", async () => {
     m.data = data({ goals: data().goals.map((g) => (g.id === TRIP ? { ...g, archived: true } : g)) });
-    expect(headings(await render(GoalsPage()), 2)).toEqual(["Noodfonds"]);
+    const out = await render(GoalsPage());
+    expect(headings(out, 2)).toEqual(["Noodfonds", "Afgerond"]);
+    expect(out).not.toContain(`href="/doelen/${TRIP}"`);
+    expect(out).toContain('aria-label="Reis terugzetten"');
+  });
+
+  test("without archived goals there is no Afgerond", async () => {
+    expect(await render(GoalsPage())).not.toContain("Afgerond");
   });
 
   test("without goals: one sentence", async () => {
@@ -73,11 +80,19 @@ describe("a goal", () => {
     expect(out).toMatch(/aria-current="page"[^>]*>.*?Doelen|href="\/doelen"[^>]*aria-current="page"/);
   });
 
-  test("the emergency fund can become the main goal but not be archived", async () => {
+  test("the secondary actions are icon buttons with a name; Storten and Opnemen stay the primary ones", async () => {
+    const out = await goalPage(TRIP);
+    for (const name of ["Aanpassen", "Archiveren", "Verwijderen"]) expect(out).toContain(`aria-label="${name}"`);
+    expect(out).toContain('title="Verbergt het doel, je geschiedenis blijft. Terugzetten kan bij Afgerond."');
+  });
+
+  test("the emergency fund can become the main goal but be neither archived nor deleted, and says why", async () => {
     const out = await goalPage(FUND);
     expect(out).toContain("Noodfonds");
     expect(out).toContain("Als hoofddoel instellen");
-    expect(out).not.toContain("Archiveren");
+    expect(out).not.toContain('aria-label="Archiveren"');
+    expect(out).not.toContain('aria-label="Verwijderen"');
+    expect(out).toContain("Je noodfonds kan je niet archiveren of verwijderen");
   });
 
   test("a goal that cannot be reached says what to do", async () => {
@@ -145,10 +160,15 @@ describe("the deposit screen", () => {
     expect(fields(out)).toBe(2);
   });
 
-  test("one pot from its own screen", async () => {
+  test("one pot from its own screen, with the back link to that pot", async () => {
     const out = await depositPage({ pot: TRIP });
     expect(out).toContain("Reis");
     expect(out).not.toContain("Noodfonds");
+    expect(out).toMatch(new RegExp(`href="/doelen/${TRIP}"[^>]*>.*?Terug naar Reis`));
+  });
+
+  test("all pots go back to the overview", async () => {
+    expect(await depositPage()).toContain("Terug naar je overzicht");
   });
 
   test("a withdrawal starts empty", async () => {

@@ -5,10 +5,81 @@
  * Design tokens, see DESIGN.md. One block per palette; the palette is chosen with data-palette on <html>.
  * Every colour is light-dark(<light>, <dark>), switched by color-scheme (data-theme, or the system setting).
  * Every palette block lists all tokens, because the swatches in the palette picker set data-palette on a card.
- * src/styles/contrast.test.ts checks every pair. "spark" is the warm highlight (the savings tile, the hero bar);
+ * src/styles/contrast.test.ts checks that and every pair. "spark" is the soft highlight (the savings tile, the hero bar);
  * hero-* is the dark card on top of the overview and the auth pages, in light and in dark.
+ * nachtblauw is the default and the brand, so it is also on :root.
  */
 :root,
+[data-palette="nachtblauw"] {
+  --color-ground: light-dark(#F3F6FB, #0A1220);
+  --color-surface: light-dark(#FFFFFF, #111C30);
+  --color-tint: light-dark(#E6ECF5, #1A2740);
+  --color-tint-accent: light-dark(#DCE8F8, #1D2D4D);
+  --color-hairline: light-dark(#D6DFEC, #26354F);
+  --color-ink: light-dark(#101B33, #E8EEF8);
+  --color-ink-2: light-dark(#4A5873, #AEBBD1);
+  --color-muted: light-dark(var(--color-ink-2), #9AABC7);
+  --color-action: light-dark(#1F3F7A, #9EBFF2);
+  --color-on-action: light-dark(#FFFFFF, #0B1730);
+  --color-progress: light-dark(#2B5BA8, #9EBFF2);
+  --color-active-bg: light-dark(#DCE8F8, #1D2D4D);
+  --color-active-ink: light-dark(#1F3F7A, #B5CFF6);
+  --color-accent-ink: light-dark(#1B3A72, #B5CFF6);
+  --color-pot-1: light-dark(#1F3F7A, #A9C4F0);
+  --color-pot-2: light-dark(#D9644A, #EE8A72);
+  --color-pot-3: light-dark(#23867C, #4DB7AC);
+  --color-pot-4: light-dark(#D9A441, #E3B65A);
+  --color-pot-5: var(--color-progress);
+  --color-seg-fixed: light-dark(#1B2E54, #B9CBEA);
+  --color-seg-living: #8FA9D1;
+  --color-seg-savings: var(--color-progress);
+  --color-seg-free: #E8D9B5;
+  --color-spark: #9CC3F5;
+  --color-hero-accent: #9CC3F5;
+  --color-on-spark: #0B1A33;
+  --color-hero-bg: light-dark(#142243, #0F1A33);
+  --color-hero-ink: #EEF3FB;
+  --color-hero-muted: #A9B8D3;
+  --color-warn-bg: #FEEDC9;
+  --color-warn-ink: #81520A;
+  --color-error: light-dark(#C4242A, #F2777C);
+}
+
+[data-palette="zand"] {
+  --color-ground: light-dark(#F5EFE6, #17120E);
+  --color-surface: light-dark(#FFFDF9, #211A15);
+  --color-tint: light-dark(#EBE2D5, #2E251E);
+  --color-tint-accent: light-dark(#F3DFD2, #3A2A21);
+  --color-hairline: light-dark(#E2D6C6, #3B3027);
+  --color-ink: light-dark(#2B211A, #F4EBE0);
+  --color-ink-2: light-dark(#5F5144, #CDBDAB);
+  --color-muted: light-dark(var(--color-ink-2), #B3A290);
+  --color-action: light-dark(#A4472A, #E39A7A);
+  --color-on-action: light-dark(#FFFFFF, #2A130A);
+  --color-progress: light-dark(#B04E2E, #E39A7A);
+  --color-active-bg: light-dark(#F3DFD2, #3A2A21);
+  --color-active-ink: light-dark(#8F3B20, #F0B79D);
+  --color-accent-ink: light-dark(#8F3B20, #F0B79D);
+  --color-pot-1: light-dark(#5A3F2E, #D9BFA9);
+  --color-pot-2: light-dark(#5E8A5B, #8DBB89);
+  --color-pot-3: light-dark(#4F78A8, #8FB5E0);
+  --color-pot-4: light-dark(#D1A038, #E0B24F);
+  --color-pot-5: var(--color-progress);
+  --color-seg-fixed: light-dark(#4A3426, #D9C6B3);
+  --color-seg-living: #C2A98E;
+  --color-seg-savings: var(--color-progress);
+  --color-seg-free: #EBD3B0;
+  --color-spark: #E9A27F;
+  --color-hero-accent: #E9A27F;
+  --color-on-spark: #2E1608;
+  --color-hero-bg: light-dark(#3B2A20, #2E2018);
+  --color-hero-ink: #FBF3EA;
+  --color-hero-muted: #D2BDA9;
+  --color-warn-bg: #FEEDC9;
+  --color-warn-ink: #81520A;
+  --color-error: light-dark(#C4242A, #F2777C);
+}
+
 [data-palette="zonsopgang"] {
   --color-ground: light-dark(#F8F3EE, #150D1C);
   --color-surface: light-dark(#FFFFFF, #1F1529);
@@ -60,7 +131,7 @@
   --color-active-ink: light-dark(#0B5D45, #45C08F);
   --color-accent-ink: light-dark(#0B5D45, #45C08F);
   --color-pot-1: light-dark(#5B6F66, #93A89F);
-  --color-pot-2: light-dark(#17707C, #5BBBC7);
+  --color-pot-2: light-dark(#3F6FB0, #7FA6E0);
   --color-pot-3: light-dark(#9E3B5C, #E48AA8);
   --color-pot-4: light-dark(#D8A93F, #E2B659);
   --color-pot-5: light-dark(#0B5D45, #45C08F);
@@ -291,7 +362,7 @@
     opacity: 0;
   }
 }
-/* The thin bar of (app)/loading.tsx: invisible for the first 200 ms, so a fast screen shows nothing. */
+/* The thin bar of nav-progress.tsx: invisible for the first 200 ms, so a fast screen shows nothing. */
 @keyframes load-bar {
   from {
     opacity: 0;
@@ -334,16 +405,31 @@
   transform: scale(0.98);
 }
 
-/* React ViewTransition (app layout): the page fades in, the nav pill slides to the new tab. */
+/* React ViewTransition (app template): the page fades in, the nav pill slides to the new tab. The named parts (the page,
+   the tab bar) cannot be tapped while it runs, so it stays at 200 ms: the root snapshot does not crossfade (that took 250 ms
+   by itself) and the groups no longer use the browser's 250 ms. The sidebar is not named and stays tappable. */
+::view-transition {
+  pointer-events: none;
+}
+::view-transition-old(root) {
+  display: none;
+}
+::view-transition-new(root) {
+  animation: none;
+}
+::view-transition-group(*) {
+  animation-duration: var(--duration-2);
+  animation-timing-function: var(--ease-standard);
+}
 ::view-transition-old(.page-out) {
   animation: page-out var(--duration-1) var(--ease-standard) both;
 }
 ::view-transition-new(.page-in) {
-  animation: page-in var(--duration-3) var(--ease-standard) both;
+  animation: page-in var(--duration-2) var(--ease-standard) both;
 }
-::view-transition-group(nav-pill) {
-  animation-duration: var(--duration-3);
-  animation-timing-function: var(--ease-standard);
+/* The tab bar always paints above the pages that fade in and out beside it. */
+::view-transition-group(bottom-nav) {
+  z-index: 10;
 }
 /* The dark hero's soft contour lines. */
 .contour {

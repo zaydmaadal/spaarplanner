@@ -62,12 +62,12 @@ export default function PrivacyPage() {
 
       <section className="flex flex-col gap-2">
         <h2 className={h2}>Downloaden of wissen</h2>
-        <p>Je gegevens zijn van jou. Je kan ze elk moment zelf meenemen of laten wissen. Je gegevens aanpassen kan in de app, onder Meer.</p>
+        <p>Je gegevens zijn van jou. Je kan ze elk moment zelf meenemen of laten wissen. Je gegevens aanpassen kan in de app, onder Profiel.</p>
         <ul className="flex flex-col">
           <li>
             {/* Not a link to the export itself: a visitor without a session would save the login page instead of the data. */}
             <Link href="/meer" className={link}>
-              Gegevens downloaden via Meer
+              Gegevens downloaden via Profiel
             </Link>
             <span className="block text-sm text-ink-2">Kies daar Gegevens downloaden. Je krijgt één bestand met je gegevens, op de technische sleutels van je meldingen na.</span>
           </li>

@@ -46,7 +46,7 @@ test("the screens of the app", async ({ page }) => {
   await check(page, "/doelen", "Doelen");
   await check(page, "/storten", "Storten");
   await check(page, "/plan", "Plan");
-  await check(page, "/meer", "Meer");
+  await check(page, "/meer", "Profiel");
 
   // Next keeps the screens you left mounted but hidden. Their ids and landmarks must not clash with the visible one.
   await test.step("after moving between the tabs, with the earlier screens hidden", async () => {
@@ -55,7 +55,7 @@ test("the screens of the app", async ({ page }) => {
       ["Overzicht", /\/overzicht$/, "Hoi Haider"],
       ["Doelen", /\/doelen$/, "Doelen"],
       ["Plan", /\/plan$/, "Plan"],
-      ["Meer", /\/meer$/, "Meer"],
+      ["Profiel", /\/meer$/, "Profiel"],
     ] as const) {
       await tab(name).click();
       await expect(page).toHaveURL(path);

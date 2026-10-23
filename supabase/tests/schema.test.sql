@@ -1,5 +1,5 @@
 begin;
-select plan(85);
+select plan(91);
 
 -- Two users; the trigger creates their profile and plan.
 insert into auth.users (id, email) values
@@ -9,11 +9,11 @@ insert into auth.users (id, email) values
 -- Tables exist and RLS is on.
 select has_table('public', t, 'table ' || t) from unnest(array[
   'profiles', 'plans', 'income_sources', 'budget_lines', 'goals', 'transactions',
-  'checklist_items', 'push_subscriptions', 'notification_log', 'admin_audit']) as t;
+  'checklist_items', 'push_subscriptions', 'notification_log', 'admin_audit', 'feedback']) as t;
 select is((select relrowsecurity from pg_class where relnamespace = 'public'::regnamespace and relname = t),
   true, 'RLS enabled on ' || t) from unnest(array[
   'profiles', 'plans', 'income_sources', 'budget_lines', 'goals', 'transactions',
-  'checklist_items', 'push_subscriptions', 'notification_log', 'admin_audit']) as t;
+  'checklist_items', 'push_subscriptions', 'notification_log', 'admin_audit', 'feedback']) as t;
 
 -- Sign-up trigger and view.
 select is((select username from profiles where id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'), 'a', 'trigger creates the profile with username a');
@@ -88,6 +88,15 @@ select throws_ok($$insert into goals (user_id, kind, name, target_cents, priorit
   '23514', null, 'a goal target of 0 is rejected');
 select throws_ok($$insert into goals (user_id, kind, name, target_cents, priority) values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'trip', repeat('x', 81), 1, 2)$$,
   '23514', null, 'a goal name over 80 characters is rejected');
+
+-- Feedback: kind is feedback or bug, the message is 1 to 2000 characters.
+select lives_ok($$insert into feedback (user_id, kind, message, page) values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'bug', 'Het werkt niet', '/doelen')$$, 'a feedback row is accepted');
+select throws_ok($$insert into feedback (user_id, kind, message) values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'idee', 'x')$$,
+  '23514', null, 'an unknown feedback kind is rejected');
+select throws_ok($$insert into feedback (user_id, kind, message) values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'bug', '   ')$$,
+  '23514', null, 'an empty feedback message is rejected');
+select throws_ok($$insert into feedback (user_id, kind, message) values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'bug', repeat('x', 2001))$$,
+  '23514', null, 'a feedback message over 2000 characters is rejected');
 
 -- Prefs size.
 select throws_ok($$update profiles set prefs = jsonb_build_object('x', repeat('a', 9000)) where id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'$$,

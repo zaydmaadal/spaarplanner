@@ -2,66 +2,68 @@
 
 Source of truth for the look of Spaarplanner. Spec: `docs/superpowers/specs/2026-10-21-spaarplanner-design.md` section 10.
 
-Direction: warm and alive, not a bank. A dark hero card on top of the overview (the big amount in a display serif, the payday countdown as the loudest number), soft white cards on a tinted ground, pots in their own harmonious colours, a floating pill navigation on the phone and a sidebar on the desktop. Playfair Display for headings and amounts, Plus Jakarta Sans for text. Amounts: tabular figures, right-aligned in lists. No emoji, no confetti: the life comes from colour, type and a little motion.
+Direction: calm, clear and a little warm, not a bank and not loud. A dark hero card on top of the overview (the big amount in a display serif, the payday countdown as the loudest number), soft white cards on a tinted ground, pots in their own harmonious colours, a floating pill navigation on the phone and a sidebar on the desktop. Playfair Display for headings and amounts, Plus Jakarta Sans for text. Amounts: tabular figures, right-aligned in lists. No emoji, no confetti: the calm comes from colour, type and a little motion.
 
-The user picks one of four palettes and a theme (`light`, `dark`, `system`). Both live in `profiles.prefs` and are applied as `data-palette` and `data-theme` on `<html>` by the root layout, so there is no flash on load.
+The user picks one of six palettes and a theme (`light`, `dark`, `system`). Both live in `profiles.prefs` and are applied as `data-palette` and `data-theme` on `<html>` by the root layout, so there is no flash on load. The look is also kept in the plain cookie `sp-look` (`<palette>.<theme>`, one year, not sensitive): `ThemeSync` writes it whenever the signed-in look changes (so also at sign-in) and the palette form writes it after a save, and the root layout reads it when there is no session, so the login and register pages show the palette of the last user on this device instead of the default.
 
 | id | Name | Main colours | Use |
 |---|---|---|---|
-| `zonsopgang` | Zonsopgang | plum #5B2A8C, apricot #F4A261, warm cream ground | the default and the brand: a sun rising over the horizon (see `LogoMark`) |
+| `nachtblauw` | Nachtblauw | ink blue #142243, soft light blue #9CC3F5, cool white ground | the default and the brand: subtle, calm and professional (the leaves and the action colour are light blue in dark, navy in light) |
+| `zand` | Zand | warm beige ground, terracotta #A4472A, umber hero #3B2A20 | warm and earthy |
 | `smaragd` | Smaragd & goud | emerald #0B5D45, gold #D8A93F | the palette of the user's own planner |
-| `lagune` | Lagune | petrol #0E6479, aqua #5ED3C3 | cool and calm |
+| `lagune` | Lagune | petrol #0E6479, aqua #5ED3C3 | cool and fresh |
 | `kersen` | Kersen | burgundy #A3234F, rose #F29BB2 | warm and playful |
+| `zonsopgang` | Zonsopgang | plum #5B2A8C, apricot #F4A261, warm cream ground | the purple one: an option only, no longer the default |
 
-The phase 1 ids `oceaan`, `salie` and `grafiet` are gone. Migration `20261023000001_palettes.sql` widens the CHECK on `profiles.prefs` and rewrites stored values (oceaan to lagune, salie to smaragd, grafiet to zonsopgang); `parsePrefs` maps them too, for the time between a deploy and the migration.
+The phase 1 ids `oceaan`, `salie` and `grafiet` are gone. Migration `20261023000002_palettes.sql` widened the CHECK on `profiles.prefs` and rewrote stored values (oceaan to lagune, salie to smaragd, grafiet to zonsopgang); `20261024000001_palettes_nachtblauw_zand.sql` adds `nachtblauw` and `zand` and makes `nachtblauw` the value of a profile without a palette. Stored palettes are never rewritten, so everyone who chose one keeps it. `parsePrefs` maps the phase 1 ids too, for the time between a deploy and the migration.
 
 ## Palette swap
 
 A palette swap is editing the tokens in `src/app/globals.css`, nothing else.
 
-- Change a colour: edit it in the palette block (`[data-palette="..."]`; `zonsopgang` is also on `:root`). Every block lists every token, because the swatches in the palette picker set `data-palette` on a card. Every colour is `light-dark(<light>, <dark>)`.
-- Run `npm test`: `src/styles/contrast.test.ts` checks every text and non-text pair of the table below in light and dark for all palettes.
-- Add a palette: one new full block in `globals.css`, plus its id in `PALETTES` (`src/lib/prefs.ts`), in the test's `PALETTES`, in `NAMES` of `src/components/palette-picker.tsx` and in a migration that widens the CHECK on `profiles.prefs`.
+- Change a colour: edit it in the palette block (`[data-palette="..."]`; `nachtblauw` is also on `:root`, as the default). Every block lists every token, because the swatches in the palette picker set `data-palette` on a card. Every colour is `light-dark(<light>, <dark>)`.
+- Run `npm test`: `src/styles/contrast.test.ts` checks that every palette lists every token (none leans on another) and every text and non-text pair of the table below in light and dark for all palettes, and that pots 1 to 3 are at least 40 degrees of hue apart.
+- Add a palette: one new full block in `globals.css`, plus its id in `PALETTES` (`src/lib/prefs.ts`), in the test's `PALETTES`, in `NAMES` of `src/components/palette-picker.tsx` and in a migration that widens the CHECK on `profiles.prefs` (with a pgTAP test in `supabase/tests/palettes.test.sql`).
 - Components use tokens only (`bg-ground`, `text-ink`, `bg-action`, `bg-hero-bg`, `var(--color-pot-1)`), never a hex value, never Tailwind palette colours, and never the `dark:` variant (it follows the operating system, not `data-theme`). The one allowed non-token colour is the scrim behind a dialog or sheet, `bg-black/50`.
 
 ## Colour tokens
 
 `light-dark()` picks the first value in light and the second in dark. Values below are generated from `globals.css`; the shared `hero-tile`, `hero-line`, `hero-track` and `shadow` live on `:root` only.
 
-| Token | zonsopgang light | zonsopgang dark | smaragd light | smaragd dark | lagune light | lagune dark | kersen light | kersen dark |
-|---|---|---|---|---|---|---|---|---|
-| `--color-ground` | #F8F3EE | #150D1C | #F2F6F2 | #0C1512 | #EDF4F5 | #0A1417 | #FAF1F2 | #170B0F |
-| `--color-surface` | #FFFFFF | #1F1529 | #FFFFFF | #13201B | #FFFFFF | #112126 | #FFFFFF | #211217 |
-| `--color-tint` | #EFE7E1 | #2B1E38 | #E8F0EA | #1A2A24 | #E0ECEE | #182C32 | #F3E4E6 | #2D1B21 |
-| `--color-tint-accent` | #F0E5F8 | #2B1E38 | #D5EADF | #1D3B30 | #D3EAEE | #182C32 | #F8DDE4 | #2D1B21 |
-| `--color-hairline` | #E6DCD3 | #3A2B49 | #D3E0D7 | #26382F | #D2E1E4 | #24393F | #EBD7DA | #3D272E |
-| `--color-ink` | #24132F | #F3EBF8 | #102620 | #E3EDE7 | #0C262E | #E4F0F2 | #2A101A | #F7EAED |
-| `--color-ink-2` | #5B4A66 | #C2B4CF | #52665D | #AFC3B9 | #4B6168 | #AFC5CB | #6A4A55 | #CBB1B9 |
-| `--color-muted` | #5B4A66 | #A798B6 | #52665D | #9AB0A6 | #4B6168 | #96B0B7 | #6A4A55 | #B398A1 |
-| `--color-action` | #5B2A8C | #C6A5F2 | #0B5D45 | #45C08F | #0E6479 | #5CC6DC | #A3234F | #F08CA8 |
-| `--color-on-action` | #FFFFFF | #1A0F24 | #FFFFFF | #06140F | #FFFFFF | #04141A | #FFFFFF | #2A0A14 |
-| `--color-progress` | #6A35A8 | #C6A5F2 | #0B5D45 | #45C08F | #0E6479 | #5CC6DC | #A3234F | #F08CA8 |
-| `--color-active-bg` | #F0E5F8 | #2B1E38 | #D5EADF | #1D3B30 | #D3EAEE | #182C32 | #F8DDE4 | #2D1B21 |
-| `--color-active-ink` | #5B2A8C | #D3B8F5 | #0B5D45 | #45C08F | #0B5668 | #7BD3E5 | #8E1C44 | #F6A6BC |
-| `--color-accent-ink` | #4A2178 | #D3B8F5 | #0B5D45 | #45C08F | #0B5668 | #7BD3E5 | #8E1C44 | #F6A6BC |
-| `--color-pot-1` | #3B1F5C | #CDB6EB | #5B6F66 | #93A89F | #0C3947 | #B5D6DE | #4A1426 | #E8BCC8 |
-| `--color-pot-2` | #D9622B | #D9622B | #17707C | #5BBBC7 | #E0614A | #F08A76 | #2F7D6D | #4FB5A0 |
-| `--color-pot-3` | #2E8B83 | #2E8B83 | #9E3B5C | #E48AA8 | #6F65B5 | #A096E0 | #7C5BA8 | #B596DC |
-| `--color-pot-4` | #E0A23A | #E0A23A | #D8A93F | #E2B659 | #E7B65C | #E7B65C | #E09A3A | #E9AE5A |
-| `--color-pot-5` | #6A35A8 | #C6A5F2 | #0B5D45 | #45C08F | #0E6479 | #5CC6DC | #A3234F | #F08CA8 |
-| `--color-seg-fixed` | #3B1F5C | #CDB6EB | #1F3A30 | #BFD3C8 | #0C3947 | #B5D6DE | #4A1426 | #E8BCC8 |
-| `--color-seg-living` | #A68BC9 | #A68BC9 | #8FB0A0 | #8FB0A0 | #86B3BF | #86B3BF | #C99AA9 | #C99AA9 |
-| `--color-seg-savings` | #6A35A8 | #C6A5F2 | #0B5D45 | #45C08F | #0E6479 | #5CC6DC | #A3234F | #F08CA8 |
-| `--color-seg-free` | #F4C9A0 | #F4C9A0 | #E9D08F | #E9D08F | #F6C9BE | #F6C9BE | #F3CFA0 | #F3CFA0 |
-| `--color-spark` | #F4A261 | #F4A261 | #D8A93F | #D8A93F | #5ED3C3 | #5ED3C3 | #F29BB2 | #F29BB2 |
-| `--color-hero-accent` | #F4A261 | #F4A261 | #D8A93F | #D8A93F | #5ED3C3 | #5ED3C3 | #F29BB2 | #F29BB2 |
-| `--color-on-spark` | #2A1405 | #2A1405 | #1B1405 | #1B1405 | #052420 | #052420 | #2D0814 | #2D0814 |
-| `--color-hero-bg` | #2B1744 | #22123A | #0B3A2D | #0A241C | #0B3C4C | #082A35 | #4A1426 | #36101D |
-| `--color-hero-ink` | #F6EEFA | #F6EEFA | #EFF6F1 | #EFF6F1 | #ECF6F8 | #ECF6F8 | #FBEEF1 | #FBEEF1 |
-| `--color-hero-muted` | #BCA7D3 | #BCA7D3 | #A7C6B7 | #A7C6B7 | #A6C8D0 | #A6C8D0 | #D5A9B6 | #D5A9B6 |
-| `--color-warn-bg` | #FEEDC9 | #FEEDC9 | #FEEDC9 | #FEEDC9 | #FEEDC9 | #FEEDC9 | #FEEDC9 | #FEEDC9 |
-| `--color-warn-ink` | #81520A | #81520A | #81520A | #81520A | #81520A | #81520A | #81520A | #81520A |
-| `--color-error` | #C4242A | #F2777C | #C4242A | #F2777C | #C4242A | #F2777C | #C4242A | #F2777C |
+| Token | nachtblauw light | nachtblauw dark | zand light | zand dark | smaragd light | smaragd dark | lagune light | lagune dark | kersen light | kersen dark | zonsopgang light | zonsopgang dark |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `--color-ground` | #F3F6FB | #0A1220 | #F5EFE6 | #17120E | #F2F6F2 | #0C1512 | #EDF4F5 | #0A1417 | #FAF1F2 | #170B0F | #F8F3EE | #150D1C |
+| `--color-surface` | #FFFFFF | #111C30 | #FFFDF9 | #211A15 | #FFFFFF | #13201B | #FFFFFF | #112126 | #FFFFFF | #211217 | #FFFFFF | #1F1529 |
+| `--color-tint` | #E6ECF5 | #1A2740 | #EBE2D5 | #2E251E | #E8F0EA | #1A2A24 | #E0ECEE | #182C32 | #F3E4E6 | #2D1B21 | #EFE7E1 | #2B1E38 |
+| `--color-tint-accent` | #DCE8F8 | #1D2D4D | #F3DFD2 | #3A2A21 | #D5EADF | #1D3B30 | #D3EAEE | #182C32 | #F8DDE4 | #2D1B21 | #F0E5F8 | #2B1E38 |
+| `--color-hairline` | #D6DFEC | #26354F | #E2D6C6 | #3B3027 | #D3E0D7 | #26382F | #D2E1E4 | #24393F | #EBD7DA | #3D272E | #E6DCD3 | #3A2B49 |
+| `--color-ink` | #101B33 | #E8EEF8 | #2B211A | #F4EBE0 | #102620 | #E3EDE7 | #0C262E | #E4F0F2 | #2A101A | #F7EAED | #24132F | #F3EBF8 |
+| `--color-ink-2` | #4A5873 | #AEBBD1 | #5F5144 | #CDBDAB | #52665D | #AFC3B9 | #4B6168 | #AFC5CB | #6A4A55 | #CBB1B9 | #5B4A66 | #C2B4CF |
+| `--color-muted` | #4A5873 | #9AABC7 | #5F5144 | #B3A290 | #52665D | #9AB0A6 | #4B6168 | #96B0B7 | #6A4A55 | #B398A1 | #5B4A66 | #A798B6 |
+| `--color-action` | #1F3F7A | #9EBFF2 | #A4472A | #E39A7A | #0B5D45 | #45C08F | #0E6479 | #5CC6DC | #A3234F | #F08CA8 | #5B2A8C | #C6A5F2 |
+| `--color-on-action` | #FFFFFF | #0B1730 | #FFFFFF | #2A130A | #FFFFFF | #06140F | #FFFFFF | #04141A | #FFFFFF | #2A0A14 | #FFFFFF | #1A0F24 |
+| `--color-progress` | #2B5BA8 | #9EBFF2 | #B04E2E | #E39A7A | #0B5D45 | #45C08F | #0E6479 | #5CC6DC | #A3234F | #F08CA8 | #6A35A8 | #C6A5F2 |
+| `--color-active-bg` | #DCE8F8 | #1D2D4D | #F3DFD2 | #3A2A21 | #D5EADF | #1D3B30 | #D3EAEE | #182C32 | #F8DDE4 | #2D1B21 | #F0E5F8 | #2B1E38 |
+| `--color-active-ink` | #1F3F7A | #B5CFF6 | #8F3B20 | #F0B79D | #0B5D45 | #45C08F | #0B5668 | #7BD3E5 | #8E1C44 | #F6A6BC | #5B2A8C | #D3B8F5 |
+| `--color-accent-ink` | #1B3A72 | #B5CFF6 | #8F3B20 | #F0B79D | #0B5D45 | #45C08F | #0B5668 | #7BD3E5 | #8E1C44 | #F6A6BC | #4A2178 | #D3B8F5 |
+| `--color-pot-1` | #1F3F7A | #A9C4F0 | #5A3F2E | #D9BFA9 | #5B6F66 | #93A89F | #0C3947 | #B5D6DE | #4A1426 | #E8BCC8 | #3B1F5C | #CDB6EB |
+| `--color-pot-2` | #D9644A | #EE8A72 | #5E8A5B | #8DBB89 | #3F6FB0 | #7FA6E0 | #E0614A | #F08A76 | #2F7D6D | #4FB5A0 | #D9622B | #D9622B |
+| `--color-pot-3` | #23867C | #4DB7AC | #4F78A8 | #8FB5E0 | #9E3B5C | #E48AA8 | #6F65B5 | #A096E0 | #7C5BA8 | #B596DC | #2E8B83 | #2E8B83 |
+| `--color-pot-4` | #D9A441 | #E3B65A | #D1A038 | #E0B24F | #D8A93F | #E2B659 | #E7B65C | #E7B65C | #E09A3A | #E9AE5A | #E0A23A | #E0A23A |
+| `--color-pot-5` | #2B5BA8 | #9EBFF2 | #B04E2E | #E39A7A | #0B5D45 | #45C08F | #0E6479 | #5CC6DC | #A3234F | #F08CA8 | #6A35A8 | #C6A5F2 |
+| `--color-seg-fixed` | #1B2E54 | #B9CBEA | #4A3426 | #D9C6B3 | #1F3A30 | #BFD3C8 | #0C3947 | #B5D6DE | #4A1426 | #E8BCC8 | #3B1F5C | #CDB6EB |
+| `--color-seg-living` | #8FA9D1 | #8FA9D1 | #C2A98E | #C2A98E | #8FB0A0 | #8FB0A0 | #86B3BF | #86B3BF | #C99AA9 | #C99AA9 | #A68BC9 | #A68BC9 |
+| `--color-seg-savings` | #2B5BA8 | #9EBFF2 | #B04E2E | #E39A7A | #0B5D45 | #45C08F | #0E6479 | #5CC6DC | #A3234F | #F08CA8 | #6A35A8 | #C6A5F2 |
+| `--color-seg-free` | #E8D9B5 | #E8D9B5 | #EBD3B0 | #EBD3B0 | #E9D08F | #E9D08F | #F6C9BE | #F6C9BE | #F3CFA0 | #F3CFA0 | #F4C9A0 | #F4C9A0 |
+| `--color-spark` | #9CC3F5 | #9CC3F5 | #E9A27F | #E9A27F | #D8A93F | #D8A93F | #5ED3C3 | #5ED3C3 | #F29BB2 | #F29BB2 | #F4A261 | #F4A261 |
+| `--color-hero-accent` | #9CC3F5 | #9CC3F5 | #E9A27F | #E9A27F | #D8A93F | #D8A93F | #5ED3C3 | #5ED3C3 | #F29BB2 | #F29BB2 | #F4A261 | #F4A261 |
+| `--color-on-spark` | #0B1A33 | #0B1A33 | #2E1608 | #2E1608 | #1B1405 | #1B1405 | #052420 | #052420 | #2D0814 | #2D0814 | #2A1405 | #2A1405 |
+| `--color-hero-bg` | #142243 | #0F1A33 | #3B2A20 | #2E2018 | #0B3A2D | #0A241C | #0B3C4C | #082A35 | #4A1426 | #36101D | #2B1744 | #22123A |
+| `--color-hero-ink` | #EEF3FB | #EEF3FB | #FBF3EA | #FBF3EA | #EFF6F1 | #EFF6F1 | #ECF6F8 | #ECF6F8 | #FBEEF1 | #FBEEF1 | #F6EEFA | #F6EEFA |
+| `--color-hero-muted` | #A9B8D3 | #A9B8D3 | #D2BDA9 | #D2BDA9 | #A7C6B7 | #A7C6B7 | #A6C8D0 | #A6C8D0 | #D5A9B6 | #D5A9B6 | #BCA7D3 | #BCA7D3 |
+| `--color-warn-bg` | #FEEDC9 | #FEEDC9 | #FEEDC9 | #FEEDC9 | #FEEDC9 | #FEEDC9 | #FEEDC9 | #FEEDC9 | #FEEDC9 | #FEEDC9 | #FEEDC9 | #FEEDC9 |
+| `--color-warn-ink` | #81520A | #81520A | #81520A | #81520A | #81520A | #81520A | #81520A | #81520A | #81520A | #81520A | #81520A | #81520A |
+| `--color-error` | #C4242A | #F2777C | #C4242A | #F2777C | #C4242A | #F2777C | #C4242A | #F2777C | #C4242A | #F2777C | #C4242A | #F2777C |
 
 Roles:
 
@@ -78,13 +80,13 @@ Roles:
 | `active-bg`, `active-ink` | the active tab |
 | `accent-ink` | accent text on `tint-accent` (light) |
 | `pot-1` to `pot-5` | the colours of savings pots; they never clash within one palette, and pots 1 to 3 are three different hues so the first goals are easy to tell apart |
-| `spark` | the warm highlight: the savings tile, the hero bar, the sun in the logo. `on-spark` is the text on it |
+| `spark` | the highlight: the savings tile, the hero bar, the leaves in the logo. `on-spark` is the text on it |
 | `hero-bg`, `hero-ink`, `hero-muted`, `hero-accent` | the dark hero card (overview, auth pages, onboarding welcome): background, text, quiet text, highlight. The same in light and dark, with `hero-tile`, `hero-line` and `hero-track` (translucent white) for tiles, borders and bar tracks on it |
 | `seg-fixed`, `seg-living`, `seg-savings`, `seg-free` | segments of the stacked bar |
 | `warn-bg`, `warn-ink` | warning notices |
 | `error` | errors |
 
-Other tokens: `--radius-strip` 14 px, `--radius-card` 20 px, `--radius-hero` 28 px; `--font-display` (Playfair Display 600 and 700, via `next/font`, for headings, big amounts and the countdown), `--font-body` (Plus Jakarta Sans 400 to 700); `--shadow-card`, `--shadow-nav`; `--ease-standard` `cubic-bezier(0.2, 0, 0, 1)`; `--duration-1` 120 ms, `--duration-2` 200 ms, `--duration-3` 320 ms. Names such as `bg-background`, `text-foreground`, `bg-primary` and `border-input` are aliases for the shadcn components and the account forms. The token for the warm highlight is `spark`, not `accent`, because `accent` is already the shadcn alias of `tint-accent`.
+Other tokens: `--radius-strip` 14 px, `--radius-card` 20 px, `--radius-hero` 28 px; `--font-display` (Playfair Display 600 and 700, via `next/font`, for headings, big amounts and the countdown), `--font-body` (Plus Jakarta Sans 400 to 700); `--shadow-card`, `--shadow-nav`; `--ease-standard` `cubic-bezier(0.2, 0, 0, 1)`; `--duration-1` 120 ms, `--duration-2` 200 ms, `--duration-3` 320 ms. Names such as `bg-background`, `text-foreground`, `bg-primary` and `border-input` are aliases for the shadcn components and the account forms. The token for the highlight is `spark`, not `accent`, because `accent` is already the shadcn alias of `tint-accent`.
 
 ## Spacing
 
@@ -126,7 +128,7 @@ Do:
 - One main figure per screen (32 px), other figures 20 to 24 px.
 - Space on a 4 px grid, see Spacing.
 - Contrast of at least 4.5:1 for all text, also small grey labels. Say it in words or icons too.
-- One accent colour per palette (`action`, `progress`, the active tab) plus its warm highlight `spark` for the hero and the savings tile. Pots may use their own `pot-n` colour. Status colours (good, warning, error) are separate.
+- One accent colour per palette (`action`, `progress`, the active tab) plus its highlight `spark` for the hero and the savings tile. Pots may use their own `pot-n` colour. Status colours (good, warning, error) are separate.
 - Motion with `--ease-standard` and 120, 200 or 320 ms, only for feedback and transitions. With `prefers-reduced-motion` only instant changes (a global rule in `globals.css`).
 - Forms: `inputmode="decimal"`, comma and dot both allowed, labels always visible, a fixed euro prefix.
 - Dutch, informal "je", sentence case, buttons say what they do ("Pot opslaan").
@@ -135,7 +137,7 @@ Do:
 - In a server component an id from `useId()` is numbered per request, so it can equal an id on a hidden page: name a region with `aria-label`, never with `aria-labelledby` and a generated id. Client components keep `useId()` (unique within their own tree).
 
 Don't:
-- Colour gradients, glass effects, glow, emoji, confetti, or a coloured border on the left of a card. The one allowed pattern is the hero's contour (`.contour`: thin concentric lines in `hero-line`, around the sun).
+- Colour gradients, glass effects, glow, emoji, confetti, or a coloured border on the left of a card. The one allowed pattern is the hero's contour (`.contour`: thin concentric lines in `hero-line`, from the top right corner of the hero and the auth pages).
 - A status colour used as decoration.
 - Colour as the only carrier of meaning.
 - The em dash character (U+2014) in copy, comments or docs.
@@ -159,8 +161,8 @@ Money is integer cents. Show it only through `formatEUR` (`src/domain/money.ts`)
 | `StackedBar` | `segments` of `{ label, cents, color }`; the legend with label and amount carries the meaning |
 | `BottomNav` | `active` (a tab, or `storten` on the deposit screen); every screen renders it with its own tab. A floating pill under 1024 px, `lg:hidden`, with a raised Storten button in the middle and a sliding active pill (view transition). Content needs bottom padding, which `src/app/(app)/layout.tsx` provides |
 | `SidebarNav` | client component in `(app)/layout.tsx`, from 1024 px: logo, a Storten button, the four tabs; the active one comes from the URL |
-| `LogoMark` | the brand mark (sun over a horizon) in palette tokens |
-| `AuthShell`, `AuthHero` | `src/components/auth-shell.tsx`: login and register (hero above, or on the left from 1024 px, the form in a card that overlaps it). `AuthHero` alone is the welcome block of onboarding step 1. The page keeps its own h1 |
+| `LogoMark` | the brand mark in palette tokens, see Logo |
+| `AuthShell`, `AuthHero` | `src/components/auth-shell.tsx`: login and register (hero above with the form in a card that overlaps it; from 1024 px hero left and the form in a centred card right, together never taller than the window, so no scrolling at 1280 by 720). `AuthHero` alone is the welcome block of onboarding step 1. The page keeps its own h1 |
 | `CountUp` | `cents`, `className?`: `Money` that counts up once on mount; for hero figures |
 | `form-fields` | `TextField`, `MoneyField` (fixed euro prefix, `inputmode="decimal"`, optional `onRemove` for a stored amount that is not a list row), `SelectField`, `TextareaField`, `CheckField`, `Choice` (one out of a few), `Toggles` (switch items on or off), `Item` (a row of a list form with its remove button). Label always visible, hint and error tied with `aria-describedby`, ids from `useId` |
 | `EffectPreview` | `before`, `after` as `previewInputs` makes them (same horizon, one-off income for it); the goal's own "Klaar rond ..." with status and advice, then a sentence per other goal that moves. Shown in the goal form before saving |
@@ -172,7 +174,11 @@ Money is integer cents. Show it only through `formatEUR` (`src/domain/money.ts`)
 | `Appearance`, `PlanSettingsForm` | `src/components/settings`: Meer. `Appearance` is the `PalettePicker` plus the theme switch (licht, donker, systeem), shown on `<html>` at once and saved with both values. `PlanSettingsForm` holds the plan settings the onboarding has no form for (wisselend inkomen, eenmalig inkomen meetellen, noodfonds-aandeel), each shown only where it applies |
 | `src/components/ui/*` | shadcn (new-york, Radix) with the tokens mapped; buttons and inputs are 44 px high, close buttons are 44 px. `Slider` hands `aria-labelledby` (or `aria-label`) and `aria-valuetext` to its thumb: label it, show its value next to it and give the value in words |
 
-`src/app/(app)` holds the screens that need a finished onboarding (`requireOnboarded()`). Onboarding and `/wachtwoord-wijzigen` stay outside it, or the proxy's must-change redirect would loop. Its `loading.tsx` (grey blocks, no shimmer) and `error.tsx` (a card with "Opnieuw proberen", which calls `retry()` and never shows the error) are the loading and error state of every screen in it (spec 8.8).
+`src/app/(app)` holds the screens that need a finished onboarding (`requireOnboarded()`). Onboarding and `/wachtwoord-wijzigen` stay outside it, or the proxy's must-change redirect would loop. It has no `loading.tsx`: a fallback commit made every tab switch wait about 300 ms. Instead `nav-progress.tsx` shows a thin bar when a link click takes longer than 200 ms, and the old screen stays until the new one is ready. Its `error.tsx` (a card with "Opnieuw proberen", which calls `retry()` and never shows the error) is the error state of every screen in it (spec 8.8).
+
+## Logo
+
+Two stacked coins with a sprout: money that grows. `LogoMark` (`src/components/logo-mark.tsx`) draws it on a rounded tile in `hero-bg` with the leaves in `spark` and the coins in `hero-ink`, so it follows the palette; it is a few flat shapes with no thin lines, so it still reads at 16 px. `src/app/icon.svg`, `src/app/favicon.ico` (16, 32 and 48 px) and `public/icons` (`icon-192`, `icon-512` rounded; `maskable-512` full bleed with the mark inside the central 62 percent, which is within the 80 percent safe zone; `apple-touch-icon` full bleed) are the same drawing in the nachtblauw colours. Regenerate them all with `node scripts/generate-icons.mjs` after changing the drawing (it lives in that script and in `LogoMark`). `manifest.ts` uses the nachtblauw ground and `hero-bg` as background and theme colour.
 
 ## Skills
 

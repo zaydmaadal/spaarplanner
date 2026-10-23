@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { parsePrefs, parseStep8Prefs } from "./prefs";
+import { LOOK_COOKIE, lookCookieValue, parseLookCookie, parsePrefs, parseStep8Prefs } from "./prefs";
 
 describe("parsePrefs", () => {
-  it("defaults to zonsopgang and system when prefs are empty, missing or not an object", () => {
+  it("defaults to nachtblauw and system when prefs are empty, missing or not an object", () => {
     for (const raw of [{}, null, undefined, "x", 3, []]) {
-      expect(parsePrefs(raw)).toEqual({ palette: "zonsopgang", theme: "system" });
+      expect(parsePrefs(raw)).toEqual({ palette: "nachtblauw", theme: "system" });
     }
   });
 
@@ -18,7 +18,22 @@ describe("parsePrefs", () => {
 
   it("falls back per field and ignores other keys", () => {
     expect(parsePrefs({ palette: "smaragd", theme: "blue", other: 1 })).toEqual({ palette: "smaragd", theme: "system" });
-    expect(parsePrefs({ palette: "neon", theme: "light" })).toEqual({ palette: "zonsopgang", theme: "light" });
+    expect(parsePrefs({ palette: "neon", theme: "light" })).toEqual({ palette: "nachtblauw", theme: "light" });
+  });
+});
+
+describe("look cookie", () => {
+  it("round-trips palette and theme", () => {
+    expect(LOOK_COOKIE).toBe("sp-look");
+    expect(parseLookCookie(lookCookieValue({ palette: "zand", theme: "dark" }))).toEqual({ palette: "zand", theme: "dark" });
+  });
+
+  it("falls back to the defaults for a missing or tampered value", () => {
+    for (const raw of [undefined, "", "neon.blue", "zand", ".dark"]) {
+      const { palette, theme } = parseLookCookie(raw);
+      expect(palette).toBe(raw === "zand" ? "zand" : "nachtblauw");
+      expect(theme).toBe(raw === ".dark" ? "dark" : "system");
+    }
   });
 });
 

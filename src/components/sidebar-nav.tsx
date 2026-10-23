@@ -21,7 +21,7 @@ export function SidebarNav() {
         <Link
           href="/storten"
           aria-current={is("/storten") ? "page" : undefined}
-          className="press mb-2 flex min-h-11 items-center justify-center gap-2 rounded-full bg-action px-4 text-sm font-semibold text-on-action hover:opacity-90"
+          className="press mb-2 flex min-h-11 items-center gap-3 rounded-strip bg-action px-3 text-sm font-semibold text-on-action hover:opacity-90"
         >
           <Plus aria-hidden className="size-5" />
           Storten

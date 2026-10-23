@@ -13,7 +13,7 @@ test("/privacy opens without a session, and the export does not", async ({ page,
   await expect(page.getByRole("heading", { level: 1, name: "Privacy", exact: true })).toBeVisible();
   await expect(page.getByText("Zayd Maadal")).toBeVisible();
   // It tells you where to download (Meer), and does not link to the export itself.
-  await expect(page.getByRole("link", { name: "Gegevens downloaden via Meer", exact: true })).toHaveAttribute("href", "/meer");
+  await expect(page.getByRole("link", { name: "Gegevens downloaden via Profiel", exact: true })).toHaveAttribute("href", "/meer");
   await expect(page.locator('a[href="/api/export"]')).toHaveCount(0);
 
   // The proxy sends a visitor without a session to the login page, the same as for every other private path.
@@ -38,7 +38,7 @@ test("the export is one JSON download with only the own rows and no push keys", 
 
   await test.step("the link on Meer downloads spaarplanner-export.json", async () => {
     await page.goto("/meer");
-    await expect(page.getByRole("heading", { level: 1, name: "Meer", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Profiel", exact: true })).toBeVisible();
     const [download] = await Promise.all([
       page.waitForEvent("download"),
       page.getByRole("link", { name: "Gegevens downloaden", exact: true }).click(),

@@ -22,7 +22,7 @@ export function CertaintyLabel({ level, reason }: { level: Level; reason: string
         </Popover.Trigger>
         <Popover.Portal>
           <Popover.Content sideOffset={4} collisionPadding={16} className="z-50 max-w-72 rounded-strip border border-hairline bg-surface p-3 text-sm font-normal text-ink shadow-lg">
-            Schatting: dit bedrag is een inschatting {why}. Pas het aan in Meer.
+            Schatting: dit bedrag is een inschatting {why}. Pas het aan bij Profiel.
           </Popover.Content>
         </Popover.Portal>
       </Popover.Root>

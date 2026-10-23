@@ -76,6 +76,12 @@ describe("BottomNav", () => {
     expect(out).toMatch(/<a[^>]*href="\/storten"[^>]*>.*?Storten/);
   });
 
+  it("names the last tab Profiel but keeps its route /meer", () => {
+    const out = html(h(BottomNav, { active: "meer" }));
+    expect(out).toMatch(/<a[^>]*href="\/meer"[^>]*>.*?Profiel/);
+    expect(out).not.toContain(">Meer<");
+  });
+
   it("marks the middle button on the deposit screen, and no tab", () => {
     const out = html(h(BottomNav, { active: "storten" }));
     expect(count(out, 'aria-current="page"')).toBe(1);

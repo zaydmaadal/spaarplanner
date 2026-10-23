@@ -1,19 +1,19 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-// Reads the real tokens: every palette block lists all tokens.
+// Reads the real tokens: every palette block lists all tokens (no palette leans on another one).
 // A token is `#hex`, `var(--color-x)` or `light-dark(<light>, <dark>)` of those two.
 const css = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
 const blocks = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, selector, body]) => ({
   selector: selector.trim(),
   vars: Object.fromEntries([...body.matchAll(/--color-([\w-]+)\s*:\s*([^;]+);/g)].map(([, k, v]) => [k, v.trim()])),
 }));
-const PALETTES = ["zonsopgang", "smaragd", "lagune", "kersen"] as const;
+const PALETTES = ["nachtblauw", "zand", "smaragd", "lagune", "kersen", "zonsopgang"] as const;
 const MODES = ["light", "dark"] as const;
 type Mode = (typeof MODES)[number];
 
-const varsOf = (palette: string) => blocks.find((b) => b.selector.includes(`[data-palette="${palette}"]`))?.vars;
-const tokensOf = (palette: string): Record<string, string> => ({ ...varsOf("zonsopgang"), ...varsOf(palette) });
+const tokensOf = (palette: string): Record<string, string> =>
+  blocks.find((b) => b.selector.includes(`[data-palette="${palette}"]`))?.vars ?? {};
 
 function color(tokens: Record<string, string>, name: string, mode: Mode): string {
   const raw = tokens[name];
@@ -74,4 +74,35 @@ describe.each(PALETTES)("palette %s", (palette) => {
       expect(r, `${fg} ${color(tokens, fg, mode)} on ${bg} ${color(tokens, bg, mode)} = ${r.toFixed(2)}`).toBeGreaterThanOrEqual(min);
     });
   }
+});
+
+// Hue in degrees (0 to 360) of a #rrggbb colour.
+function hue(hex: string): number {
+  const n = parseInt(hex.slice(1), 16);
+  const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((c) => c / 255);
+  const max = Math.max(r, g, b);
+  const d = max - Math.min(r, g, b);
+  if (d === 0) return 0;
+  const h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return (h * 60 + 360) % 360;
+}
+
+describe("palette tokens", () => {
+  const reference = Object.keys(tokensOf("nachtblauw")).sort();
+  it("nachtblauw is the default on :root", () => {
+    expect(blocks.some((b) => b.selector.includes(":root") && b.selector.includes('[data-palette="nachtblauw"]'))).toBe(true);
+  });
+  it.each(PALETTES)("%s defines every token", (palette) => {
+    expect(reference.length).toBeGreaterThan(30);
+    expect(Object.keys(tokensOf(palette)).sort()).toEqual(reference);
+  });
+  describe.each(PALETTES)("%s", (palette) => {
+    it.each(MODES)("pot 1 to 3 are three clearly different hues (%s)", (mode) => {
+      const hues = [1, 2, 3].map((n) => hue(color(tokensOf(palette), `pot-${n}`, mode)));
+      for (const [a, b] of [[0, 1], [0, 2], [1, 2]]) {
+        const gap = Math.abs(hues[a] - hues[b]);
+        expect(Math.min(gap, 360 - gap), `pot-${a + 1} ${hues[a].toFixed(0)} and pot-${b + 1} ${hues[b].toFixed(0)}`).toBeGreaterThanOrEqual(40);
+      }
+    });
+  });
 });

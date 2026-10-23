@@ -6,6 +6,8 @@ import { PALETTES, type Palette } from "@/lib/prefs";
 import { cn } from "@/lib/utils";
 
 const NAMES: Record<Palette, { name: string; hint: string }> = {
+  nachtblauw: { name: "Nachtblauw", hint: "Inktblauw met zacht lichtblauw" },
+  zand: { name: "Zand", hint: "Warm beige met terracotta" },
   zonsopgang: { name: "Zonsopgang", hint: "Pruim met abrikoos" },
   smaragd: { name: "Smaragd & goud", hint: "Diepgroen met goud" },
   lagune: { name: "Lagune", hint: "Petrolblauw met aqua" },

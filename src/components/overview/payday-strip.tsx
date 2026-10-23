@@ -20,7 +20,7 @@ export function PaydayStrip({ nextPayday, daysToPayday, progress, className }: {
   return (
     <div className={cn("grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-2.5 rounded-strip border border-hero-line bg-hero-tile p-3", className)}>
       <div className="flex flex-col">
-        <p className="text-xs font-semibold tracking-widest text-hero-muted uppercase">Volgende loondag</p>
+        <p className="text-sm font-semibold text-hero-muted">Volgende loondag</p>
         <p className="text-sm text-hero-ink first-letter:uppercase">{longDateNl(nextPayday)}</p>
       </div>
       <p className="flex items-baseline font-display text-lg text-hero-ink">{inDays(daysToPayday)}</p>

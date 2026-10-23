@@ -10,7 +10,10 @@ export default function RegistrerenPage() {
   const { mode } = signupConfig();
   return (
     <AuthShell>
-      <h1 className="font-display text-3xl font-bold">Account maken</h1>
+      <div>
+        <h1 className="font-display text-3xl font-bold">Account maken</h1>
+        <p className="mt-1 text-ink-2">Zo zie je snel wat je per maand kunt sparen.</p>
+      </div>
       {mode === "closed" ? <p>Registreren is nu gesloten.</p> : <RegisterForm askInviteCode={mode === "invite"} />}
       <p>
         Heb je al een account?{" "}

@@ -60,7 +60,7 @@ export function SubmitButton({ pending, children }: { pending: boolean; children
     <button
       type="submit"
       disabled={pending}
-      className={`h-11 rounded-md bg-foreground px-4 font-medium text-background disabled:opacity-60 ${focusRing}`}
+      className={`h-11 rounded-md bg-primary px-4 font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60 ${focusRing}`}
     >
       {children}
     </button>

@@ -9,6 +9,7 @@ import { NextSteps } from "./next-steps";
 import { PaydayStrip } from "./payday-strip";
 import { PotsList } from "./pots-list";
 import { SalarySplit } from "./salary-split";
+import { shift } from "./sim-row";
 import { Simulator } from "./simulator";
 
 // The simulator imports a server action, which imports server-only.
@@ -124,7 +125,19 @@ describe("Simulator", () => {
     expect(out).toContain("Voorstel: 20 % van je inkomen.");
     expect(out).toMatch(/<button[^>]*disabled=""[^>]*>Zo instellen/);
     expect(out).not.toContain("Zet terug");
-    expect(out).toContain("vol rond mei 2027");
+    expect(out).toMatch(/vol rond <\/span>mei 2027/); // a compact date, with the words for a screen reader
+    expect(out).not.toMatch(/\d (mnd|maanden) (sneller|later)/); // no badge while nothing moved
+  });
+
+  test("shift: months sooner or later as a badge, nothing for a pot that did not move or is full", () => {
+    const ym = (year: number, month: number) => ({ year, month });
+    expect(shift(ym(2026, 10), ym(2026, 8))).toEqual({ text: "2 mnd sneller", faster: true });
+    expect(shift(ym(2026, 10), ym(2027, 1))).toEqual({ text: "3 mnd later", faster: false });
+    expect(shift(ym(2026, 10), ym(2026, 10))).toBeNull();
+    expect(shift("full", ym(2026, 10))).toBeNull();
+    expect(shift(ym(2026, 10), "full")).toBeNull();
+    expect(shift(null, ym(2026, 10))).toEqual({ text: "Nu haalbaar", faster: true });
+    expect(shift(ym(2026, 10), null)).toEqual({ text: "Niet meer", faster: false });
   });
 
   test("the choice between careful and normal only shows for variable income", () => {

@@ -79,7 +79,7 @@ function Success({ done, to, only }: { done: Done; to: string; only: boolean }) 
         ))}
       </ul>
       <Button asChild size="lg" className="relative bg-spark text-on-spark hover:bg-spark/90">
-        <Link href={to}>{only ? "Terug naar de pot" : "Naar je overzicht"}</Link>
+        <Link href={to}>{only ? "Terug naar het doel" : "Naar je overzicht"}</Link>
       </Button>
     </div>
   );
