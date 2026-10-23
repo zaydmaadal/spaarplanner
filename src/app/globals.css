@@ -291,7 +291,7 @@
     opacity: 0;
   }
 }
-/* The thin bar of (app)/loading.tsx: invisible for the first 200 ms, so a fast screen shows nothing. */
+/* The thin bar of nav-progress.tsx: invisible for the first 200 ms, so a fast screen shows nothing. */
 @keyframes load-bar {
   from {
     opacity: 0;
@@ -334,16 +334,31 @@
   transform: scale(0.98);
 }
 
-/* React ViewTransition (app layout): the page fades in, the nav pill slides to the new tab. */
+/* React ViewTransition (app template): the page fades in, the nav pill slides to the new tab. The named parts (the page,
+   the tab bar) cannot be tapped while it runs, so it stays at 200 ms: the root snapshot does not crossfade (that took 250 ms
+   by itself) and the groups no longer use the browser's 250 ms. The sidebar is not named and stays tappable. */
+::view-transition {
+  pointer-events: none;
+}
+::view-transition-old(root) {
+  display: none;
+}
+::view-transition-new(root) {
+  animation: none;
+}
+::view-transition-group(*) {
+  animation-duration: var(--duration-2);
+  animation-timing-function: var(--ease-standard);
+}
 ::view-transition-old(.page-out) {
   animation: page-out var(--duration-1) var(--ease-standard) both;
 }
 ::view-transition-new(.page-in) {
-  animation: page-in var(--duration-3) var(--ease-standard) both;
+  animation: page-in var(--duration-2) var(--ease-standard) both;
 }
-::view-transition-group(nav-pill) {
-  animation-duration: var(--duration-3);
-  animation-timing-function: var(--ease-standard);
+/* The tab bar always paints above the pages that fade in and out beside it. */
+::view-transition-group(bottom-nav) {
+  z-index: 10;
 }
 /* The dark hero's soft contour lines. */
 .contour {

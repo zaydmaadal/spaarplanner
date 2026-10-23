@@ -1,3 +1,4 @@
+import { NavProgress } from "@/components/nav-progress";
 import { SidebarNav } from "@/components/sidebar-nav";
 import { requireOnboarded } from "@/data/supabase/server";
 
@@ -9,6 +10,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex flex-1 flex-col lg:pl-60">
       <SidebarNav />
+      <NavProgress />
       <main className="mx-auto w-full max-w-lg flex-1 px-4 pt-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))] min-[400px]:px-5 md:max-w-2xl md:px-8 lg:max-w-275 lg:px-10 lg:pt-10 lg:pb-12">
         {children}
       </main>

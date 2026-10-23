@@ -1,4 +1,4 @@
-import { CalendarDays, Ellipsis, House, Plus, Target } from "lucide-react";
+import { CalendarDays, House, Plus, Target, UserRound } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -8,7 +8,7 @@ export const TABS = {
   overzicht: { href: "/overzicht", label: "Overzicht", Icon: House },
   doelen: { href: "/doelen", label: "Doelen", Icon: Target },
   plan: { href: "/plan", label: "Plan", Icon: CalendarDays },
-  meer: { href: "/meer", label: "Meer", Icon: Ellipsis },
+  meer: { href: "/meer", label: "Profiel", Icon: UserRound },
 } as const;
 
 const item = "press relative flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 rounded-full text-xs font-semibold";
