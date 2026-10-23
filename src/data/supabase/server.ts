@@ -7,7 +7,7 @@ import { connection } from "next/server";
 import { cache } from "react";
 import type { Database } from "@/data/database.types";
 import { adminUserIds, publicEnv } from "@/lib/env";
-import { parsePrefs } from "@/lib/prefs";
+import { LOOK_COOKIE, parseLookCookie, parsePrefs } from "@/lib/prefs";
 
 // Never call this inside "use cache" or "use cache: private": connection() throws there. Use React cache() for sharing.
 export async function createServerSupabase(): Promise<SupabaseClient<Database>> {
@@ -68,9 +68,9 @@ export async function requireOnboarded(): Promise<string> {
   return userId;
 }
 
-// For the root layout: palette and theme of the signed-in user. Never redirects.
+// For the root layout: palette and theme of the signed-in user, or without a session the look cookie. Never redirects.
 export async function readPrefs() {
   const claims = await readClaims();
-  if (!claims?.sub) return parsePrefs(null);
+  if (!claims?.sub) return parseLookCookie((await cookies()).get(LOOK_COOKIE)?.value);
   return parsePrefs((await readProfile(claims.sub))?.prefs);
 }
