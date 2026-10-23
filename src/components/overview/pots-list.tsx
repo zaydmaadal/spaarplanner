@@ -26,7 +26,7 @@ export function PotsList({ goals, horizonYears }: { goals: GoalView[]; horizonYe
                 <span aria-hidden className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: potColor(g) }} />
                 <h3 className="min-w-0 text-sm font-semibold break-words">{g.name}</h3>
               </div>
-              <Money cents={g.balanceCents} className="text-xl leading-tight" />
+              <Money cents={g.balanceCents} className="font-display text-xl leading-tight" />
               <p className="text-xs text-ink-2">
                 van <Money cents={g.targetCents} className="font-semibold text-ink" />
               </p>

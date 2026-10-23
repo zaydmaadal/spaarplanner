@@ -107,7 +107,7 @@ export function Step5({ mode, incomes, lines, plan }: { mode: Mode; incomes: Inc
       ))}
       <div className="flex flex-col gap-1 border-t border-hairline pt-4">
         <p className="text-sm font-semibold text-ink-2">Dit blijft er per maand over</p>
-        <Money cents={budget.roomCents} className="text-[32px] leading-tight" />
+        <Money cents={budget.roomCents} className="font-display text-[32px] leading-tight" />
       </div>
       <BudgetWarnings warnings={warnings} />
       <MoneyField

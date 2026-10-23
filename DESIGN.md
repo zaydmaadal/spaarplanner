@@ -45,10 +45,10 @@ A palette swap is editing the tokens in `src/app/globals.css`, nothing else.
 | `--color-active-ink` | #5B2A8C | #D3B8F5 | #0B5D45 | #45C08F | #0B5668 | #7BD3E5 | #8E1C44 | #F6A6BC |
 | `--color-accent-ink` | #4A2178 | #D3B8F5 | #0B5D45 | #45C08F | #0B5668 | #7BD3E5 | #8E1C44 | #F6A6BC |
 | `--color-pot-1` | #3B1F5C | #CDB6EB | #5B6F66 | #93A89F | #0C3947 | #B5D6DE | #4A1426 | #E8BCC8 |
-| `--color-pot-2` | #6A35A8 | #C6A5F2 | #17707C | #5BBBC7 | #0E6479 | #5CC6DC | #A3234F | #F08CA8 |
-| `--color-pot-3` | #D9622B | #D9622B | #9E3B5C | #E48AA8 | #E0614A | #F08A76 | #2F7D6D | #4FB5A0 |
+| `--color-pot-2` | #D9622B | #D9622B | #17707C | #5BBBC7 | #E0614A | #F08A76 | #2F7D6D | #4FB5A0 |
+| `--color-pot-3` | #2E8B83 | #2E8B83 | #9E3B5C | #E48AA8 | #6F65B5 | #A096E0 | #7C5BA8 | #B596DC |
 | `--color-pot-4` | #E0A23A | #E0A23A | #D8A93F | #E2B659 | #E7B65C | #E7B65C | #E09A3A | #E9AE5A |
-| `--color-pot-5` | #2E8B83 | #2E8B83 | #0B5D45 | #45C08F | #6F65B5 | #A096E0 | #7C5BA8 | #B596DC |
+| `--color-pot-5` | #6A35A8 | #C6A5F2 | #0B5D45 | #45C08F | #0E6479 | #5CC6DC | #A3234F | #F08CA8 |
 | `--color-seg-fixed` | #3B1F5C | #CDB6EB | #1F3A30 | #BFD3C8 | #0C3947 | #B5D6DE | #4A1426 | #E8BCC8 |
 | `--color-seg-living` | #A68BC9 | #A68BC9 | #8FB0A0 | #8FB0A0 | #86B3BF | #86B3BF | #C99AA9 | #C99AA9 |
 | `--color-seg-savings` | #6A35A8 | #C6A5F2 | #0B5D45 | #45C08F | #0E6479 | #5CC6DC | #A3234F | #F08CA8 |
@@ -77,7 +77,7 @@ Roles:
 | `progress` | progress bars and savings |
 | `active-bg`, `active-ink` | the active tab |
 | `accent-ink` | accent text on `tint-accent` (light) |
-| `pot-1` to `pot-5` | the colours of savings pots; they never clash within one palette |
+| `pot-1` to `pot-5` | the colours of savings pots; they never clash within one palette, and pots 1 to 3 are three different hues so the first goals are easy to tell apart |
 | `spark` | the warm highlight: the savings tile, the hero bar, the sun in the logo. `on-spark` is the text on it |
 | `hero-bg`, `hero-ink`, `hero-muted`, `hero-accent` | the dark hero card (overview, auth pages, onboarding welcome): background, text, quiet text, highlight. The same in light and dark, with `hero-tile`, `hero-line` and `hero-track` (translucent white) for tiles, borders and bar tracks on it |
 | `seg-fixed`, `seg-living`, `seg-savings`, `seg-free` | segments of the stacked bar |
