@@ -48,9 +48,19 @@ const DUTCH = {
 };
 
 // The order of the list is the priority of the goals (spec 8.4). Drag the handle, or focus it and use space, the arrow
-// keys and space again. The page keys this list on the stored order, so it starts again from the props when that changes.
+// keys and space again. When the stored order changes (a goal added, archived, or a reorder coming back from the server)
+// the list takes it over without remounting: a remount would play the entry animation of every bar again.
 export function SortableGoals({ goals, horizonYears }: { goals: GoalView[]; horizonYears: number }) {
-  const [order, setOrder] = useState(() => goals.map((g) => g.id));
+  const stored = goals.map((g) => g.id);
+  const [order, setOrder] = useState(stored);
+  const [seen, setSeen] = useState(stored.join());
+  if (seen !== stored.join()) {
+    setSeen(stored.join());
+    setOrder(stored);
+  }
+  // The bars grow in once, when the list first shows. React moves the cards in the DOM on a drop, which would play that
+  // animation again, so it is switched off for good once a card has been picked up.
+  const [dragged, setDragged] = useState(false);
   const [, startTransition] = useTransition();
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
   const dndId = useId();
@@ -71,9 +81,9 @@ export function SortableGoals({ goals, horizonYears }: { goals: GoalView[]; hori
   }
 
   return (
-    <DndContext id={dndId} sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd} accessibility={DUTCH}>
+    <DndContext id={dndId} sensors={sensors} collisionDetection={closestCenter} onDragStart={() => setDragged(true)} onDragEnd={onDragEnd} accessibility={DUTCH}>
       <SortableContext items={order} strategy={rectSortingStrategy}>
-        <ul className="grid gap-3 lg:grid-cols-2">
+        <ul className={cn("grid gap-3 lg:grid-cols-2", dragged && "[&_.bar-fill]:animate-none!")}>
           {order.map((id) => (
             <Item key={id} goal={byId.get(id)!} horizonYears={horizonYears} />
           ))}
