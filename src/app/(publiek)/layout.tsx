@@ -1,7 +1,4 @@
+// The auth pages bring their own full-bleed shell (AuthShell); the privacy page its own column.
 export default function PubliekLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center gap-6 px-4 py-8">
-      {children}
-    </main>
-  );
+  return <div className="flex min-h-dvh flex-col">{children}</div>;
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { AuthHero } from "@/components/auth-shell";
 import { STEPS } from "@/components/onboarding/progress";
 import { Step1 } from "@/components/onboarding/step-1";
 import { Step2 } from "@/components/onboarding/step-2";
@@ -72,5 +73,10 @@ export default async function OnboardingPage({ params }: PageProps<"/onboarding/
       />
     );
   }
-  return <main className="mx-auto w-full max-w-lg flex-1 px-4 py-6 min-[400px]:px-5">{content}</main>;
+  return (
+    <main className="mx-auto flex w-full max-w-lg flex-1 flex-col px-4 py-6 min-[400px]:px-5 md:max-w-xl lg:max-w-2xl lg:justify-center lg:py-12">
+      {step === 1 && <AuthHero className="mb-5 rounded-hero p-6 lg:p-10" tagline="Welkom. Zo bouwen we samen je spaarplan." />}
+      {content}
+    </main>
+  );
 }

@@ -10,7 +10,7 @@ const link = "inline-flex min-h-11 items-center font-medium underline underline-
 // Spec 12: who is responsible, which data, which processors, how long, and how to download or delete.
 export default function PrivacyPage() {
   return (
-    <>
+    <main className="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 py-8">
       <h1 className="font-display text-2xl font-semibold">Privacy</h1>
       <p>Spaarplanner is een kleine app van één persoon. Hier staat wat de app van je bewaart, waarom en bij wie.</p>
 
@@ -81,6 +81,6 @@ export default function PrivacyPage() {
       <Link href="/" className={link}>
         Terug naar de app
       </Link>
-    </>
+    </main>
   );
 }

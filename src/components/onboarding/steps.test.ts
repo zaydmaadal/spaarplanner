@@ -46,7 +46,7 @@ describe("shell", () => {
 
   it("has no 'Vorige' on the first step and finishes on the last", () => {
     expect(html(h(Step1, { mode: "onboarding", displayName: "" }))).not.toContain("Vorige");
-    const last = html(h(Step8, { mode: "onboarding", palette: "oceaan", noInterestSavings: false, contextNote: "", startBalanceCents: null, emergencyTargetCents: null, emergencySharePct: 100 }));
+    const last = html(h(Step8, { mode: "onboarding", palette: "zonsopgang", noInterestSavings: false, contextNote: "", startBalanceCents: null, emergencyTargetCents: null, emergencySharePct: 100 }));
     expect(last).toContain("Naar mijn overzicht");
     expect(last).toContain("Je logt één keer opnieuw in in de geïnstalleerde app.");
     expect(last).toContain("Zet op beginscherm");
@@ -133,7 +133,8 @@ describe("accessibility details", () => {
   it("says the step in text and hides the bar that only pictures it", () => {
     const page = html(h(OnboardingProgress, { step: 3 }));
     expect(page).toContain("Stap 3 van 8");
-    expect(page).toMatch(/<div aria-hidden="true"><div role="progressbar"/);
+    expect(page).toMatch(/<div aria-hidden="true" class="grid grid-cols-8/);
+    expect(page.match(/bar-fill/g)).toHaveLength(3);
   });
 });
 
@@ -220,7 +221,7 @@ describe("the forms on the pages of Meer (mode edit)", () => {
   });
 
   it("step 8 leaves the palette to Uiterlijk and keeps the other answers and the note", () => {
-    const props = { palette: "oceaan" as const, noInterestSavings: true, contextNote: "Ik heb 20 vakantiedagen.", startBalanceCents: null, emergencyTargetCents: null, emergencySharePct: 100 };
+    const props = { palette: "zonsopgang" as const, noInterestSavings: true, contextNote: "Ik heb 20 vakantiedagen.", startBalanceCents: null, emergencyTargetCents: null, emergencySharePct: 100 };
     const edit = html(h(Step8, { mode: "edit", ...props }));
     expect(edit).toMatch(/<h1[^>]*>Wat de app over je weet<\/h1>/);
     expect(edit).not.toContain("Kleurenpalet");

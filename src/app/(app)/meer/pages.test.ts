@@ -83,7 +83,7 @@ describe("the forms are filled with what is stored", () => {
   });
 
   test("context: the note, without the palette (that is under Uiterlijk on Meer)", async () => {
-    m.prefs = { palette: "salie", context_note: "Ik heb 20 vakantiedagen.", no_interest_savings: true };
+    m.prefs = { palette: "smaragd", context_note: "Ik heb 20 vakantiedagen.", no_interest_savings: true };
     const out = await render(ContextPage);
     expect(out).toContain("Ik heb 20 vakantiedagen.</textarea>");
     expect(out).not.toContain("Kleurenpalet");

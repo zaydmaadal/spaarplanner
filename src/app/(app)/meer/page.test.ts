@@ -2,7 +2,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
-const m = vi.hoisted(() => ({ prefs: { palette: "oceaan", theme: "system" } as { palette: string; theme: string } }));
+const m = vi.hoisted(() => ({ prefs: { palette: "zonsopgang", theme: "system" } as { palette: string; theme: string } }));
 vi.mock("@/data/supabase/server", () => ({ readPrefs: async () => m.prefs }));
 vi.mock("@/data/actions/profile", () => ({ saveProfileAction: vi.fn() }));
 vi.mock("@/data/actions/auth", () => ({ logoutAction: vi.fn() }));
@@ -17,7 +17,7 @@ const headings = (out: string, level: number) => [...out.matchAll(new RegExp(`<h
 const anchor = (out: string, href: string) => new RegExp(`<a [^>]*href="${href.replaceAll("/", "\\/")}"[^>]*>`).exec(out)?.[0] ?? "";
 
 beforeEach(() => {
-  m.prefs = { palette: "oceaan", theme: "system" };
+  m.prefs = { palette: "zonsopgang", theme: "system" };
 });
 
 describe("the Meer page (spec 8.7)", () => {
@@ -62,12 +62,12 @@ describe("the Meer page (spec 8.7)", () => {
     expect(await render()).toMatch(/<form[^>]*>\s*<button[^>]*type="submit"[^>]*>Uitloggen<\/button><\/form>/);
   });
 
-  test("shows the three palettes and the three themes with the stored ones chosen", async () => {
-    m.prefs = { palette: "salie", theme: "dark" };
+  test("shows the four palettes and the three themes with the stored ones chosen", async () => {
+    m.prefs = { palette: "smaragd", theme: "dark" };
     const out = await render();
-    for (const name of ["Oceaan", "Salie", "Grafiet", "Licht", "Donker", "Systeem"]) expect(out).toContain(name);
+    for (const name of ["Zonsopgang", "Smaragd", "Lagune", "Kersen", "Licht", "Donker", "Systeem"]) expect(out).toContain(name);
     const chosen = [...out.matchAll(/<input[^>]*type="radio"[^>]*checked=""[^>]*value="([^"]+)"/g)].map((x) => x[1]);
-    expect(chosen).toEqual(["salie", "dark"]);
+    expect(chosen).toEqual(["smaragd", "dark"]);
   });
 
   test("uses generated ids and no em dash", async () => {

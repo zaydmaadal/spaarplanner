@@ -77,22 +77,22 @@ describe("createServerSupabase", () => {
 describe("readPrefs", () => {
   it("returns the defaults without a session and does not redirect or query", async () => {
     m.sub = undefined;
-    expect(await readPrefs()).toEqual({ palette: "oceaan", theme: "system" });
+    expect(await readPrefs()).toEqual({ palette: "zonsopgang", theme: "system" });
     expect(m.redirect).not.toHaveBeenCalled();
     expect(m.select).not.toHaveBeenCalled();
   });
 
   it("returns the stored palette and theme of the signed-in user", async () => {
     m.sub = "user-1";
-    m.prefs = { palette: "salie", theme: "dark" };
-    expect(await readPrefs()).toEqual({ palette: "salie", theme: "dark" });
+    m.prefs = { palette: "smaragd", theme: "dark" };
+    expect(await readPrefs()).toEqual({ palette: "smaragd", theme: "dark" });
   });
 
   it("falls back to the defaults for invalid values or a missing profile", async () => {
     m.sub = "user-1";
     m.prefs = { palette: "neon", theme: 3 };
-    expect(await readPrefs()).toEqual({ palette: "oceaan", theme: "system" });
+    expect(await readPrefs()).toEqual({ palette: "zonsopgang", theme: "system" });
     m.prefs = undefined;
-    expect(await readPrefs()).toEqual({ palette: "oceaan", theme: "system" });
+    expect(await readPrefs()).toEqual({ palette: "zonsopgang", theme: "system" });
   });
 });

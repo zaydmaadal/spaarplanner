@@ -6,9 +6,10 @@ import { PALETTES, type Palette } from "@/lib/prefs";
 import { cn } from "@/lib/utils";
 
 const NAMES: Record<Palette, { name: string; hint: string }> = {
-  oceaan: { name: "Oceaan", hint: "Blauwgrijs met kobaltblauw" },
-  salie: { name: "Salie", hint: "Zachtgroen met dennengroen" },
-  grafiet: { name: "Grafiet", hint: "Neutraal grijs met violet" },
+  zonsopgang: { name: "Zonsopgang", hint: "Pruim met abrikoos" },
+  smaragd: { name: "Smaragd & goud", hint: "Diepgroen met goud" },
+  lagune: { name: "Lagune", hint: "Petrolblauw met aqua" },
+  kersen: { name: "Kersen", hint: "Bordeaux met roze" },
 };
 
 // Each card sets data-palette itself, so its colours are that palette's own tokens. Persisting the choice is up to the parent.
@@ -39,7 +40,7 @@ export function PalettePicker({ value, onChange }: { value: Palette; onChange: (
             className="sr-only"
           />
           <span aria-hidden className="flex shrink-0 -space-x-1">
-            {["bg-ground", "bg-surface", "bg-action", "bg-progress"].map((swatch) => (
+            {["bg-ground", "bg-hero-bg", "bg-action", "bg-spark"].map((swatch) => (
               <span key={swatch} className={cn("size-6 rounded-full border border-ink-2", swatch)} />
             ))}
           </span>

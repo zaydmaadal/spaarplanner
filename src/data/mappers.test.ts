@@ -27,7 +27,7 @@ const profileRow: Tables<"profiles"> = {
   timezone: "Europe/Brussels",
   onboarding_step: 8,
   onboarding_completed_at: "2026-10-02T10:00:00Z",
-  prefs: { ziekenfonds: "nee", no_interest_savings: true, palette: "salie", context_note: "x" },
+  prefs: { ziekenfonds: "nee", no_interest_savings: true, palette: "smaragd", context_note: "x" },
   created_at: "2026-10-01T10:00:00Z",
 };
 

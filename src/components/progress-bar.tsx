@@ -28,7 +28,7 @@ export function ProgressBar({
       className={cn("h-2 w-full overflow-hidden rounded-full bg-tint", className)}
     >
       <div
-        className="h-full rounded-full transition-[width] duration-(--duration-3) ease-standard"
+        className="bar-fill h-full rounded-full transition-[width] duration-(--duration-3) ease-standard"
         style={{ width: `${fraction * 100}%`, backgroundColor: color }}
       />
     </div>
